@@ -1,11 +1,11 @@
 ;;; find-dired.el --- run a `find' command and dired the output
 
-;; Copyright (C) 1992, 1994-1995, 2000-2013 Free Software Foundation,
+;; Copyright (C) 1992, 1994-1995, 2000-2014 Free Software Foundation,
 ;; Inc.
 
 ;; Author: Roland McGrath <roland@gnu.org>,
 ;;	   Sebastian Kremer <sk@thp.uni-koeln.de>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: unix
 
 ;; This file is part of GNU Emacs.
@@ -30,7 +30,7 @@
 (require 'dired)
 
 (defgroup find-dired nil
-  "Run a `find' command and dired the output."
+  "Run a `find' command and Dired the output."
   :group 'dired
   :prefix "find-")
 
@@ -210,13 +210,15 @@ use in place of \"-ls\" as the final argument."
     (insert "  " dir ":\n")
     ;; Make second line a ``find'' line in analogy to the ``total'' or
     ;; ``wildcard'' line.
-    (insert "  " args "\n")
+    (let ((point (point)))
+      (insert "  " args "\n")
+      (dired-insert-set-properties point (point)))
     (setq buffer-read-only t)
     (let ((proc (get-buffer-process (current-buffer))))
       (set-process-filter proc (function find-dired-filter))
       (set-process-sentinel proc (function find-dired-sentinel))
       ;; Initialize the process marker; it is used by the filter.
-      (move-marker (process-mark proc) 1 (current-buffer)))
+      (move-marker (process-mark proc) (point) (current-buffer)))
     (setq mode-line-process '(":%s"))))
 
 (defun kill-find ()
@@ -232,11 +234,13 @@ use in place of \"-ls\" as the final argument."
 ;;;###autoload
 (defun find-name-dired (dir pattern)
   "Search DIR recursively for files matching the globbing pattern PATTERN,
-and run dired on those files.
+and run Dired on those files.
 PATTERN is a shell wildcard (not an Emacs regexp) and need not be quoted.
-The command run (after changing into DIR) is
+The default command run (after changing into DIR) is
 
-    find . -name 'PATTERN' -ls"
+    find . -name 'PATTERN' -ls
+
+See `find-name-arg' to customize the arguments."
   (interactive
    "DFind-name (directory): \nsFind-name (filename wildcard): ")
   (find-dired dir (concat find-name-arg " " (shell-quote-argument pattern))))
@@ -250,7 +254,7 @@ The command run (after changing into DIR) is
 (defalias 'lookfor-dired 'find-grep-dired)
 ;;;###autoload
 (defun find-grep-dired (dir regexp)
-  "Find files in DIR containing a regexp REGEXP and start Dired on output.
+  "Find files in DIR matching a regexp REGEXP and start Dired on output.
 The command run (after changing into DIR) is
 
   find . \\( -type f -exec `grep-program' `find-grep-options' \\
@@ -337,10 +341,11 @@ use in place of \"-ls\" as the final argument."
 	  (let ((buffer-read-only nil))
 	    (save-excursion
 	      (goto-char (point-max))
-	      (insert "\n  find " state)
-	      (forward-char -1)		;Back up before \n at end of STATE.
-	      (insert " at " (substring (current-time-string) 0 19))
-	      (forward-char 1)
+	      (let ((point (point)))
+		(insert "\n  find " state)
+		(forward-char -1)		;Back up before \n at end of STATE.
+		(insert " at " (substring (current-time-string) 0 19))
+		(dired-insert-set-properties point (point)))
 	      (setq mode-line-process
 		    (concat ":"
 			    (symbol-name (process-status proc))))

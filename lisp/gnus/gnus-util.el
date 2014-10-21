@@ -1,6 +1,6 @@
 ;;; gnus-util.el --- utility functions for Gnus
 
-;; Copyright (C) 1996-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2014 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -68,7 +68,7 @@
   "Value of `completion-styles' to use when completing."
   :version "24.1"
   :group 'gnus-meta
-  :type 'list)
+  :type '(repeat symbol))
 
 ;; Fixme: this should be a gnus variable, not nnmail-.
 (defvar nnmail-pathname-coding-system)
@@ -225,7 +225,7 @@ is slower."
 
 
 (defun gnus-goto-colon ()
-  (beginning-of-line)
+  (move-beginning-of-line 1)
   (let ((eol (point-at-eol)))
     (goto-char (or (text-property-any (point) eol 'gnus-position t)
 		   (search-forward ":" eol t)
@@ -333,6 +333,13 @@ TIME defaults to the current time."
 
 (defmacro gnus-define-keys (keymap &rest plist)
   "Define all keys in PLIST in KEYMAP."
+  ;; Convert the key [?\S-\ ] to [(shift space)] for XEmacs.
+  (when (featurep 'xemacs)
+    (let ((bindings plist))
+      (while bindings
+	(when (equal (car bindings) [?\S-\ ])
+	  (setcar bindings [(shift space)]))
+	(setq bindings (cddr bindings)))))
   `(gnus-define-keys-1 (quote ,keymap) (quote ,plist)))
 
 (defmacro gnus-define-keys-safe (keymap &rest plist)
@@ -507,11 +514,14 @@ but also to the ones displayed in the echo area."
 			     (> message-log-max 0)
 			     (/= (length str) 0))
 		    (setq time (current-time))
-		    (with-current-buffer (get-buffer-create "*Messages*")
+		    (with-current-buffer (if (fboundp 'messages-buffer)
+					     (messages-buffer)
+					   (get-buffer-create "*Messages*"))
 		      (goto-char (point-max))
-		      (insert ,timestamp str "\n")
-		      (forward-line (- message-log-max))
-		      (delete-region (point-min) (point))
+		      (let ((inhibit-read-only t))
+			(insert ,timestamp str "\n")
+			(forward-line (- message-log-max))
+			(delete-region (point-min) (point)))
 		      (goto-char (point-max))))
 		  str)
 		 (gnus-add-timestamp-to-message
@@ -866,18 +876,29 @@ If there's no subdirectory, delete DIRECTORY as well."
 	  (setq beg (point)))
 	(gnus-overlay-put (gnus-make-overlay beg (point)) prop val)))))
 
-(defun gnus-put-text-property-excluding-characters-with-faces (beg end
-								   prop val)
-  "The same as `put-text-property', but don't put props on characters with the `gnus-face' property."
-  (let ((b beg))
-    (while (/= b end)
-      (when (get-text-property b 'gnus-face)
-	(setq b (next-single-property-change b 'gnus-face nil end)))
-      (when (/= b end)
+(defun gnus-put-text-property-excluding-characters-with-faces (beg end prop val)
+  "The same as `put-text-property', except where `gnus-face' is set.
+If so, and PROP is `face', set the second element of its value to VAL.
+Otherwise, do nothing."
+  (while (< beg end)
+    ;; Property values are compared with `eq'.
+    (let ((stop (next-single-property-change beg 'face nil end)))
+      (if (get-text-property beg 'gnus-face)
+	  (when (eq prop 'face)
+	    (setcar (cdr (get-text-property beg 'face)) (or val 'default)))
 	(inline
-	  (gnus-put-text-property
-	   b (setq b (next-single-property-change b 'gnus-face nil end))
-	   prop val))))))
+	  (gnus-put-text-property beg stop prop val)))
+      (setq beg stop))))
+
+(defun gnus-get-text-property-excluding-characters-with-faces (pos prop)
+  "The same as `get-text-property', except where `gnus-face' is set.
+If so, and PROP is `face', return the second element of its value.
+Otherwise, return the value."
+  (let ((val (get-text-property pos prop)))
+    (if (and (get-text-property pos 'gnus-face)
+	     (eq prop 'face))
+	(cadr val)
+      (get-text-property pos prop))))
 
 (defmacro gnus-faces-at (position)
   "Return a list of faces at POSITION."
@@ -916,7 +937,7 @@ If there's no subdirectory, delete DIRECTORY as well."
       'previous-extent-change 'previous-char-property-change))
 
 ;;; Protected and atomic operations.  dmoore@ucsd.edu 21.11.1996
-;; The primary idea here is to try to protect internal datastructures
+;; The primary idea here is to try to protect internal data structures
 ;; from becoming corrupted when the user hits C-g, or if a hook or
 ;; similar blows up.  Often in Gnus multiple tables/lists need to be
 ;; updated at the same time, or information can be lost.
@@ -1007,6 +1028,15 @@ with potentially long computations."
 
 (declare-function mm-append-to-file "mm-util"
                   (start end filename &optional codesys inhibit))
+(declare-function rmail-swap-buffers-maybe "rmail" ())
+(declare-function rmail-maybe-set-message-counters "rmail" ())
+(declare-function rmail-count-new-messages "rmail" (&optional nomsg))
+(declare-function rmail-summary-exists "rmail" ())
+(declare-function rmail-show-message "rmail" (&optional n no-summary))
+;; Macroexpansion of rmail-select-summary:
+(declare-function rmail-summary-displayed "rmail" ())
+(declare-function rmail-pop-to-buffer "rmail" (&rest args))
+(declare-function rmail-maybe-display-summary "rmail" ())
 
 (defun gnus-output-to-rmail (filename &optional ask)
   "Append the current article to an Rmail file named FILENAME.
@@ -1531,9 +1561,15 @@ SPEC is a predicate specifier that contains stuff like `or', `and',
   "Call standard `completing-read-function'."
   (let ((completion-styles gnus-completion-styles))
     (completing-read prompt
-                     ;; Old XEmacs (at least 21.4) expect an alist for
-                     ;; collection.
-                     (mapcar 'list collection)
+		     (if (featurep 'xemacs)
+			 ;; Old XEmacs (at least 21.4) expect an alist,
+			 ;; in which the car of each element is a string,
+			 ;; for collection.
+			 (mapcar
+			  (lambda (elem)
+			    (list (format "%s" (or (car-safe elem) elem))))
+			  collection)
+		       collection)
                      nil require-match initial-input history def)))
 
 (autoload 'ido-completing-read "ido")
@@ -1855,6 +1891,8 @@ empty directories from OLD-PATH."
             (get-char-table ,character ,display-table)))
     `(aref ,display-table ,character)))
 
+(declare-function image-size "image.c" (spec &optional pixels frame))
+
 (defun gnus-rescale-image (image size)
   "Rescale IMAGE to SIZE if possible.
 SIZE is in format (WIDTH . HEIGHT). Return a new image.
@@ -1937,27 +1975,6 @@ to case differences."
 	   (if ignore-case
 	       (string-equal (downcase str1) (downcase prefix))
 	     (string-equal str1 prefix))))))
-
-(eval-and-compile
-  (if (fboundp 'macroexpand-all)
-      (defalias 'gnus-macroexpand-all 'macroexpand-all)
-    (defun gnus-macroexpand-all (form &optional environment)
-      "Return result of expanding macros at all levels in FORM.
-If no macros are expanded, FORM is returned unchanged.
-The second optional arg ENVIRONMENT specifies an environment of macro
-definitions to shadow the loaded ones for use in file byte-compilation."
-      (if (consp form)
-	  (let ((idx 1)
-		(len (length (setq form (copy-sequence form))))
-		expanded)
-	    (while (< idx len)
-	      (setcar (nthcdr idx form) (gnus-macroexpand-all (nth idx form)
-							      environment))
-	      (setq idx (1+ idx)))
-	    (if (eq (setq expanded (macroexpand form environment)) form)
-		form
-	      (gnus-macroexpand-all expanded environment)))
-	form))))
 
 ;; Simple check: can be a macro but this way, although slow, it's really clear.
 ;; We don't use `bound-and-true-p' because it's not in XEmacs.

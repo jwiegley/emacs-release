@@ -2,7 +2,7 @@
 #define EMACS_W32_H
 
 /* Support routines for the NT version of Emacs.
-   Copyright (C) 1994, 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 1994, 2001-2014 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -68,17 +68,41 @@ enum {
    a socket, the process handle in pi is NULL. */
 typedef struct _child_process
 {
-  int                   fd;
-  int                   pid;
-  HANDLE                char_avail;
-  HANDLE                char_consumed;
-  HANDLE                thrd;
-  HWND                  hwnd;
-  PROCESS_INFORMATION   procinfo;
-  volatile int          status;
-  char                  chr;
-  OVERLAPPED            ovl_read;
-  OVERLAPPED            ovl_write;
+  /* File descriptor for sockets and serial port connections, and for
+     reading output from async subprocesses; otherwise -1.  */
+  int                 fd;
+  /* PID for subprocess, either async or not; otherwise -1.  */
+  int                 pid;
+  /* Handle to an event object that is signaled when a read operation
+     is completed, either successfully (in which case there're indeed
+     "characters available") or not.  Used by sys_select to wait for
+     output from subprocesses or socket/serial connections.  */
+  HANDLE              char_avail;
+  /* Handle to an event that is signaled to wake up the reader thread
+     and tell it to try reading more output from a subprocess.  */
+  HANDLE              char_consumed;
+  /* Handle to the reader thread to read output from a subprocess or a
+     socket or a comm port.  */
+  HANDLE              thrd;
+  /* Handle to the console window of a subprocess.  Used to forcibly
+     terminate it by sys_kill.  */
+  HWND                hwnd;
+  /* Information about subprocess returned by CreateProcess.  Includes
+     handles to the subprocess and its primary thread, and the
+     corresponding process ID and thread ID numbers.  The PID is
+     mirrored by the 'pid' member above.  The process handle is used
+     to wait on it.  */
+  PROCESS_INFORMATION procinfo;
+  /* Status of subprocess/connection and of reading its output.  For
+     values, see the enumeration above.  */
+  volatile int        status;
+  /* Holds a single character read by _sys_read_ahead, when a
+     subprocess has some output ready.  */
+  char                chr;
+  /* Used for async read operations on serial comm ports.  */
+  OVERLAPPED          ovl_read;
+  /* Used for async write operations on serial comm ports.  */
+  OVERLAPPED          ovl_write;
 } child_process;
 
 #define MAXDESC FD_SETSIZE
@@ -122,6 +146,9 @@ extern int w32_valid_pointer_p (void *, int);
 /* Get long (aka "true") form of file name, if it exists.  */
 extern BOOL w32_get_long_filename (char * name, char * buf, int size);
 
+/* Get the short (a.k.a. "8+3") form of a file name.  */
+extern unsigned int w32_get_short_filename (char *, char *, int);
+
 /* Prepare our standard handles for proper inheritance by child processes.  */
 extern void prepare_standard_handles (int in, int out,
 				      int err, HANDLE handles[4]);
@@ -133,8 +160,10 @@ extern void reset_standard_handles (int in, int out,
 /* Return the string resource associated with KEY of type TYPE.  */
 extern LPBYTE w32_get_resource (char * key, LPDWORD type);
 
+extern void release_listen_threads (void);
 extern void init_ntproc (int);
 extern void term_ntproc (int);
+extern HANDLE maybe_load_unicows_dll (void);
 extern void globals_of_w32 (void);
 
 extern void term_timers (void);
@@ -146,27 +175,36 @@ extern int _sys_wait_accept (int fd);
 extern Lisp_Object QCloaded_from;
 extern HMODULE w32_delayed_load (Lisp_Object);
 
+extern int (WINAPI *pMultiByteToWideChar)(UINT,DWORD,LPCSTR,int,LPWSTR,int);
+extern int (WINAPI *pWideCharToMultiByte)(UINT,DWORD,LPCWSTR,int,LPSTR,int,LPCSTR,LPBOOL);
+
 extern void init_environment (char **);
 extern void check_windows_init_file (void);
 extern void syms_of_ntproc (void);
 extern void syms_of_ntterm (void);
 extern void dostounix_filename (register char *);
 extern void unixtodos_filename (register char *);
+extern int  filename_from_ansi (const char *, char *);
+extern int  filename_to_ansi (const char *, char *);
+extern int  filename_from_utf16 (const wchar_t *, char *);
+extern int  filename_to_utf16 (const char *, wchar_t *);
+extern Lisp_Object ansi_encode_filename (Lisp_Object);
+extern int  w32_copy_file (const char *, const char *, int, int, int);
+
 extern BOOL init_winsock (int load_now);
 extern void srandom (int);
 extern int random (void);
 
-extern int sys_pipe (int *);
+extern int fchmod (int, mode_t);
+extern int sys_rename_replace (char const *, char const *, BOOL);
+extern int pipe2 (int *, int);
 
 extern void set_process_dir (char *);
 extern int sys_spawnve (int, char *, char **, char **);
-extern void register_child (int, int);
+extern void register_child (pid_t, int);
 
 extern void sys_sleep (int);
-extern char *getwd (char *);
 extern int sys_link (const char *, const char *);
-
-
 
 #ifdef HAVE_GNUTLS
 #include <gnutls/gnutls.h>
@@ -181,4 +219,3 @@ extern ssize_t emacs_gnutls_push (gnutls_transport_ptr_t p,
 #endif /* HAVE_GNUTLS */
 
 #endif /* EMACS_W32_H */
-

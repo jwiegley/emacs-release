@@ -26,6 +26,10 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #import <IOKit/graphics/IOGraphicsLib.h>
 #define Z (current_buffer->text->z)
 
+#ifndef NSFoundationVersionNumber10_8_3
+#define NSFoundationVersionNumber10_8_3 945.16
+#endif
+
 #ifndef NSAppKitVersionNumber10_4
 #define NSAppKitVersionNumber10_4 824
 #endif
@@ -41,14 +45,13 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifndef NSAppKitVersionNumber10_8
 #define NSAppKitVersionNumber10_8 1187
 #endif
+#ifndef NSAppKitVersionNumber10_9
+#define NSAppKitVersionNumber10_9 1265
+#endif
 
 #ifndef NSINTEGER_DEFINED
 typedef int NSInteger;
 typedef unsigned int NSUInteger;
-#endif
-
-#ifndef __has_feature
-#define __has_feature(x) 0
 #endif
 
 #ifndef USE_ARC
@@ -59,6 +62,11 @@ typedef unsigned int NSUInteger;
 
 #if !USE_ARC
 #define __unsafe_unretained
+#define __autoreleasing
+#endif
+
+#if !__has_feature (objc_instancetype)
+typedef id instancetype;
 #endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
@@ -83,9 +91,9 @@ typedef unsigned int NSUInteger;
 @end
 
 @interface NSString (Emacs)
-+ (id)stringWithLispString:(Lisp_Object)lispString;
-+ (id)stringWithUTF8LispString:(Lisp_Object)lispString;
-+ (id)stringWithUTF8String:(const char *)bytes fallback:(BOOL)flag;
++ (instancetype)stringWithLispString:(Lisp_Object)lispString;
++ (instancetype)stringWithUTF8LispString:(Lisp_Object)lispString;
++ (instancetype)stringWithUTF8String:(const char *)bytes fallback:(BOOL)flag;
 - (Lisp_Object)lispString;
 - (Lisp_Object)UTF8LispString;
 - (Lisp_Object)UTF16LispString;
@@ -99,6 +107,7 @@ typedef unsigned int NSUInteger;
 @interface NSEvent (Emacs)
 - (NSEvent *)mouseEventByChangingType:(NSEventType)type
 		          andLocation:(NSPoint)location;
+- (CGEventRef)coreGraphicsEvent;
 @end
 
 @interface NSAttributedString (Emacs)
@@ -111,7 +120,7 @@ typedef unsigned int NSUInteger;
 @end
 
 @interface NSImage (Emacs)
-+ (id)imageWithCGImage:(CGImageRef)cgImage exclusive:(BOOL)flag;
++ (NSImage *)imageWithCGImage:(CGImageRef)cgImage exclusive:(BOOL)flag;
 @end
 
 @interface NSApplication (Emacs)
@@ -130,12 +139,17 @@ typedef unsigned int NSUInteger;
 - (BOOL)canShowMenuBar;
 @end
 
-/* Workarounds for memory leaks on OS X 10.9.  Should be removed once
-   the problem is fixed in the framework.  */
+@interface NSCursor (Emacs)
++ (NSCursor *)cursorWithThemeCursor:(ThemeCursor)shape;
+@end
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
+/* Workarounds for memory leaks on OS X 10.9.  */
 @interface NSApplication (Undocumented)
 - (void)_installMemoryPressureDispatchSources;
 - (void)_installMemoryStatusDispatchSources;
 @end
+#endif
 
 @interface EmacsApplication : NSApplication
 @end
@@ -164,7 +178,7 @@ typedef unsigned int NSUInteger;
 
   /* Non-zero means that a HELP_EVENT has been generated since Emacs
    start.  */
-  int any_help_event_p;
+  bool any_help_event_p;
 
   /* The frame on which a HELP_EVENT occurs.  */
   struct frame *emacsHelpFrame;
@@ -324,15 +338,15 @@ typedef unsigned int NSUInteger;
   /* Window manager state after the full screen transition.  */
   WMState fullScreenTargetState;
 
+  /* Toolbar visibility saved for full screen transition.  */
+  BOOL savedToolbarVisibility;
+
   /* Pointer to the Lisp symbol that is set as `fullscreen' frame
      parameter after the full screen transition.  */
   Lisp_Object *fullscreenFrameParameterAfterTransition;
-
-  /* View used for the full screen transition.  */
-  NSView *fullScreenTransitionView;
 #endif
 }
-- (id)initWithEmacsFrame:(struct frame *)emacsFrame;
+- (instancetype)initWithEmacsFrame:(struct frame *)emacsFrame;
 - (void)setupEmacsView;
 - (void)setupWindow;
 - (struct frame *)emacsFrame;
@@ -359,13 +373,16 @@ typedef unsigned int NSUInteger;
    inheritance.  */
 
 @interface EmacsView : NSView
-- (struct frame *)emacsFrame;
 @end
 
 /* Class for Emacs view that also handles input events.  Used by
    ordinary frames.  */
 
-@interface EmacsMainView : EmacsView <NSTextInput, NSTextInputClient>
+@interface EmacsMainView : EmacsView <NSTextInputClient
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+				      , NSTextInput
+#endif
+				      >
 {
   /* Target object to which the EmacsMainView object sends
      actions.  */
@@ -385,6 +402,11 @@ typedef unsigned int NSUInteger;
   /* Whether scrollRect:by: has copied rounded bottom corner area.  */
   BOOL roundedBottomCornersCopied;
 
+  /* Whether the raw key event below has mapped any of CGEvent flags.
+     It is precalculated in keyDown: so as to avoid regeneration of a
+     CGEvent object.  */
+  BOOL rawKeyEventHasMappedFlags;
+
   /* Raw key event that is interpreted by intepretKeyEvents:.  */
   NSEvent *rawKeyEvent;
 
@@ -397,6 +419,7 @@ typedef unsigned int NSUInteger;
   /* Modifiers in the last normal (non-momentum) wheel event.  */
   int savedWheelModifiers;
 }
+- (struct frame *)emacsFrame;
 - (id)target;
 - (SEL)action;
 - (void)setTarget:(id)anObject;
@@ -424,6 +447,13 @@ typedef unsigned int NSUInteger;
 - (void)setShowsResizeIndicator:(BOOL)flag;
 - (void)adjustWindowFrame;
 @end
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
+/* Class for view used in full screen transition animations.  */
+
+@interface EmacsFullScreenTransitionView : NSView
+@end
+#endif
 
 /* Class for scroller that doesn't do modal mouse tracking.  */
 
@@ -484,13 +514,9 @@ typedef unsigned int NSUInteger;
      scroller area.  */
   CGFloat clickPositionInFrame;
 
-  /* For a scroller click with the control modifier, this becomes the
-     value of the `code' member in struct input_event.  */
-  int inputEventCode;
-
-  /* For a scroller click with the control modifier, this becomes the
-     value of the `modifiers' member in struct input_event.  */
-  int inputEventModifiers;
+  /* This is used for saving the `code' and `modifiers' members of an
+     input event for a scroller click with the control modifier.  */
+  struct input_event inputEvent;
 }
 - (void)setEmacsScrollBar:(struct scroll_bar *)bar;
 - (struct scroll_bar *)emacsScrollBar;
@@ -499,7 +525,7 @@ typedef unsigned int NSUInteger;
 - (CGFloat)knobMinEdgeInSlot;
 - (CGFloat)frameSpan;
 - (CGFloat)clickPositionInFrame;
-- (int)inputEventCode;
+- (ptrdiff_t)inputEventCode;
 - (int)inputEventModifiers;
 @end
 
@@ -597,7 +623,7 @@ typedef unsigned int NSUInteger;
 @end
 
 @interface EmacsDialogView : NSView
-- (id)initWithWidgetValue:(widget_value *)wv;
+- (instancetype)initWithWidgetValue:(widget_value *)wv;
 @end
 
 @interface NSPasteboard (Emacs)
@@ -647,17 +673,17 @@ typedef unsigned int NSUInteger;
   /* Whether a page load has completed.  */
   BOOL isLoaded;
 }
-- (id)initWithEmacsFrame:(struct frame *)f emacsImage:(struct image *)img
-      checkImageSizeFunc:(bool (*)(struct frame *, int, int))checkImageSize
-	  imageErrorFunc:(void (*)(const char *, Lisp_Object, Lisp_Object))imageError;
-- (int)loadData:(NSData *)data backgroundColor:(NSColor *)backgroundColor;
+- (instancetype)initWithEmacsFrame:(struct frame *)f emacsImage:(struct image *)img
+		checkImageSizeFunc:(bool (*)(struct frame *, int, int))checkImageSize
+		    imageErrorFunc:(void (*)(const char *, Lisp_Object, Lisp_Object))imageError;
+- (bool)loadData:(NSData *)data backgroundColor:(NSColor *)backgroundColor;
 @end
 
 /* Protocol for document rasterization.  */
 
 @protocol EmacsDocumentRasterizer <NSObject>
-- (id)initWithURL:(NSURL *)url;
-- (id)initWithData:(NSData *)data;
+- (instancetype)initWithURL:(NSURL *)url options:(NSDictionary *)options;
+- (instancetype)initWithData:(NSData *)data options:(NSDictionary *)options;
 + (NSArray *)supportedTypes;
 - (NSUInteger)pageCount;
 - (NSSize)integralSizeOfPageAtIndex:(NSUInteger)index;
@@ -683,8 +709,8 @@ typedef unsigned int NSUInteger;
   NSTextStorage *textStorage;
   NSDictionary *documentAttributes;
 }
-- (id)initWithAttributedString:(NSAttributedString *)anAttributedString
-	    documentAttributes:(NSDictionary *)docAttributes;
+- (instancetype)initWithAttributedString:(NSAttributedString *)anAttributedString
+		      documentAttributes:(NSDictionary *)docAttributes;
 @end
 
 @interface EmacsFrameController (Accessibility)
@@ -800,6 +826,13 @@ typedef unsigned int NSUInteger;
 @end
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+@interface NSFileManager (AvailableOn1080AndLater)
+- (BOOL)trashItemAtURL:(NSURL *)url resultingItemURL:(NSURL **)outResultingURL
+		 error:(NSError **)error;
+@end
+#endif
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
 enum {
   NSApplicationPresentationDefault			= 0,
@@ -830,6 +863,17 @@ typedef NSUInteger NSApplicationPresentationOptions;
 enum {
   NSApplicationPresentationFullScreen			= 1 << 10,
   NSApplicationPresentationAutoHideToolbar		= 1 << 11
+};
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+enum {
+  NSModalResponseAbort		= NSRunAbortedResponse,
+  NSModalResponseContinue	= NSRunContinuesResponse
+};
+
+enum {
+  NSModalResponseOK	= NSOKButton
 };
 #endif
 
@@ -902,6 +946,17 @@ enum {
 @end
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
+@interface NSCursor (AvailableOn1060AndLater)
++ (NSCursor *)dragLinkCursor;
++ (NSCursor *)dragCopyCursor;
++ (NSCursor *)contextualMenuCursor;
+/* The documentation says it is available on Mac OS X 10.5, but
+   actually it was not declared in the header.  */
++ (NSCursor *)operationNotAllowedCursor;
+@end
+#endif
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 @interface NSSavePanel (AvailableOn1090AndLater)
 - (void)setShowsTagField:(BOOL)flag;
@@ -912,6 +967,13 @@ enum {
 @interface NSMenu (AvailableOn1060AndLater)
 - (BOOL)popUpMenuPositioningItem:(NSMenuItem *)item
 		      atLocation:(NSPoint)location inView:(NSView *)view;
+@end
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+@interface NSEvent (AvailableOn1050AndLater)
+- (CGEventRef)CGEvent;
+- (const void * /* EventRef */)eventRef;
 @end
 #endif
 

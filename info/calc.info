@@ -1,16 +1,15 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/calc.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/calc.texi.
+This is ../../info/calc.info, produced by makeinfo version 4.13 from
+./calc.texi.
 
 This file documents Calc, the GNU Emacs calculator.
 
-Copyright (C) 1990-1991, 2001-2013 Free Software Foundation, Inc.
+Copyright (C) 1990-1991, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
      Foundation; with the Invariant Sections being just "GNU GENERAL
-     PUBLIC LICENSE", with the Front-Cover texts being "A GNU Manual,"
+     PUBLIC LICENSE", with the Front-Cover Texts being "A GNU Manual,"
      and with the Back-Cover Texts as in (a) below.  A copy of the
      license is included in the section entitled "GNU Free
      Documentation License."
@@ -26,8 +25,8 @@ END-INFO-DIR-ENTRY
 
 File: calc.info,  Node: Top,  Next: Getting Started,  Prev: (dir),  Up: (dir)
 
-1 The GNU Emacs Calculator
-**************************
+The GNU Emacs Calculator
+************************
 
 "Calc" is an advanced desk calculator and mathematical tool written by
 Dave Gillespie that runs as part of the GNU Emacs environment.
@@ -44,13 +43,13 @@ tutorial.)
 
    This file documents Calc, the GNU Emacs calculator.
 
-   Copyright (C) 1990-1991, 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 1990-1991, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
      Foundation; with the Invariant Sections being just "GNU GENERAL
-     PUBLIC LICENSE", with the Front-Cover texts being "A GNU Manual,"
+     PUBLIC LICENSE", with the Front-Cover Texts being "A GNU Manual,"
      and with the Back-Cover Texts as in (a) below.  A copy of the
      license is included in the section entitled "GNU Free
      Documentation License."
@@ -98,7 +97,7 @@ tutorial.)
 
 File: calc.info,  Node: Getting Started,  Next: Interactive Tutorial,  Prev: Top,  Up: Top
 
-2 Getting Started
+1 Getting Started
 *****************
 
 This chapter provides a general overview of Calc, the GNU Emacs
@@ -117,7 +116,7 @@ what are the various ways that it can be used.
 
 File: calc.info,  Node: What is Calc,  Next: About This Manual,  Prev: Getting Started,  Up: Getting Started
 
-2.1 What is Calc?
+1.1 What is Calc?
 =================
 
 "Calc" is an advanced calculator and mathematical tool that runs as
@@ -169,7 +168,7 @@ and freedom.
 
 File: calc.info,  Node: About This Manual,  Next: Notations Used in This Manual,  Prev: What is Calc,  Up: Getting Started
 
-2.2 About This Manual
+1.2 About This Manual
 =====================
 
 This document serves as a complete description of the GNU Emacs
@@ -241,7 +240,7 @@ or
 
 File: calc.info,  Node: Notations Used in This Manual,  Next: Demonstration of Calc,  Prev: About This Manual,  Up: Getting Started
 
-2.3 Notations Used in This Manual
+1.3 Notations Used in This Manual
 =================================
 
 This section describes the various notations that are used throughout
@@ -281,7 +280,7 @@ algebraic-style formula would be `cos(X)'.
 
 File: calc.info,  Node: Demonstration of Calc,  Next: Using Calc,  Prev: Notations Used in This Manual,  Up: Getting Started
 
-2.4 A Demonstration of Calc
+1.4 A Demonstration of Calc
 ===========================
 
 This section will show some typical small problems being solved with
@@ -403,7 +402,7 @@ To exit from Calc, press `q' or `C-x * c' again.
 
 File: calc.info,  Node: Using Calc,  Next: History and Acknowledgments,  Prev: Demonstration of Calc,  Up: Getting Started
 
-2.5 Using Calc
+1.5 Using Calc
 ==============
 
 Calc has several user interfaces that are specialized for different
@@ -423,7 +422,7 @@ mode, Keypad mode, and Embedded mode.
 
 File: calc.info,  Node: Starting Calc,  Next: The Standard Interface,  Prev: Using Calc,  Up: Using Calc
 
-2.5.1 Starting Calc
+1.5.1 Starting Calc
 -------------------
 
 On most systems, you can type `C-x *' to start the Calculator.  The key
@@ -455,7 +454,7 @@ Calculator also turn it off if it is already on.
 
 File: calc.info,  Node: The Standard Interface,  Next: Quick Mode Overview,  Prev: Starting Calc,  Up: Using Calc
 
-2.5.2 The Standard Calc Interface
+1.5.2 The Standard Calc Interface
 ---------------------------------
 
 Calc's standard interface acts like a traditional RPN calculator,
@@ -542,7 +541,7 @@ switch back into Calc when you are done.
 
 File: calc.info,  Node: Quick Mode Overview,  Next: Keypad Mode Overview,  Prev: The Standard Interface,  Up: Using Calc
 
-2.5.3 Quick Mode (Overview)
+1.5.3 Quick Mode (Overview)
 ---------------------------
 
 "Quick mode" is a quick way to use Calc when you don't need the full
@@ -566,7 +565,7 @@ go into regular Calc (with `C-x * c') to change the mode settings.
 
 File: calc.info,  Node: Keypad Mode Overview,  Next: Standalone Operation,  Prev: Quick Mode Overview,  Up: Using Calc
 
-2.5.4 Keypad Mode (Overview)
+1.5.4 Keypad Mode (Overview)
 ----------------------------
 
 "Keypad mode" is a mouse-based interface to the Calculator.  It is
@@ -633,7 +632,7 @@ the stack in the lower right, and the trail on top.
 
 File: calc.info,  Node: Standalone Operation,  Next: Embedded Mode Overview,  Prev: Keypad Mode Overview,  Up: Using Calc
 
-2.5.5 Standalone Operation
+1.5.5 Standalone Operation
 --------------------------
 
 If you are not in Emacs at the moment but you wish to use Calc, you
@@ -654,7 +653,7 @@ clicking on the keypad <EXIT> button) quits Emacs itself.
 
 File: calc.info,  Node: Embedded Mode Overview,  Next: Other C-x * Commands,  Prev: Standalone Operation,  Up: Using Calc
 
-2.5.6 Embedded Mode (Overview)
+1.5.6 Embedded Mode (Overview)
 ------------------------------
 
 "Embedded mode" is a way to use Calc directly from inside an editing
@@ -760,7 +759,7 @@ to exit Embedded mode.
 
 File: calc.info,  Node: Other C-x * Commands,  Prev: Embedded Mode Overview,  Up: Using Calc
 
-2.5.7 Other `C-x *' Commands
+1.5.7 Other `C-x *' Commands
 ----------------------------
 
 Two more Calc-related commands are `C-x * g' and `C-x * r', which
@@ -906,7 +905,7 @@ Miscellaneous commands:
 
 File: calc.info,  Node: History and Acknowledgments,  Prev: Using Calc,  Up: Getting Started
 
-2.6 History and Acknowledgments
+1.6 History and Acknowledgments
 ===============================
 
 Calc was originally started as a two-week project to occupy a lull in
@@ -998,7 +997,7 @@ would have been finished in two weeks.
 
 File: calc.info,  Node: Interactive Tutorial,  Next: Tutorial,  Prev: Getting Started,  Up: Top
 
-3 Tutorial
+2 Tutorial
 **********
 
 Some brief instructions on using the Emacs Info system for this
@@ -1030,7 +1029,7 @@ where you were before.
 
 File: calc.info,  Node: Tutorial,  Next: Introduction,  Prev: Interactive Tutorial,  Up: Top
 
-4 Tutorial
+3 Tutorial
 **********
 
 This chapter explains how to use Calc and its many features, in a
@@ -1075,7 +1074,7 @@ a printed summary.  *Note Summary::.
 
 File: calc.info,  Node: Basic Tutorial,  Next: Arithmetic Tutorial,  Prev: Tutorial,  Up: Tutorial
 
-4.1 Basic Tutorial
+3.1 Basic Tutorial
 ==================
 
 In this section, we learn how RPN and algebraic-style calculations
@@ -1092,7 +1091,7 @@ control various modes of the Calculator.
 
 File: calc.info,  Node: RPN Tutorial,  Next: Algebraic Tutorial,  Prev: Basic Tutorial,  Up: Basic Tutorial
 
-4.1.1 RPN Calculations and the Stack
+3.1.1 RPN Calculations and the Stack
 ------------------------------------
 
 Calc normally uses RPN notation.  You may be familiar with the RPN
@@ -1393,7 +1392,7 @@ second-to-top element of the stack:
 
 File: calc.info,  Node: Algebraic Tutorial,  Next: Undo Tutorial,  Prev: RPN Tutorial,  Up: Basic Tutorial
 
-4.1.2 Algebraic-Style Calculations
+3.1.2 Algebraic-Style Calculations
 ----------------------------------
 
 If you are not used to RPN notation, you may prefer to operate the
@@ -1631,7 +1630,7 @@ when we discuss the algebra and calculus features of the Calculator.
 
 File: calc.info,  Node: Undo Tutorial,  Next: Modes Tutorial,  Prev: Algebraic Tutorial,  Up: Basic Tutorial
 
-4.1.3 Undo and Redo
+3.1.3 Undo and Redo
 -------------------
 
 If you make a mistake, you can usually correct it by pressing shift-`U',
@@ -1749,7 +1748,7 @@ formula.
 
 File: calc.info,  Node: Modes Tutorial,  Prev: Undo Tutorial,  Up: Basic Tutorial
 
-4.1.4 Mode-Setting Commands
+3.1.4 Mode-Setting Commands
 ---------------------------
 
 Calc has many types of "modes" that affect the way it interprets your
@@ -2109,7 +2108,7 @@ every time you change any mode that might affect their values.
 
 File: calc.info,  Node: Arithmetic Tutorial,  Next: Vector/Matrix Tutorial,  Prev: Basic Tutorial,  Up: Tutorial
 
-4.2 Arithmetic Tutorial
+3.2 Arithmetic Tutorial
 =======================
 
 In this section, we explore the arithmetic and scientific functions
@@ -2390,7 +2389,7 @@ on binary numbers (like `and', `xor', and `lsh').
 
 File: calc.info,  Node: Vector/Matrix Tutorial,  Next: Types Tutorial,  Prev: Arithmetic Tutorial,  Up: Tutorial
 
-4.3 Vector/Matrix Tutorial
+3.3 Vector/Matrix Tutorial
 ==========================
 
 A "vector" is a list of numbers or other Calc data objects.  Calc
@@ -2407,7 +2406,7 @@ as a list of objects.
 
 File: calc.info,  Node: Vector Analysis Tutorial,  Next: Matrix Tutorial,  Prev: Vector/Matrix Tutorial,  Up: Vector/Matrix Tutorial
 
-4.3.1 Vector Analysis
+3.3.1 Vector Analysis
 ---------------------
 
 If you add two vectors, the result is a vector of the sums of the
@@ -2502,7 +2501,7 @@ position of the particle.  *Note 2: Vector Answer 2. (*)
 
 File: calc.info,  Node: Matrix Tutorial,  Next: List Tutorial,  Prev: Vector Analysis Tutorial,  Up: Vector/Matrix Tutorial
 
-4.3.2 Matrices
+3.3.2 Matrices
 --------------
 
 A "matrix" is just a vector of vectors, all the same length.  This
@@ -2694,7 +2693,7 @@ equations.  Use Calc to solve the following over-determined system:
 
 File: calc.info,  Node: List Tutorial,  Prev: Matrix Tutorial,  Up: Vector/Matrix Tutorial
 
-4.3.3 Vectors as Lists
+3.3.3 Vectors as Lists
 ----------------------
 
 Although Calc has a number of features for manipulating vectors and
@@ -3189,7 +3188,7 @@ vector of the cosine and sine of an angle.)  *Note 14: List Answer 14.
 
 File: calc.info,  Node: Types Tutorial,  Next: Algebra Tutorial,  Prev: Vector/Matrix Tutorial,  Up: Tutorial
 
-4.4 Types Tutorial
+3.4 Types Tutorial
 ==================
 
 Calc understands a variety of data types as well as simple numbers.  In
@@ -3363,7 +3362,7 @@ several months.  *Note Date Arithmetic::, for more.
 *Note 5: Types Answer 5. (*)
 
    (*) *Exercise 6.*  How many leap years will there be between now and
-the year 10001 A.D.?  *Note 6: Types Answer 6. (*)
+the year 10001 AD?  *Note 6: Types Answer 6. (*)
 
    An "error form" represents a mean value with an attached standard
 deviation, or error estimate.  Suppose our measurements indicate that a
@@ -3581,7 +3580,7 @@ still travel legally on most US highways?  *Note 15: Types Answer 15.
 
 File: calc.info,  Node: Algebra Tutorial,  Next: Programming Tutorial,  Prev: Types Tutorial,  Up: Tutorial
 
-4.5 Algebra and Calculus Tutorial
+3.5 Algebra and Calculus Tutorial
 =================================
 
 This section shows how to use Calc's algebra facilities to solve
@@ -3596,7 +3595,7 @@ formulas.
 
 File: calc.info,  Node: Basic Algebra Tutorial,  Next: Rewrites Tutorial,  Prev: Algebra Tutorial,  Up: Algebra Tutorial
 
-4.5.1 Basic Algebra
+3.5.1 Basic Algebra
 -------------------
 
 If you enter a formula in Algebraic mode that refers to variables, the
@@ -3939,7 +3938,7 @@ examples.
 
 File: calc.info,  Node: Rewrites Tutorial,  Prev: Basic Algebra Tutorial,  Up: Algebra Tutorial
 
-4.5.2 Rewrite Rules
+3.5.2 Rewrite Rules
 -------------------
 
 No matter how many built-in commands Calc provided for doing algebra,
@@ -4275,7 +4274,7 @@ nasty surprise when you use Calc to balance your checkbook!)
 
 File: calc.info,  Node: Programming Tutorial,  Next: Answers to Exercises,  Prev: Algebra Tutorial,  Up: Tutorial
 
-4.6 Programming Tutorial
+3.6 Programming Tutorial
 ========================
 
 The Calculator is written entirely in Emacs Lisp, a highly extensible
@@ -4721,7 +4720,7 @@ tutorial.  The rest of this manual tells the whole story.
 
 File: calc.info,  Node: Answers to Exercises,  Prev: Programming Tutorial,  Up: Tutorial
 
-4.7 Answers to Exercises
+3.7 Answers to Exercises
 ========================
 
 This section includes answers to all the exercises in the Calc tutorial.
@@ -4801,7 +4800,7 @@ This section includes answers to all the exercises in the Calc tutorial.
 
 File: calc.info,  Node: RPN Answer 1,  Next: RPN Answer 2,  Prev: Answers to Exercises,  Up: Answers to Exercises
 
-4.7.1 RPN Tutorial Exercise 1
+3.7.1 RPN Tutorial Exercise 1
 -----------------------------
 
 `1 <RET> 2 <RET> 3 <RET> 4 + * -'
@@ -4811,7 +4810,7 @@ File: calc.info,  Node: RPN Answer 1,  Next: RPN Answer 2,  Prev: Answers to Exe
 
 File: calc.info,  Node: RPN Answer 2,  Next: RPN Answer 3,  Prev: RPN Answer 1,  Up: Answers to Exercises
 
-4.7.2 RPN Tutorial Exercise 2
+3.7.2 RPN Tutorial Exercise 2
 -----------------------------
 
 `2*4 + 7*9.5 + 5/4 = 75.75'
@@ -4854,7 +4853,7 @@ choose is purely a matter of taste.
 
 File: calc.info,  Node: RPN Answer 3,  Next: RPN Answer 4,  Prev: RPN Answer 2,  Up: Answers to Exercises
 
-4.7.3 RPN Tutorial Exercise 3
+3.7.3 RPN Tutorial Exercise 3
 -----------------------------
 
 The <TAB> key provides a way to operate on the number in level 2.
@@ -4879,7 +4878,7 @@ The <TAB> key provides a way to operate on the number in level 2.
 
 File: calc.info,  Node: RPN Answer 4,  Next: Algebraic Answer 1,  Prev: RPN Answer 3,  Up: Answers to Exercises
 
-4.7.4 RPN Tutorial Exercise 4
+3.7.4 RPN Tutorial Exercise 4
 -----------------------------
 
 Either `( 2 , 3 )' or `( 2 <SPC> 3 )' would have worked, but using both
@@ -4911,7 +4910,7 @@ exhibit the "feature" that tripped poor Joe.)
 
 File: calc.info,  Node: Algebraic Answer 1,  Next: Algebraic Answer 2,  Prev: RPN Answer 4,  Up: Answers to Exercises
 
-4.7.5 Algebraic Entry Tutorial Exercise 1
+3.7.5 Algebraic Entry Tutorial Exercise 1
 -----------------------------------------
 
 Type `' sqrt($) <RET>'.
@@ -4926,7 +4925,7 @@ closer equivalent, since `9^0.5' yields `3.0' whereas `sqrt(9)' and
 
 File: calc.info,  Node: Algebraic Answer 2,  Next: Algebraic Answer 3,  Prev: Algebraic Answer 1,  Up: Answers to Exercises
 
-4.7.6 Algebraic Entry Tutorial Exercise 2
+3.7.6 Algebraic Entry Tutorial Exercise 2
 -----------------------------------------
 
 In the formula `2 x (1+y)', `x' was interpreted as a function name with
@@ -4937,7 +4936,7 @@ symbol here:  `2 x*(1+y)'.
 
 File: calc.info,  Node: Algebraic Answer 3,  Next: Modes Answer 1,  Prev: Algebraic Answer 2,  Up: Answers to Exercises
 
-4.7.7 Algebraic Entry Tutorial Exercise 3
+3.7.7 Algebraic Entry Tutorial Exercise 3
 -----------------------------------------
 
 The result from `1 <RET> 0 /' will be the formula `1 / 0'.  The
@@ -4955,7 +4954,7 @@ discussion of infinite and indeterminate values.
 
 File: calc.info,  Node: Modes Answer 1,  Next: Modes Answer 2,  Prev: Algebraic Answer 3,  Up: Answers to Exercises
 
-4.7.8 Modes Tutorial Exercise 1
+3.7.8 Modes Tutorial Exercise 1
 -------------------------------
 
 Calc always stores its numbers in decimal, so even though one-third has
@@ -5017,7 +5016,7 @@ you use a relatively unusual radix like 3.
 
 File: calc.info,  Node: Modes Answer 2,  Next: Modes Answer 3,  Prev: Modes Answer 1,  Up: Answers to Exercises
 
-4.7.9 Modes Tutorial Exercise 2
+3.7.9 Modes Tutorial Exercise 2
 -------------------------------
 
 If the radix is 15 or higher, we can't use the letter `e' to mark the
@@ -5040,7 +5039,7 @@ number into a file and later moved it back into Calc.
 
 File: calc.info,  Node: Modes Answer 3,  Next: Modes Answer 4,  Prev: Modes Answer 2,  Up: Answers to Exercises
 
-4.7.10 Modes Tutorial Exercise 3
+3.7.10 Modes Tutorial Exercise 3
 --------------------------------
 
 The answer he got was `0.5000000000006399'.
@@ -5075,7 +5074,7 @@ for the higher precision to be meaningful.
 
 File: calc.info,  Node: Modes Answer 4,  Next: Arithmetic Answer 1,  Prev: Modes Answer 3,  Up: Answers to Exercises
 
-4.7.11 Modes Tutorial Exercise 4
+3.7.11 Modes Tutorial Exercise 4
 --------------------------------
 
 Many calculations involve real-world quantities, like the width and
@@ -5098,7 +5097,7 @@ floating-point answer.
 
 File: calc.info,  Node: Arithmetic Answer 1,  Next: Arithmetic Answer 2,  Prev: Modes Answer 4,  Up: Answers to Exercises
 
-4.7.12 Arithmetic Tutorial Exercise 1
+3.7.12 Arithmetic Tutorial Exercise 1
 -------------------------------------
 
 Dividing two integers that are larger than the current precision may
@@ -5117,7 +5116,7 @@ command without ever switching to floating-point format.
 
 File: calc.info,  Node: Arithmetic Answer 2,  Next: Vector Answer 1,  Prev: Arithmetic Answer 1,  Up: Answers to Exercises
 
-4.7.13 Arithmetic Tutorial Exercise 2
+3.7.13 Arithmetic Tutorial Exercise 2
 -------------------------------------
 
 `27 <RET> 9 B' could give the exact result `3:2', but it does a
@@ -5131,7 +5130,7 @@ numbers for an exact answer, so Calc doesn't try.
 
 File: calc.info,  Node: Vector Answer 1,  Next: Vector Answer 2,  Prev: Arithmetic Answer 2,  Up: Answers to Exercises
 
-4.7.14 Vector Tutorial Exercise 1
+3.7.14 Vector Tutorial Exercise 1
 ---------------------------------
 
 Duplicate the vector, compute its length, then divide the vector by its
@@ -5149,7 +5148,7 @@ have unit length.
 
 File: calc.info,  Node: Vector Answer 2,  Next: Matrix Answer 1,  Prev: Vector Answer 1,  Up: Answers to Exercises
 
-4.7.15 Vector Tutorial Exercise 2
+3.7.15 Vector Tutorial Exercise 2
 ---------------------------------
 
 The average position is equal to the sum of the products of the
@@ -5160,7 +5159,7 @@ put the two vectors on the stack and press `*'.
 
 File: calc.info,  Node: Matrix Answer 1,  Next: Matrix Answer 2,  Prev: Vector Answer 2,  Up: Answers to Exercises
 
-4.7.16 Matrix Tutorial Exercise 1
+3.7.16 Matrix Tutorial Exercise 1
 ---------------------------------
 
 The trick is to multiply by a vector of ones.  Use `r 4 [1 1 1] *' to
@@ -5169,7 +5168,7 @@ get the row sum.  Similarly, use `[1 1] r 4 *' to get the column sum.
 
 File: calc.info,  Node: Matrix Answer 2,  Next: Matrix Answer 3,  Prev: Matrix Answer 1,  Up: Answers to Exercises
 
-4.7.17 Matrix Tutorial Exercise 2
+3.7.17 Matrix Tutorial Exercise 2
 ---------------------------------
 
         x + a y = 6
@@ -5197,7 +5196,7 @@ mode:
 
 File: calc.info,  Node: Matrix Answer 3,  Next: List Answer 1,  Prev: Matrix Answer 2,  Up: Answers to Exercises
 
-4.7.18 Matrix Tutorial Exercise 3
+3.7.18 Matrix Tutorial Exercise 3
 ---------------------------------
 
 To solve `trn(A) * A * X = trn(A) * B', first we compute `A2 = trn(A) *
@@ -5258,7 +5257,7 @@ This is reasonably close to our original `B' vector, `[6, 2, 3, 11]'.
 
 File: calc.info,  Node: List Answer 1,  Next: List Answer 2,  Prev: Matrix Answer 3,  Up: Answers to Exercises
 
-4.7.19 List Tutorial Exercise 1
+3.7.19 List Tutorial Exercise 1
 -------------------------------
 
 We can use `v x' to build a vector of integers.  This needs to be
@@ -5282,7 +5281,7 @@ Now we use `V M ^' to map the exponentiation operator across the vector.
 
 File: calc.info,  Node: List Answer 2,  Next: List Answer 3,  Prev: List Answer 1,  Up: Answers to Exercises
 
-4.7.20 List Tutorial Exercise 2
+3.7.20 List Tutorial Exercise 2
 -------------------------------
 
 Given `x' and `y' vectors in quick variables 1 and 2 as before, the
@@ -5331,7 +5330,7 @@ fits.  *Note Curve Fitting::.
 
 File: calc.info,  Node: List Answer 3,  Next: List Answer 4,  Prev: List Answer 2,  Up: Answers to Exercises
 
-4.7.21 List Tutorial Exercise 3
+3.7.21 List Tutorial Exercise 3
 -------------------------------
 
 Move to one end of the list and press `C-@' (or `C-<SPC>' or whatever)
@@ -5363,7 +5362,7 @@ that power.)
 
 File: calc.info,  Node: List Answer 4,  Next: List Answer 5,  Prev: List Answer 3,  Up: Answers to Exercises
 
-4.7.22 List Tutorial Exercise 4
+3.7.22 List Tutorial Exercise 4
 -------------------------------
 
 A number `j' is a divisor of `n' if `n % j = 0'.  The first step is to
@@ -5393,7 +5392,7 @@ simple `*' would have worked equally well.
 
 File: calc.info,  Node: List Answer 5,  Next: List Answer 6,  Prev: List Answer 4,  Up: Answers to Exercises
 
-4.7.23 List Tutorial Exercise 5
+3.7.23 List Tutorial Exercise 5
 -------------------------------
 
 The obvious first step is to obtain the list of factors with `k f'.
@@ -5424,7 +5423,7 @@ convenient way to do the above test in practice.
 
 File: calc.info,  Node: List Answer 6,  Next: List Answer 7,  Prev: List Answer 5,  Up: Answers to Exercises
 
-4.7.24 List Tutorial Exercise 6
+3.7.24 List Tutorial Exercise 6
 -------------------------------
 
 First use `v x 6 <RET>' to get a list of integers, then `V M v x' to
@@ -5433,7 +5432,7 @@ get a list of lists of integers!
 
 File: calc.info,  Node: List Answer 7,  Next: List Answer 8,  Prev: List Answer 6,  Up: Answers to Exercises
 
-4.7.25 List Tutorial Exercise 7
+3.7.25 List Tutorial Exercise 7
 -------------------------------
 
 Here's one solution.  First, compute the triangular list from the
@@ -5486,7 +5485,7 @@ the sum of its elements.)
 
 File: calc.info,  Node: List Answer 8,  Next: List Answer 9,  Prev: List Answer 7,  Up: Answers to Exercises
 
-4.7.26 List Tutorial Exercise 8
+3.7.26 List Tutorial Exercise 8
 -------------------------------
 
 The first step is to build a list of values of `x'.
@@ -5552,7 +5551,7 @@ you can see, our simple search got quite close to the right answer.
 
 File: calc.info,  Node: List Answer 9,  Next: List Answer 10,  Prev: List Answer 8,  Up: Answers to Exercises
 
-4.7.27 List Tutorial Exercise 9
+3.7.27 List Tutorial Exercise 9
 -------------------------------
 
 Step one is to convert our integer into vector notation.
@@ -5633,7 +5632,7 @@ Another way to do this final step would be to reduce the formula
 
 File: calc.info,  Node: List Answer 10,  Next: List Answer 11,  Prev: List Answer 9,  Up: Answers to Exercises
 
-4.7.28 List Tutorial Exercise 10
+3.7.28 List Tutorial Exercise 10
 --------------------------------
 
 For the list `[a, b, c, d]', the result is `((a = b) = c) = d', which
@@ -5657,7 +5656,7 @@ This is not at all what Joe wanted.
 
 File: calc.info,  Node: List Answer 11,  Next: List Answer 12,  Prev: List Answer 10,  Up: Answers to Exercises
 
-4.7.29 List Tutorial Exercise 11
+3.7.29 List Tutorial Exercise 11
 --------------------------------
 
 The circle of unit radius consists of those points `(x,y)' for which
@@ -5707,7 +5706,7 @@ full-sized display of vectors.
 
 File: calc.info,  Node: List Answer 12,  Next: List Answer 13,  Prev: List Answer 11,  Up: Answers to Exercises
 
-4.7.30 List Tutorial Exercise 12
+3.7.30 List Tutorial Exercise 12
 --------------------------------
 
 This problem can be made a lot easier by taking advantage of some
@@ -5782,7 +5781,7 @@ full-sized display of vectors.
 
 File: calc.info,  Node: List Answer 13,  Next: List Answer 14,  Prev: List Answer 12,  Up: Answers to Exercises
 
-4.7.31 List Tutorial Exercise 13
+3.7.31 List Tutorial Exercise 13
 --------------------------------
 
 First, we put the string on the stack as a vector of ASCII codes.
@@ -5869,7 +5868,7 @@ modulo some value M.
 
 File: calc.info,  Node: List Answer 14,  Next: Types Answer 1,  Prev: List Answer 13,  Up: Answers to Exercises
 
-4.7.32 List Tutorial Exercise 14
+3.7.32 List Tutorial Exercise 14
 --------------------------------
 
 We want to use `H V U' to nest a function which adds a random step to
@@ -5925,7 +5924,7 @@ Schwartz.)
 
 File: calc.info,  Node: Types Answer 1,  Next: Types Answer 2,  Prev: List Answer 14,  Up: Answers to Exercises
 
-4.7.33 Types Tutorial Exercise 1
+3.7.33 Types Tutorial Exercise 1
 --------------------------------
 
 If the number is the square root of `pi' times a rational number, then
@@ -5960,7 +5959,7 @@ to the current precision before they begin.
 
 File: calc.info,  Node: Types Answer 2,  Next: Types Answer 3,  Prev: Types Answer 1,  Up: Answers to Exercises
 
-4.7.34 Types Tutorial Exercise 2
+3.7.34 Types Tutorial Exercise 2
 --------------------------------
 
 `inf / inf = nan'.  Perhaps `1' is the "obvious" answer.  But if
@@ -5996,7 +5995,7 @@ turned on Infinite mode.  Otherwise, it will treat `ln(0)' as an error.
 
 File: calc.info,  Node: Types Answer 3,  Next: Types Answer 4,  Prev: Types Answer 2,  Up: Answers to Exercises
 
-4.7.35 Types Tutorial Exercise 3
+3.7.35 Types Tutorial Exercise 3
 --------------------------------
 
 We can make `inf - inf' be any real number we like, say, `a', just by
@@ -6020,7 +6019,7 @@ what the true answer is.
 
 File: calc.info,  Node: Types Answer 4,  Next: Types Answer 5,  Prev: Types Answer 3,  Up: Answers to Exercises
 
-4.7.36 Types Tutorial Exercise 4
+3.7.36 Types Tutorial Exercise 4
 --------------------------------
 
      2:  0@ 47' 26"              1:  0@ 2' 47.411765"
@@ -6042,7 +6041,7 @@ The album would be 53 minutes and 6 seconds long.
 
 File: calc.info,  Node: Types Answer 5,  Next: Types Answer 6,  Prev: Types Answer 4,  Up: Answers to Exercises
 
-4.7.37 Types Tutorial Exercise 5
+3.7.37 Types Tutorial Exercise 5
 --------------------------------
 
 Let's suppose it's January 14, 1991.  The easiest thing to do is to
@@ -6069,7 +6068,7 @@ to map over:
 
          v x 6 <RET>                  V M t I
 
-Et voila`, September 13, 1991 is a Friday.
+Et voilà, September 13, 1991 is a Friday.
 
      1:  242
          .
@@ -6081,7 +6080,7 @@ And the answer to our original question:  242 days to go.
 
 File: calc.info,  Node: Types Answer 6,  Next: Types Answer 7,  Prev: Types Answer 5,  Up: Answers to Exercises
 
-4.7.38 Types Tutorial Exercise 6
+3.7.38 Types Tutorial Exercise 6
 --------------------------------
 
 The full rule for leap years is that they occur in every year divisible
@@ -6118,7 +6117,7 @@ information in that regard.)
 
 File: calc.info,  Node: Types Answer 7,  Next: Types Answer 8,  Prev: Types Answer 6,  Up: Answers to Exercises
 
-4.7.39 Types Tutorial Exercise 7
+3.7.39 Types Tutorial Exercise 7
 --------------------------------
 
 The relative errors must be converted to absolute errors so that `+/-'
@@ -6152,7 +6151,7 @@ Thus the volume is 6316 cubic centimeters, within about 11 percent.
 
 File: calc.info,  Node: Types Answer 8,  Next: Types Answer 9,  Prev: Types Answer 7,  Up: Answers to Exercises
 
-4.7.40 Types Tutorial Exercise 8
+3.7.40 Types Tutorial Exercise 8
 --------------------------------
 
 The first answer is pretty simple:  `1 / (0 .. 10) = (0.1 .. inf)'.
@@ -6185,7 +6184,7 @@ case.
 
 File: calc.info,  Node: Types Answer 9,  Next: Types Answer 10,  Prev: Types Answer 8,  Up: Answers to Exercises
 
-4.7.41 Types Tutorial Exercise 9
+3.7.41 Types Tutorial Exercise 9
 --------------------------------
 
      1:  [-3 .. 3]       2:  [-3 .. 3]     2:  [0 .. 9]
@@ -6207,7 +6206,7 @@ for different numbers.
 
 File: calc.info,  Node: Types Answer 10,  Next: Types Answer 11,  Prev: Types Answer 9,  Up: Answers to Exercises
 
-4.7.42 Types Tutorial Exercise 10
+3.7.42 Types Tutorial Exercise 10
 ---------------------------------
 
 Testing the first number, we might arbitrarily choose 17 for `x'.
@@ -6247,7 +6246,7 @@ that a large integer is prime with any desired probability.
 
 File: calc.info,  Node: Types Answer 11,  Next: Types Answer 12,  Prev: Types Answer 10,  Up: Answers to Exercises
 
-4.7.43 Types Tutorial Exercise 11
+3.7.43 Types Tutorial Exercise 11
 ---------------------------------
 
 There are several ways to insert a calculated number into an HMS form.
@@ -6281,7 +6280,7 @@ number 3.14159...
 
 File: calc.info,  Node: Types Answer 12,  Next: Types Answer 13,  Prev: Types Answer 11,  Up: Answers to Exercises
 
-4.7.44 Types Tutorial Exercise 12
+3.7.44 Types Tutorial Exercise 12
 ---------------------------------
 
 As we recall, there are 17 songs of about 2 minutes and 47 seconds each.
@@ -6302,7 +6301,7 @@ No matter how long it is, the album will fit nicely on one CD.
 
 File: calc.info,  Node: Types Answer 13,  Next: Types Answer 14,  Prev: Types Answer 12,  Up: Answers to Exercises
 
-4.7.45 Types Tutorial Exercise 13
+3.7.45 Types Tutorial Exercise 13
 ---------------------------------
 
 Type `' 1 yr <RET> u c s <RET>'.  The answer is 31557600 seconds.
@@ -6310,7 +6309,7 @@ Type `' 1 yr <RET> u c s <RET>'.  The answer is 31557600 seconds.
 
 File: calc.info,  Node: Types Answer 14,  Next: Types Answer 15,  Prev: Types Answer 13,  Up: Answers to Exercises
 
-4.7.46 Types Tutorial Exercise 14
+3.7.46 Types Tutorial Exercise 14
 ---------------------------------
 
 How long will it take for a signal to get from one end of the computer
@@ -6336,7 +6335,7 @@ could actually attain the full speed of light.  Pretty tight!
 
 File: calc.info,  Node: Types Answer 15,  Next: Algebra Answer 1,  Prev: Types Answer 14,  Up: Answers to Exercises
 
-4.7.47 Types Tutorial Exercise 15
+3.7.47 Types Tutorial Exercise 15
 ---------------------------------
 
 The speed limit is 55 miles per hour on most highways.  We want to find
@@ -6363,7 +6362,7 @@ Thus Sam can take up to 14 pills without a worry.
 
 File: calc.info,  Node: Algebra Answer 1,  Next: Algebra Answer 2,  Prev: Types Answer 15,  Up: Answers to Exercises
 
-4.7.48 Algebra Tutorial Exercise 1
+3.7.48 Algebra Tutorial Exercise 1
 ----------------------------------
 
 The result `sqrt(x)^2' is simplified back to `x' by the Calculator, but
@@ -6375,7 +6374,7 @@ way to tell Calc that `x' is known to be real.)
 
 File: calc.info,  Node: Algebra Answer 2,  Next: Algebra Answer 3,  Prev: Algebra Answer 1,  Up: Answers to Exercises
 
-4.7.49 Algebra Tutorial Exercise 2
+3.7.49 Algebra Tutorial Exercise 2
 ----------------------------------
 
 Suppose our roots are `[a, b, c]'.  We want a polynomial which is zero
@@ -6404,7 +6403,7 @@ as the original polynomial.
 
 File: calc.info,  Node: Algebra Answer 3,  Next: Algebra Answer 4,  Prev: Algebra Answer 2,  Up: Answers to Exercises
 
-4.7.50 Algebra Tutorial Exercise 3
+3.7.50 Algebra Tutorial Exercise 3
 ----------------------------------
 
      1:  x sin(pi x)         1:  sin(pi x) / pi^2 - x cos(pi x) / pi
@@ -6441,7 +6440,7 @@ File: calc.info,  Node: Algebra Answer 3,  Next: Algebra Answer 4,  Prev: Algebr
 
 File: calc.info,  Node: Algebra Answer 4,  Next: Rewrites Answer 1,  Prev: Algebra Answer 3,  Up: Answers to Exercises
 
-4.7.51 Algebra Tutorial Exercise 4
+3.7.51 Algebra Tutorial Exercise 4
 ----------------------------------
 
 The hard part is that `V R +' is no longer sufficient to add up all the
@@ -6488,7 +6487,7 @@ Wow!  That's even better than the result from the Taylor series method.
 
 File: calc.info,  Node: Rewrites Answer 1,  Next: Rewrites Answer 2,  Prev: Algebra Answer 4,  Up: Answers to Exercises
 
-4.7.52 Rewrites Tutorial Exercise 1
+3.7.52 Rewrites Tutorial Exercise 1
 -----------------------------------
 
 We'll use Big mode to make the formulas more readable.
@@ -6527,7 +6526,7 @@ and cosines or the imaginary constant `i'.
 
 File: calc.info,  Node: Rewrites Answer 2,  Next: Rewrites Answer 3,  Prev: Rewrites Answer 1,  Up: Answers to Exercises
 
-4.7.53 Rewrites Tutorial Exercise 2
+3.7.53 Rewrites Tutorial Exercise 2
 -----------------------------------
 
 Here is the rule set:
@@ -6558,7 +6557,7 @@ instead of `fib' as the name of the three-argument function.
 
 File: calc.info,  Node: Rewrites Answer 3,  Next: Rewrites Answer 4,  Prev: Rewrites Answer 2,  Up: Answers to Exercises
 
-4.7.54 Rewrites Tutorial Exercise 3
+3.7.54 Rewrites Tutorial Exercise 3
 -----------------------------------
 
 He got an infinite loop.  First, Calc did as expected and rewrote
@@ -6581,7 +6580,7 @@ so that the rule matches the actual variable `x' rather than letting
 
 File: calc.info,  Node: Rewrites Answer 4,  Next: Rewrites Answer 5,  Prev: Rewrites Answer 3,  Up: Answers to Exercises
 
-4.7.55 Rewrites Tutorial Exercise 4
+3.7.55 Rewrites Tutorial Exercise 4
 -----------------------------------
 
 Here is a suitable set of rules to solve the first part of the problem:
@@ -6635,7 +6634,7 @@ rewrites will stop right away.
 
 File: calc.info,  Node: Rewrites Answer 5,  Next: Rewrites Answer 6,  Prev: Rewrites Answer 4,  Up: Answers to Exercises
 
-4.7.56 Rewrites Tutorial Exercise 5
+3.7.56 Rewrites Tutorial Exercise 5
 -----------------------------------
 
 If `x' is the sum `a + b', then `nterms(X)' must be `nterms(A)' plus
@@ -6651,7 +6650,7 @@ know that `x' is not a sum.
 
 File: calc.info,  Node: Rewrites Answer 6,  Next: Programming Answer 1,  Prev: Rewrites Answer 5,  Up: Answers to Exercises
 
-4.7.57 Rewrites Tutorial Exercise 6
+3.7.57 Rewrites Tutorial Exercise 6
 -----------------------------------
 
 Here is a rule set that will do the job:
@@ -6720,7 +6719,7 @@ probably be better to write the formatting routine in Lisp.)
 
 File: calc.info,  Node: Programming Answer 1,  Next: Programming Answer 2,  Prev: Rewrites Answer 6,  Up: Answers to Exercises
 
-4.7.58 Programming Tutorial Exercise 1
+3.7.58 Programming Tutorial Exercise 1
 --------------------------------------
 
 Just enter the formula `ninteg(sin(t)/t, t, 0, x)', type `Z F', and
@@ -6734,7 +6733,7 @@ since `t' is really a dummy variable to be used within `ninteg'.
 
 File: calc.info,  Node: Programming Answer 2,  Next: Programming Answer 3,  Prev: Programming Answer 1,  Up: Answers to Exercises
 
-4.7.59 Programming Tutorial Exercise 2
+3.7.59 Programming Tutorial Exercise 2
 --------------------------------------
 
 One way is to move the number to the top of the stack, operate on it,
@@ -6753,7 +6752,7 @@ just what we want:  `C-x ( M-- 3 n C-x )'.
 
 File: calc.info,  Node: Programming Answer 3,  Next: Programming Answer 4,  Prev: Programming Answer 2,  Up: Answers to Exercises
 
-4.7.60 Programming Tutorial Exercise 3
+3.7.60 Programming Tutorial Exercise 3
 --------------------------------------
 
 Each of these functions can be computed using the stack, or using
@@ -6785,7 +6784,7 @@ from the stack and uses it as the prefix argument for the next command.)
 
 File: calc.info,  Node: Programming Answer 4,  Next: Programming Answer 5,  Prev: Programming Answer 3,  Up: Answers to Exercises
 
-4.7.61 Programming Tutorial Exercise 4
+3.7.61 Programming Tutorial Exercise 4
 --------------------------------------
 
 Here's one way:  `C-x ( <RET> V R + <TAB> v l / C-x )'.
@@ -6793,7 +6792,7 @@ Here's one way:  `C-x ( <RET> V R + <TAB> v l / C-x )'.
 
 File: calc.info,  Node: Programming Answer 5,  Next: Programming Answer 6,  Prev: Programming Answer 4,  Up: Answers to Exercises
 
-4.7.62 Programming Tutorial Exercise 5
+3.7.62 Programming Tutorial Exercise 5
 --------------------------------------
 
      2:  1              1:  1.61803398502         2:  1.61803398502
@@ -6807,7 +6806,7 @@ This answer is quite accurate.
 
 File: calc.info,  Node: Programming Answer 6,  Next: Programming Answer 7,  Prev: Programming Answer 5,  Up: Answers to Exercises
 
-4.7.63 Programming Tutorial Exercise 6
+3.7.63 Programming Tutorial Exercise 6
 --------------------------------------
 
 Here is the matrix:
@@ -6830,7 +6829,7 @@ that it would not have been practical.
 
 File: calc.info,  Node: Programming Answer 7,  Next: Programming Answer 8,  Prev: Programming Answer 6,  Up: Answers to Exercises
 
-4.7.64 Programming Tutorial Exercise 7
+3.7.64 Programming Tutorial Exercise 7
 --------------------------------------
 
 The trick here is to compute the harmonic numbers differently, so that
@@ -6863,7 +6862,7 @@ harmonic number is 4.02.
 
 File: calc.info,  Node: Programming Answer 8,  Next: Programming Answer 9,  Prev: Programming Answer 7,  Up: Answers to Exercises
 
-4.7.65 Programming Tutorial Exercise 8
+3.7.65 Programming Tutorial Exercise 8
 --------------------------------------
 
 The first step is to compute the derivative `f'(x)' and thus the formula
@@ -6948,7 +6947,7 @@ method (among others) to look for numerical solutions to any equation.
 
 File: calc.info,  Node: Programming Answer 9,  Next: Programming Answer 10,  Prev: Programming Answer 8,  Up: Answers to Exercises
 
-4.7.66 Programming Tutorial Exercise 9
+3.7.66 Programming Tutorial Exercise 9
 --------------------------------------
 
 The first step is to adjust `z' to be greater than 5.  A simple "for"
@@ -7035,7 +7034,7 @@ To get a full 12 digits, let's use a higher precision:
 
 File: calc.info,  Node: Programming Answer 10,  Next: Programming Answer 11,  Prev: Programming Answer 9,  Up: Answers to Exercises
 
-4.7.67 Programming Tutorial Exercise 10
+3.7.67 Programming Tutorial Exercise 10
 ---------------------------------------
 
 Taking the derivative of a term of the form `x^n' will produce a term
@@ -7105,7 +7104,7 @@ against a table of powers of `x'.
 
 File: calc.info,  Node: Programming Answer 11,  Next: Programming Answer 12,  Prev: Programming Answer 10,  Up: Answers to Exercises
 
-4.7.68 Programming Tutorial Exercise 11
+3.7.68 Programming Tutorial Exercise 11
 ---------------------------------------
 
 First we define a dummy program to go on the `z s' key.  The true `z s'
@@ -7185,7 +7184,7 @@ create recursive programs in Calc.
 
 File: calc.info,  Node: Programming Answer 12,  Prev: Programming Answer 11,  Up: Answers to Exercises
 
-4.7.69 Programming Tutorial Exercise 12
+3.7.69 Programming Tutorial Exercise 12
 ---------------------------------------
 
 This turns out to be a much easier way to solve the problem.  Let's
@@ -7215,7 +7214,7 @@ rule.
 
 File: calc.info,  Node: Introduction,  Next: Data Types,  Prev: Tutorial,  Up: Top
 
-5 Introduction
+4 Introduction
 **************
 
 This chapter is the beginning of the Calc reference manual.  It covers
@@ -7239,7 +7238,7 @@ numeric prefix arguments, etc.
 
 File: calc.info,  Node: Basic Commands,  Next: Help Commands,  Prev: Introduction,  Up: Introduction
 
-5.1 Basic Commands
+4.1 Basic Commands
 ==================
 
 To start the Calculator in its standard interface, type `M-x calc'.  By
@@ -7356,7 +7355,7 @@ everything else to its default state.
 
 File: calc.info,  Node: Help Commands,  Next: Stack Basics,  Prev: Basic Commands,  Up: Introduction
 
-5.2 Help Commands
+4.2 Help Commands
 =================
 
 The `?' key (`calc-help') displays a series of brief help messages.
@@ -7434,8 +7433,9 @@ the Calc manual.  Enter a variable name like `pi' or `PlotRejects'.
 except that only local (Calc-related) key bindings are listed.
 
    The `h n' or `h C-n' (`calc-view-news') command displays the "news"
-or change history of Calc.  This is kept in the file `README', which
-Calc looks for in the same directory as the Calc source files.
+or change history of Emacs, and jumps to the most recent portion
+concerning Calc (if present).  For older history, see the file
+`etc/CALC-NEWS' in the Emacs distribution.
 
    The `h C-c', `h C-d', and `h C-w' keys display copying,
 distribution, and warranty information about Calc.  These work by
@@ -7445,7 +7445,7 @@ sections of the manual.
 
 File: calc.info,  Node: Stack Basics,  Next: Numeric Entry,  Prev: Help Commands,  Up: Introduction
 
-5.3 Stack Basics
+4.3 Stack Basics
 ================
 
 Calc uses RPN notation.  If you are not familiar with RPN, *note RPN
@@ -7490,7 +7490,7 @@ Trail::, for descriptions of these and other stack-related commands.
 
 File: calc.info,  Node: Numeric Entry,  Next: Algebraic Entry,  Prev: Stack Basics,  Up: Introduction
 
-5.4 Numeric Entry
+4.4 Numeric Entry
 =================
 
 Pressing a digit or other numeric key begins numeric entry using the
@@ -7520,7 +7520,7 @@ data types.  *Note Data Types::.
 
 File: calc.info,  Node: Algebraic Entry,  Next: Quick Calculator,  Prev: Numeric Entry,  Up: Introduction
 
-5.5 Algebraic Entry
+4.5 Algebraic Entry
 ===================
 
 The `'' (`calc-algebraic-entry') command can be used to enter
@@ -7619,7 +7619,7 @@ this formula.
 
 File: calc.info,  Node: Quick Calculator,  Next: Prefix Arguments,  Prev: Algebraic Entry,  Up: Introduction
 
-5.6 "Quick Calculator" Mode
+4.6 "Quick Calculator" Mode
 ===========================
 
 There is another way to invoke the Calculator if all you need to do is
@@ -7684,7 +7684,7 @@ calculations.
 
 File: calc.info,  Node: Prefix Arguments,  Next: Undo,  Prev: Quick Calculator,  Up: Introduction
 
-5.7 Numeric Prefix Arguments
+4.7 Numeric Prefix Arguments
 ============================
 
 Many Calculator commands use numeric prefix arguments.  Some, such as
@@ -7732,7 +7732,7 @@ pushes it onto the stack in the form of an integer.
 
 File: calc.info,  Node: Undo,  Next: Error Messages,  Prev: Prefix Arguments,  Up: Introduction
 
-5.8 Undoing Mistakes
+4.8 Undoing Mistakes
 ====================
 
 The shift-`U' key (`calc-undo') undoes the most recent operation.  If
@@ -7778,7 +7778,7 @@ trail.  *Note Trail Commands::.
 
 File: calc.info,  Node: Error Messages,  Next: Multiple Calculators,  Prev: Undo,  Up: Introduction
 
-5.9 Error Messages
+4.9 Error Messages
 ==================
 
 Many situations that would produce an error message in other calculators
@@ -7805,7 +7805,7 @@ must always press `w' yourself to see the messages).
 
 File: calc.info,  Node: Multiple Calculators,  Next: Troubleshooting Commands,  Prev: Error Messages,  Up: Introduction
 
-5.10 Multiple Calculators
+4.10 Multiple Calculators
 =========================
 
 It is possible to have any number of Calc mode buffers at once.
@@ -7832,7 +7832,7 @@ Calculator buffers.
 
 File: calc.info,  Node: Troubleshooting Commands,  Prev: Multiple Calculators,  Up: Introduction
 
-5.11 Troubleshooting Commands
+4.11 Troubleshooting Commands
 =============================
 
 This section describes commands you can use in case a computation
@@ -7851,7 +7851,7 @@ to a bug or deficiency in Calc.
 
 File: calc.info,  Node: Autoloading Problems,  Next: Recursion Depth,  Prev: Troubleshooting Commands,  Up: Troubleshooting Commands
 
-5.11.1 Autoloading Problems
+4.11.1 Autoloading Problems
 ---------------------------
 
 The Calc program is split into many component files; components are
@@ -7868,7 +7868,7 @@ would otherwise, but it's guaranteed to fix the problem.
 
 File: calc.info,  Node: Recursion Depth,  Next: Caches,  Prev: Autoloading Problems,  Up: Troubleshooting Commands
 
-5.11.2 Recursion Depth
+4.11.2 Recursion Depth
 ----------------------
 
 Calc uses recursion in many of its calculations.  Emacs Lisp keeps a
@@ -7890,7 +7890,7 @@ internal Lisp recursion limit.  The minimum value for this limit is 600.
 
 File: calc.info,  Node: Caches,  Next: Debugging Calc,  Prev: Recursion Depth,  Up: Troubleshooting Commands
 
-5.11.3 Caches
+4.11.3 Caches
 -------------
 
 Calc saves certain values after they have been computed once.  For
@@ -7915,7 +7915,7 @@ all other aspects of the Calculator's state.
 
 File: calc.info,  Node: Debugging Calc,  Prev: Caches,  Up: Troubleshooting Commands
 
-5.11.4 Debugging Calc
+4.11.4 Debugging Calc
 ---------------------
 
 A few commands exist to help in the debugging of Calc commands.  *Note
@@ -7965,7 +7965,7 @@ user-friendly message will be lost.
 
 File: calc.info,  Node: Data Types,  Next: Stack and Trail,  Prev: Introduction,  Up: Top
 
-6 Data Types
+5 Data Types
 ************
 
 This chapter discusses the various types of objects that can be placed
@@ -8002,7 +8002,7 @@ matrices, or algebraic formulas.
 
 File: calc.info,  Node: Integers,  Next: Fractions,  Prev: Data Types,  Up: Data Types
 
-6.1 Integers
+5.1 Integers
 ============
 
 The Calculator stores integers to arbitrary precision.  Addition,
@@ -8028,7 +8028,7 @@ beginning of a number, the current display radix is used.
 
 File: calc.info,  Node: Fractions,  Next: Floats,  Prev: Integers,  Up: Data Types
 
-6.2 Fractions
+5.2 Fractions
 =============
 
 A "fraction" is a ratio of two integers.  Fractions are traditionally
@@ -8049,7 +8049,7 @@ always use the same radix.
 
 File: calc.info,  Node: Floats,  Next: Complex Numbers,  Prev: Fractions,  Up: Data Types
 
-6.3 Floats
+5.3 Floats
 ==========
 
 A floating-point number or "float" is a number stored in scientific
@@ -8120,7 +8120,7 @@ non-decimal floats.
 
 File: calc.info,  Node: Complex Numbers,  Next: Infinities,  Prev: Floats,  Up: Data Types
 
-6.4 Complex Numbers
+5.4 Complex Numbers
 ===================
 
 There are two supported formats for complex numbers: rectangular and
@@ -8152,7 +8152,7 @@ to a real number.
 
 File: calc.info,  Node: Infinities,  Next: Vectors and Matrices,  Prev: Complex Numbers,  Up: Data Types
 
-6.5 Infinities
+5.5 Infinities
 ==============
 
 The word `inf' represents the mathematical concept of "infinity".  Calc
@@ -8223,7 +8223,7 @@ Interval Forms::.
 
 File: calc.info,  Node: Vectors and Matrices,  Next: Strings,  Prev: Infinities,  Up: Data Types
 
-6.6 Vectors and Matrices
+5.6 Vectors and Matrices
 ========================
 
 The "vector" data type is flexible and general.  A vector is simply a
@@ -8257,7 +8257,7 @@ build `[a, b, c]', `cvec(a, n, m)' to build an NxM matrix of `a's, and
 
 File: calc.info,  Node: Strings,  Next: HMS Forms,  Prev: Vectors and Matrices,  Up: Data Types
 
-6.7 Strings
+5.7 Strings
 ===========
 
 Character strings are not a special data type in the Calculator.
@@ -8316,7 +8316,7 @@ in the string.
 
 File: calc.info,  Node: HMS Forms,  Next: Date Forms,  Prev: Strings,  Up: Data Types
 
-6.8 HMS Forms
+5.8 HMS Forms
 =============
 
 "HMS" stands for Hours-Minutes-Seconds; when used as an angular
@@ -8348,7 +8348,7 @@ the stack as an HMS form.
 
 File: calc.info,  Node: Date Forms,  Next: Modulo Forms,  Prev: HMS Forms,  Up: Data Types
 
-6.9 Date Forms
+5.9 Date Forms
 ==============
 
 A "date form" represents a date and possibly an associated time.
@@ -8366,10 +8366,10 @@ date forms can be entered in any of the usual notations for dates and
 times.  *Note Date Formats::.
 
    Date forms are stored internally as numbers, specifically the number
-of days since midnight on the morning of January 1 of the year 1 AD.
+of days since midnight on the morning of December 31 of the year 1 BC.
 If the internal number is an integer, the form represents a date only;
 if the internal number is a fraction or float, the form represents a
-date and time.  For example, `<6:00am Wed Jan 9, 1991>' is represented
+date and time.  For example, `<6:00am Thu Jan 10, 1991>' is represented
 by the number 726842.25.  The standard precision of 12 decimal digits
 is enough to ensure that a (reasonable) date and time can be stored
 without roundoff error.
@@ -8388,14 +8388,17 @@ commands to get at the numerical representation of a date form.  *Note
 Packing and Unpacking::.
 
    Date forms can go arbitrarily far into the future or past.  Negative
-year numbers represent years BC.  Calc uses a combination of the
-Gregorian and Julian calendars, following the history of Great Britain
-and the British colonies.  This is the same calendar that is used by
-the `cal' program in most Unix implementations.
+year numbers represent years BC.  There is no "year 0"; the day before
+`<Mon Jan 1, +1>' is `<Sun Dec 31, -1>'.  These are days 1 and 0
+respectively in Calc's internal numbering scheme.  The Gregorian
+calendar is used for all dates, including dates before the Gregorian
+calendar was invented (although that can be configured; see below).
+Thus Calc's use of the day number -10000 to represent August 15, 28 BC
+should be taken with a grain of salt.
 
    Some historical background:  The Julian calendar was created by
-Julius Caesar in the year 46 BC as an attempt to fix the gradual drift
-caused by the lack of leap years in the calendar used until that time.
+Julius Caesar in the year 46 BC as an attempt to fix the confusion
+caused by the irregular Roman calendar that was used before that time.
 The Julian calendar introduced an extra day in all years divisible by
 four.  After some initial confusion, the calendar was adopted around
 the year we call 8 AD.  Some centuries later it became apparent that
@@ -8404,36 +8407,47 @@ Pope Gregory XIII introduced the Gregorian calendar, which added the
 new rule that years divisible by 100, but not by 400, were not to be
 considered leap years despite being divisible by four.  Many countries
 delayed adoption of the Gregorian calendar because of religious
-differences; in Britain it was put off until the year 1752, by which
-time the Julian calendar had fallen eleven days behind the true
-seasons.  So the switch to the Gregorian calendar in early September
-1752 introduced a discontinuity:  The day after Sep 2, 1752 is Sep 14,
-1752.  Calc follows this convention.  To take another example, Russia
-waited until 1918 before adopting the new calendar, and thus needed to
-remove thirteen days (between Feb 1, 1918 and Feb 14, 1918).  This
-means that Calc's reckoning will be inconsistent with Russian history
-between 1752 and 1918, and similarly for various other countries.
+differences.  For example, Great Britain and the British colonies
+switched to the Gregorian calendar in September 1752, when the Julian
+calendar was eleven days behind the Gregorian calendar.  That year in
+Britain, the day after September 2 was September 14.  To take another
+example, Russia did not adopt the Gregorian calendar until 1918, and
+that year in Russia the day after January 31 was February 14.  Calc's
+reckoning therefore matches English practice starting in 1752 and
+Russian practice starting in 1918, but disagrees with earlier dates in
+both countries.
 
-   Today's timekeepers introduce an occasional "leap second" as well,
-but Calc does not take these minor effects into account.  (If it did,
-it would have to report a non-integer number of days between, say,
-`<12:00am Mon Jan 1, 1900>' and `<12:00am Sat Jan 1, 2000>'.)
+   When the Julian calendar was introduced, it had January 1 as the
+first day of the year.  By the Middle Ages, many European countries had
+changed the beginning of a new year to a different date, often to a
+religious festival.  Almost all countries reverted to using January 1
+as the beginning of the year by the time they adopted the Gregorian
+calendar.
 
-   Calc uses the Julian calendar for all dates before the year 1752,
-including dates BC when the Julian calendar technically had not yet
-been invented.  Thus the claim that day number -10000 is called "August
-16, 28 BC" should be taken with a grain of salt.
+   Some calendars attempt to mimic the historical situation by using the
+Gregorian calendar for recent dates and the Julian calendar for older
+dates. The `cal' program in most Unix implementations does this, for
+example. While January 1 wasn't always the beginning of a calendar
+year, these hybrid calendars still use January 1 as the beginning of
+the year even for older dates.   The customizable variable
+`calc-gregorian-switch' (*note Customizing Calc::) can be set to have
+Calc's date forms switch from the Julian to Gregorian calendar at any
+specified date.
 
-   Please note that there is no "year 0"; the day before `<Sat Jan 1,
-+1>' is `<Fri Dec 31, -1>'.  These are days 0 and -1 respectively in
-Calc's internal numbering scheme.
+   Today's timekeepers introduce an occasional "leap second".  These do
+not occur regularly and Calc does not take these minor effects into
+account.  (If it did, it would have to report a non-integer number of
+days between, say, `<12:00am Mon Jan 1, 1900>' and `<12:00am Sat Jan 1,
+2000>'.)
 
    Another day counting system in common use is, confusingly, also
-called "Julian."  The Julian day number is the numbers of days since
-12:00 noon (GMT) on Jan 1, 4713 BC, which in Calc's scheme (in GMT) is
--1721423.5 (recall that Calc starts at midnight instead of noon).  Thus
-to convert a Calc date code obtained by unpacking a date form into a
-Julian day number, simply add 1721423.5 after compensating for the time
+called "Julian."  Julian days go from noon to noon.  The Julian day
+number is the numbers of days since 12:00 noon (GMT) on November 24,
+4714 BC in the Gregorian calendar (i.e., January 1, 4713 BC in the
+Julian calendar).  In Calc's scheme (in GMT) the Julian day origin is
+-1721422.5, because Calc starts at midnight instead of noon.  Thus to
+convert a Calc date code obtained by unpacking a date form into a
+Julian day number, simply add 1721422.5 after compensating for the time
 zone difference.  The built-in `t J' command performs this conversion
 for you.
 
@@ -8481,7 +8495,7 @@ U' command performs these conversions.
 
 File: calc.info,  Node: Modulo Forms,  Next: Error Forms,  Prev: Date Forms,  Up: Data Types
 
-6.10 Modulo Forms
+5.10 Modulo Forms
 =================
 
 A "modulo form" is a real number which is taken modulo (i.e., within an
@@ -8544,7 +8558,7 @@ Unpacking::.  *Note Basic Arithmetic::.
 
 File: calc.info,  Node: Error Forms,  Next: Interval Forms,  Prev: Modulo Forms,  Up: Data Types
 
-6.11 Error Forms
+5.11 Error Forms
 ================
 
 An "error form" is a number with an associated standard deviation, as
@@ -8611,7 +8625,7 @@ both the mean and the error should be HMS forms if either one is.
 
 File: calc.info,  Node: Interval Forms,  Next: Incomplete Objects,  Prev: Error Forms,  Up: Data Types
 
-6.12 Interval Forms
+5.12 Interval Forms
 ===================
 
 An "interval" is a subset of consecutive real numbers.  For example,
@@ -8693,7 +8707,7 @@ entering `[1..2]' and pressing `Q 2 ^' should yield the interval
 
 File: calc.info,  Node: Incomplete Objects,  Next: Variables,  Prev: Interval Forms,  Up: Data Types
 
-6.13 Incomplete Objects
+5.13 Incomplete Objects
 =======================
 
 When `(' or `[' is typed to begin entering a complex number or vector,
@@ -8736,7 +8750,7 @@ apostrophe key.
 
 File: calc.info,  Node: Variables,  Next: Formulas,  Prev: Incomplete Objects,  Up: Data Types
 
-6.14 Variables
+5.14 Variables
 ==============
 
 A "variable" is somewhere between a storage register on a conventional
@@ -8791,7 +8805,7 @@ variables.
 
 File: calc.info,  Node: Formulas,  Prev: Variables,  Up: Data Types
 
-6.15 Formulas
+5.15 Formulas
 =============
 
 When you press the apostrophe key you may enter any expression or
@@ -8934,7 +8948,7 @@ display formats.
 
 File: calc.info,  Node: Stack and Trail,  Next: Mode Settings,  Prev: Data Types,  Up: Top
 
-7 Stack and Trail Commands
+6 Stack and Trail Commands
 **************************
 
 This chapter describes the Calc commands for manipulating objects on the
@@ -8951,7 +8965,7 @@ any type, such as numbers, vectors, formulas, and incomplete objects.)
 
 File: calc.info,  Node: Stack Manipulation,  Next: Editing Stack Entries,  Prev: Stack and Trail,  Up: Stack and Trail
 
-7.1 Stack Manipulation Commands
+6.1 Stack Manipulation Commands
 ===============================
 
 To duplicate the top object on the stack, press <RET> or <SPC> (two
@@ -8986,6 +9000,17 @@ to <RET>:  It interprets the sign of the numeric prefix argument in the
 opposite way, and the default argument is 2.  Thus `M-<DEL>' by itself
 removes the second-from-top stack element, leaving the first, third,
 fourth, and so on; `M-3 M-<DEL>' deletes the third stack element.
+
+   The above commands do not depend on the location of the cursor.  If
+the customizable variable `calc-context-sensitive-enter' is non-`nil'
+(*note Customizing Calc::), these commands will become context
+sensitive.  For example, instead of duplicating the top of the stack,
+<RET> will copy the element at the cursor to the top of the stack.
+With a positive numeric prefix, a copy of the element at the cursor and
+the appropriate number of preceding elements will be placed at the top
+of the stack.  A negative prefix will still duplicate the specified
+element of the stack regardless of the cursor  position.  Similarly,
+<DEL> will remove the corresponding elements from the stack.
 
    To exchange the top two elements of the stack, press <TAB>
 (`calc-roll-down').  Given a positive numeric prefix argument, the
@@ -9036,7 +9061,7 @@ objects at the levels determined by the point and the mark.
 
 File: calc.info,  Node: Editing Stack Entries,  Next: Trail Commands,  Prev: Stack Manipulation,  Up: Stack and Trail
 
-7.2 Editing Stack Entries
+6.2 Editing Stack Entries
 =========================
 
 The ``' (`calc-edit') command creates a temporary buffer (`*Calc
@@ -9087,7 +9112,7 @@ editing than is convenient in the minibuffer.
 
 File: calc.info,  Node: Trail Commands,  Next: Keep Arguments,  Prev: Editing Stack Entries,  Up: Stack and Trail
 
-7.3 Trail Commands
+6.3 Trail Commands
 ==================
 
 The commands for manipulating the Calc Trail buffer are two-key
@@ -9162,7 +9187,7 @@ elsewhere; *note Vector and Matrix Formats::.
 
 File: calc.info,  Node: Keep Arguments,  Prev: Trail Commands,  Up: Stack and Trail
 
-7.4 Keep Arguments
+6.4 Keep Arguments
 ==================
 
 The `K' (`calc-keep-args') command acts like a prefix for the following
@@ -9204,7 +9229,7 @@ instead of `2 3 5'.  *Note Undo::.
 
 File: calc.info,  Node: Mode Settings,  Next: Arithmetic,  Prev: Stack and Trail,  Up: Top
 
-8 Mode Settings
+7 Mode Settings
 ***************
 
 This chapter describes commands that set modes in the Calculator.  They
@@ -9227,7 +9252,7 @@ _appearance_ or _interpretation_ of the stack's contents.
 
 File: calc.info,  Node: General Mode Commands,  Next: Precision,  Prev: Mode Settings,  Up: Mode Settings
 
-8.1 General Mode Commands
+7.1 General Mode Commands
 =========================
 
 You can save all of the current mode settings in your Calc init file
@@ -9295,7 +9320,7 @@ Press `m S' again to disable shifted-prefix mode.
 
 File: calc.info,  Node: Precision,  Next: Inverse and Hyperbolic,  Prev: General Mode Commands,  Up: Mode Settings
 
-8.2 Precision
+7.2 Precision
 =============
 
 The `p' (`calc-precision') command controls the precision to which
@@ -9349,7 +9374,7 @@ related issues.
 
 File: calc.info,  Node: Inverse and Hyperbolic,  Next: Calculation Modes,  Prev: Precision,  Up: Mode Settings
 
-8.3 Inverse and Hyperbolic Flags
+7.3 Inverse and Hyperbolic Flags
 ================================
 
 There is no single-key equivalent to the `calc-arcsin' function.
@@ -9386,7 +9411,7 @@ elsewhere.  *Note Keep Arguments::.
 
 File: calc.info,  Node: Calculation Modes,  Next: Simplification Modes,  Prev: Inverse and Hyperbolic,  Up: Mode Settings
 
-8.4 Calculation Modes
+7.4 Calculation Modes
 =====================
 
 The commands in this section are two-key sequences beginning with the
@@ -9408,7 +9433,7 @@ Entry::).
 
 File: calc.info,  Node: Angular Modes,  Next: Polar Mode,  Prev: Calculation Modes,  Up: Calculation Modes
 
-8.4.1 Angular Modes
+7.4.1 Angular Modes
 -------------------
 
 The Calculator supports three notations for angles: radians, degrees,
@@ -9433,7 +9458,7 @@ mode is Degrees.
 
 File: calc.info,  Node: Polar Mode,  Next: Fraction Mode,  Prev: Angular Modes,  Up: Calculation Modes
 
-8.4.2 Polar Mode
+7.4.2 Polar Mode
 ----------------
 
 The Calculator normally "prefers" rectangular complex numbers in the
@@ -9449,7 +9474,7 @@ the above example situations would produce polar complex numbers.
 
 File: calc.info,  Node: Fraction Mode,  Next: Infinite Mode,  Prev: Polar Mode,  Up: Calculation Modes
 
-8.4.3 Fraction Mode
+7.4.3 Fraction Mode
 -------------------
 
 Division of two integers normally yields a floating-point number if the
@@ -9471,7 +9496,7 @@ fraction.  *Note Conversions::.
 
 File: calc.info,  Node: Infinite Mode,  Next: Symbolic Mode,  Prev: Fraction Mode,  Up: Calculation Modes
 
-8.4.4 Infinite Mode
+7.4.4 Infinite Mode
 -------------------
 
 The Calculator normally treats results like `1 / 0' as errors; formulas
@@ -9506,7 +9531,7 @@ equal to positive `inf'.
 
 File: calc.info,  Node: Symbolic Mode,  Next: Matrix Mode,  Prev: Infinite Mode,  Up: Calculation Modes
 
-8.4.5 Symbolic Mode
+7.4.5 Symbolic Mode
 -------------------
 
 Calculations are normally performed numerically wherever possible.  For
@@ -9533,7 +9558,7 @@ contains, you can use the key sequence `m s a v m s' (this uses
 
 File: calc.info,  Node: Matrix Mode,  Next: Automatic Recomputation,  Prev: Symbolic Mode,  Up: Calculation Modes
 
-8.4.6 Matrix and Scalar Modes
+7.4.6 Matrix and Scalar Modes
 -----------------------------
 
 Calc sometimes makes assumptions during algebraic manipulation that are
@@ -9600,7 +9625,7 @@ change back to Matrix mode before deselecting.
 
 File: calc.info,  Node: Automatic Recomputation,  Next: Working Message,  Prev: Matrix Mode,  Up: Calculation Modes
 
-8.4.7 Automatic Recomputation
+7.4.7 Automatic Recomputation
 -----------------------------
 
 The "evaluates-to" operator, `=>', has the special property that any
@@ -9623,7 +9648,7 @@ recomputation is off, use `C-x * u'.  *Note Embedded Mode::.
 
 File: calc.info,  Node: Working Message,  Prev: Automatic Recomputation,  Up: Calculation Modes
 
-8.4.8 Working Messages
+7.4.8 Working Messages
 ----------------------
 
 Since the Calculator is written entirely in Emacs Lisp, which is not
@@ -9648,7 +9673,7 @@ to turn the messages off.
 
 File: calc.info,  Node: Simplification Modes,  Next: Declarations,  Prev: Calculation Modes,  Up: Mode Settings
 
-8.5 Simplification Modes
+7.5 Simplification Modes
 ========================
 
 The current "simplification mode" controls how numbers and formulas are
@@ -9715,7 +9740,7 @@ automatically, then use manual commands like `a s' and `c c'
 
 File: calc.info,  Node: Declarations,  Next: Display Modes,  Prev: Simplification Modes,  Up: Mode Settings
 
-8.6 Declarations
+7.6 Declarations
 ================
 
 A "declaration" is a statement you make that promises you will use a
@@ -9732,7 +9757,7 @@ fully general situation into account.
 
 File: calc.info,  Node: Declaration Basics,  Next: Kinds of Declarations,  Prev: Declarations,  Up: Declarations
 
-8.6.1 Declaration Basics
+7.6.1 Declaration Basics
 ------------------------
 
 The `s d' (`calc-declare-variable') command is the easiest way to make
@@ -9787,7 +9812,7 @@ declared without `real' in some other row.  The `s d' command declares
 
 File: calc.info,  Node: Kinds of Declarations,  Next: Functions for Declarations,  Prev: Declaration Basics,  Up: Declarations
 
-8.6.2 Kinds of Declarations
+7.6.2 Kinds of Declarations
 ---------------------------
 
 The type-specifier part of a declaration (that is, the second prompt in
@@ -9969,7 +9994,7 @@ that will conflict with its new meaning.
 
 File: calc.info,  Node: Functions for Declarations,  Prev: Kinds of Declarations,  Up: Declarations
 
-8.6.3 Functions for Declarations
+7.6.3 Functions for Declarations
 --------------------------------
 
 Calc has a set of functions for accessing the current declarations in a
@@ -10051,7 +10076,7 @@ rule) it considers an unevaluated formula to be "false."  Thus,
 
 File: calc.info,  Node: Display Modes,  Next: Language Modes,  Prev: Declarations,  Up: Mode Settings
 
-8.7 Display Modes
+7.7 Display Modes
 =================
 
 The commands in this section are two-key sequences beginning with the
@@ -10096,7 +10121,7 @@ that mode, then the original mode setting is restored.  In other words,
 
 File: calc.info,  Node: Radix Modes,  Next: Grouping Digits,  Prev: Display Modes,  Up: Display Modes
 
-8.7.1 Radix Modes
+7.7.1 Radix Modes
 -----------------
 
 Calc normally displays numbers in decimal ("base-10" or "radix-10")
@@ -10146,7 +10171,7 @@ appropriate radix).
 
 File: calc.info,  Node: Grouping Digits,  Next: Float Formats,  Prev: Radix Modes,  Up: Display Modes
 
-8.7.2 Grouping Digits
+7.7.2 Grouping Digits
 ---------------------
 
 Long numbers can be hard to read if they have too many digits.  For
@@ -10180,7 +10205,7 @@ parsing because it is ignored by TeX language mode.
 
 File: calc.info,  Node: Float Formats,  Next: Complex Formats,  Prev: Grouping Digits,  Up: Display Modes
 
-8.7.3 Float Formats
+7.7.3 Float Formats
 -------------------
 
 Floating-point quantities are normally displayed in standard decimal
@@ -10236,7 +10261,7 @@ numbers, and commas to separate elements in a list.
 
 File: calc.info,  Node: Complex Formats,  Next: Fraction Formats,  Prev: Float Formats,  Up: Display Modes
 
-8.7.4 Complex Formats
+7.7.4 Complex Formats
 ---------------------
 
 There are three supported notations for complex numbers in rectangular
@@ -10259,7 +10284,7 @@ complex number.  *Note Variables::, under "special constants."
 
 File: calc.info,  Node: Fraction Formats,  Next: HMS Formats,  Prev: Complex Formats,  Up: Display Modes
 
-8.7.5 Fraction Formats
+7.7.5 Fraction Formats
 ----------------------
 
 Display of fractional numbers is controlled by the `d o'
@@ -10295,7 +10320,7 @@ never affects floats.
 
 File: calc.info,  Node: HMS Formats,  Next: Date Formats,  Prev: Fraction Formats,  Up: Display Modes
 
-8.7.6 HMS Formats
+7.7.6 HMS Formats
 -----------------
 
 The `d h' (`calc-hms-notation') command controls the display of HMS
@@ -10321,7 +10346,7 @@ algebraic entry.
 
 File: calc.info,  Node: Date Formats,  Next: Truncating the Stack,  Prev: HMS Formats,  Up: Display Modes
 
-8.7.7 Date Formats
+7.7.7 Date Formats
 ------------------
 
 The `d d' (`calc-date-notation') command controls the display of date
@@ -10342,14 +10367,84 @@ functions, your date formats should avoid using the `#' character.
 
 * Menu:
 
+* ISO 8601::
 * Date Formatting Codes::
 * Free-Form Dates::
 * Standard Date Formats::
 
 
-File: calc.info,  Node: Date Formatting Codes,  Next: Free-Form Dates,  Prev: Date Formats,  Up: Date Formats
+File: calc.info,  Node: ISO 8601,  Next: Date Formatting Codes,  Prev: Date Formats,  Up: Date Formats
 
-8.7.7.1 Date Formatting Codes
+7.7.7.1 ISO 8601
+................
+
+The same date can be written down in different formats and Calc tries
+to allow you to choose your preferred format.  Some common formats are
+ambiguous, however; for example, 10/11/2012 means October 11, 2012 in
+the United States but it means November 10, 2012 in Europe.  To help
+avoid such ambiguities, the International Organization for
+Standardization (ISO) provides the ISO 8601 standard, which provides
+three different but easily distinguishable and unambiguous ways to
+represent a date.
+
+   The ISO 8601 calendar date representation is
+
+        YYYY-MM-DD
+
+where YYYY is the four digit year, MM is the two-digit month number (01
+for January to 12 for December), and DD is the two-digit day of the
+month (01 to 31).  (Note that YYYY does not correspond to Calc's date
+formatting code, which will be introduced later.)  The year, which
+should be padded with zeros to ensure it has at least four digits, is
+the Gregorian year, except that the year before 0001 (1 AD) is the year
+0000 (1 BC).  The date October 11, 2012 is written 2012-10-11 in this
+representation and November 10, 2012 is written 2012-11-10.
+
+   The ISO 8601 ordinal date representation is
+
+       YYYY-DDD
+
+where YYYY is the year, as above, and DDD is the day of the year.  The
+date December 31, 2011 is written 2011-365 in this representation and
+January 1, 2012 is written 2012-001.
+
+   The ISO 8601 week date representation is
+
+      YYYY-WWW-D
+
+where YYYY is the ISO week-numbering year, WW is the two digit week
+number (preceded by a literal "W"), and D is the day of the week (1 for
+Monday through 7 for Sunday).  The ISO week-numbering year is based on
+the Gregorian year but can differ slightly.  The first week of an ISO
+week-numbering year is the week with the Gregorian year's first
+Thursday in it (equivalently, the week containing January 4); any day
+of that week (Monday through Sunday) is part of the same ISO
+week-numbering year, any day from the previous week is part of the
+previous year.  For example, January 4, 2013 is on a Friday, and so the
+first week for the ISO week-numbering year 2013 starts  on Monday,
+December 31, 2012.  The day December 31, 2012 is then part of the
+Gregorian year 2012 but ISO week-numbering year 2013.  In the week date
+representation, this week goes from 2013-W01-1 (December 31, 2012) to
+2013-W01-7 (January 6, 2013).
+
+   All three ISO 8601 representations arrange the numbers from most
+significant to least significant; as well as being unambiguous
+representations, they are easy to sort since chronological order in
+this formats corresponds to lexicographical order. The hyphens are
+sometimes omitted.
+
+   The ISO 8601 standard uses a 24 hour clock; a particular time is
+represented by HH:MM:SS where HH is the two-digit hour (from 00 to 24),
+MM is the two-digit minute (from 00 to 59) and SS is the two-digit
+second.  The seconds or minutes and seconds can be omitted, and
+decimals can be added.  If a date with a time is represented, they
+should be separated by a literal "T", so noon on December 13, 2012 can
+be represented as 2012-12-13T12:00.
+
+
+File: calc.info,  Node: Date Formatting Codes,  Next: Free-Form Dates,  Prev: ISO 8601,  Up: Date Formats
+
+7.7.7.2 Date Formatting Codes
 .............................
 
 When displaying a date, the current date format is used.  All
@@ -10363,7 +10458,7 @@ match the input string to the current format either with or without the
 time part.  The punctuation characters (including spaces) must match
 exactly; letter fields must correspond to suitable text in the input.
 If this doesn't work, Calc checks if the input is a simple number; if
-so, the number is interpreted as a number of days since Jan 1, 1 AD.
+so, the number is interpreted as a number of days since Dec 31, 1 BC.
 Otherwise, Calc tries a much more relaxed and flexible algorithm which
 is described in the next section.
 
@@ -10391,6 +10486,12 @@ YYY
 
 YYYY
      Year:  "1991" for 1991, "+23" for 23 AD.
+
+ZYYY
+     Year:  "1991" for 1991, "0023" for 23 AD, "0000" for 1 BC.
+
+IYYY
+     Year:  ISO 8601 week-numbering year.
 
 aa
      Year:  "ad" or blank.
@@ -10464,6 +10565,9 @@ BD
 W
      Weekday:  "0" for Sunday, "6" for Saturday.
 
+w
+     Weekday:  "1" for Monday, "7" for Sunday.
+
 WWW
      Weekday:  "SUN" for Sunday.
 
@@ -10479,6 +10583,9 @@ WWWW
 Wwww
      Weekday:  "Sunday" for Sunday.
 
+Iww
+     Week number:  ISO 8601 week number, "W01" for week 1.
+
 d
      Day of year:  "34" for Feb. 3.
 
@@ -10487,6 +10594,9 @@ ddd
 
 bdd
      Day of year:  " 34" for Feb. 3.
+
+T
+     Letter:  Literal "T".
 
 h
      Hour:  "5" for 5 AM; "17" for 5 PM.
@@ -10590,7 +10700,7 @@ conversion; *note Date Arithmetic::.
 
 File: calc.info,  Node: Free-Form Dates,  Next: Standard Date Formats,  Prev: Date Formatting Codes,  Up: Date Formats
 
-8.7.7.2 Free-Form Dates
+7.7.7.3 Free-Form Dates
 .......................
 
 When reading a date form during algebraic entry, Calc falls back on the
@@ -10613,15 +10723,21 @@ AM/PM part may be any of the words `am', `pm', `noon', or `midnight';
 each of these may be abbreviated to one letter, and the alternate forms
 `a.m.', `p.m.', and `mid' are also understood.  Obviously `noon' and
 `midnight' are allowed only on 12:00:00.  The words `noon', `mid', and
-`midnight' are also recognized with no number attached.
+`midnight' are also recognized with no number attached.  Midnight will
+represent the beginning of a day.
 
    If there is no AM/PM indicator, the time is interpreted in 24-hour
 format.
 
-   To read the date portion, all words and numbers are isolated from
-the string; other characters are ignored.  All words must be either
-month names or day-of-week names (the latter of which are ignored).
-Names can be written in full or as three-letter abbreviations.
+   When reading the date portion, Calc first checks to see if it is an
+ISO 8601 week-numbering date; if the string contains an integer
+representing the year, a "W" followed by two digits for the week
+number, and an integer from 1 to 7 representing the weekday (in that
+order), then all other characters are ignored and this information
+determines the date.  Otherwise, all words and numbers are isolated
+from the string; other characters are ignored.  All words must be
+either month names or day-of-week names (the latter of which are
+ignored). Names can be written in full or as three-letter abbreviations.
 
    Large numbers, or numbers with `+' or `-' signs, are interpreted as
 years.  If one of the other numbers is greater than 12, then that must
@@ -10647,7 +10763,7 @@ number for the month, there is no danger of ambiguity.
 
 File: calc.info,  Node: Standard Date Formats,  Prev: Free-Form Dates,  Up: Date Formats
 
-8.7.7.3 Standard Date Formats
+7.7.7.4 Standard Date Formats
 .............................
 
 There are actually ten standard date formats, numbered 0 through 9.
@@ -10691,10 +10807,16 @@ permanently with the `m m' command (*note Mode Settings::).
 9
      `YYddd< hh:mm:ss>'  (Year-day format)
 
+10
+     `ZYYY-MM-DD Www< hh:mm>' (Org mode format)
+
+11
+     `IYYY-Iww-w<Thh:mm:ss>' (ISO 8601 week numbering format)
+
 
 File: calc.info,  Node: Truncating the Stack,  Next: Justification,  Prev: Date Formats,  Up: Display Modes
 
-8.7.8 Truncating the Stack
+7.7.8 Truncating the Stack
 --------------------------
 
 The `d t' (`calc-truncate-stack') command moves the `.' line that marks
@@ -10723,7 +10845,7 @@ with a prefix argument).
 
 File: calc.info,  Node: Justification,  Next: Labels,  Prev: Truncating the Stack,  Up: Display Modes
 
-8.7.9 Justification
+7.7.9 Justification
 -------------------
 
 Values on the stack are normally left-justified in the window.  You can
@@ -10777,7 +10899,7 @@ fit the line numbers.
 
 File: calc.info,  Node: Labels,  Prev: Justification,  Up: Display Modes
 
-8.7.10 Labels
+7.7.10 Labels
 -------------
 
 The `d {' (`calc-left-label') command prompts for a string, then
@@ -10805,7 +10927,7 @@ prefer.
 
 File: calc.info,  Node: Language Modes,  Next: Modes Variable,  Prev: Display Modes,  Up: Mode Settings
 
-8.8 Language Modes
+7.8 Language Modes
 ==================
 
 The commands in this section change Calc to use a different notation for
@@ -10862,7 +10984,7 @@ shifted letter key.
 
 File: calc.info,  Node: Normal Language Modes,  Next: C FORTRAN Pascal,  Prev: Language Modes,  Up: Language Modes
 
-8.8.1 Normal Language Modes
+7.8.1 Normal Language Modes
 ---------------------------
 
 The `d N' (`calc-normal-language') command selects the usual notation
@@ -10940,7 +11062,7 @@ that Mathematica mode expects square brackets instead of parentheses).
 
 File: calc.info,  Node: C FORTRAN Pascal,  Next: TeX and LaTeX Language Modes,  Prev: Normal Language Modes,  Up: Language Modes
 
-8.8.2 C, FORTRAN, and Pascal Modes
+7.8.2 C, FORTRAN, and Pascal Modes
 ----------------------------------
 
 The `d C' (`calc-c-language') command selects the conventions of the C
@@ -11006,7 +11128,7 @@ lower-case for display and input.
 
 File: calc.info,  Node: TeX and LaTeX Language Modes,  Next: Eqn Language Mode,  Prev: C FORTRAN Pascal,  Up: Language Modes
 
-8.8.3 TeX and LaTeX Language Modes
+7.8.3 TeX and LaTeX Language Modes
 ----------------------------------
 
 The `d T' (`calc-tex-language') command selects the conventions of
@@ -11168,7 +11290,7 @@ end of this section.
 
 File: calc.info,  Node: Eqn Language Mode,  Next: Yacas Language Mode,  Prev: TeX and LaTeX Language Modes,  Up: Language Modes
 
-8.8.4 Eqn Language Mode
+7.8.4 Eqn Language Mode
 -----------------------
 
 "Eqn" is another popular formatter for math formulas.  It is designed
@@ -11239,7 +11361,7 @@ specifies.
 
 File: calc.info,  Node: Yacas Language Mode,  Next: Maxima Language Mode,  Prev: Eqn Language Mode,  Up: Language Modes
 
-8.8.5 Yacas Language Mode
+7.8.5 Yacas Language Mode
 -------------------------
 
 The `d Y' (`calc-yacas-language') command selects the conventions of
@@ -11265,7 +11387,7 @@ use square brackets.  If, for example, `A' represents the list
 
 File: calc.info,  Node: Maxima Language Mode,  Next: Giac Language Mode,  Prev: Yacas Language Mode,  Up: Language Modes
 
-8.8.6 Maxima Language Mode
+7.8.6 Maxima Language Mode
 --------------------------
 
 The `d X' (`calc-maxima-language') command selects the conventions of
@@ -11287,7 +11409,7 @@ matrix as arguments.  Square brackets are also used as subscripts.
 
 File: calc.info,  Node: Giac Language Mode,  Next: Mathematica Language Mode,  Prev: Maxima Language Mode,  Up: Language Modes
 
-8.8.7 Giac Language Mode
+7.8.7 Giac Language Mode
 ------------------------
 
 The `d A' (`calc-giac-language') command selects the conventions of
@@ -11310,7 +11432,7 @@ between an open and a closed interval while in Giac mode.
 
 File: calc.info,  Node: Mathematica Language Mode,  Next: Maple Language Mode,  Prev: Giac Language Mode,  Up: Language Modes
 
-8.8.8 Mathematica Language Mode
+7.8.8 Mathematica Language Mode
 -------------------------------
 
 The `d M' (`calc-mathematica-language') command selects the conventions
@@ -11330,7 +11452,7 @@ use double square brackets: `a[[i]]'.
 
 File: calc.info,  Node: Maple Language Mode,  Next: Compositions,  Prev: Mathematica Language Mode,  Up: Language Modes
 
-8.8.9 Maple Language Mode
+7.8.9 Maple Language Mode
 -------------------------
 
 The `d W' (`calc-maple-language') command selects the conventions of
@@ -11362,7 +11484,7 @@ various quote symbols, procedures and functional operators, and inert
 
 File: calc.info,  Node: Compositions,  Next: Syntax Tables,  Prev: Maple Language Mode,  Up: Language Modes
 
-8.8.10 Compositions
+7.8.10 Compositions
 -------------------
 
 There are several "composition functions" which allow you to get
@@ -11399,7 +11521,7 @@ language modes.
 
 File: calc.info,  Node: Composition Basics,  Next: Horizontal Compositions,  Prev: Compositions,  Up: Compositions
 
-8.8.10.1 Composition Basics
+7.8.10.1 Composition Basics
 ...........................
 
 Compositions are generally formed by stacking formulas together
@@ -11515,7 +11637,7 @@ surrounding object.
 
 File: calc.info,  Node: Horizontal Compositions,  Next: Vertical Compositions,  Prev: Composition Basics,  Up: Compositions
 
-8.8.10.2 Horizontal Compositions
+7.8.10.2 Horizontal Compositions
 ................................
 
 The `choriz' function takes a vector of objects and composes them
@@ -11550,7 +11672,7 @@ baselines of the component compositions, which are all aligned.
 
 File: calc.info,  Node: Vertical Compositions,  Next: Other Compositions,  Prev: Horizontal Compositions,  Up: Compositions
 
-8.8.10.3 Vertical Compositions
+7.8.10.3 Vertical Compositions
 ..............................
 
 The `cvert' function makes a vertical composition.  Each component of
@@ -11621,7 +11743,7 @@ Vertical compositions do not support separator strings.
 
 File: calc.info,  Node: Other Compositions,  Next: Information about Compositions,  Prev: Vertical Compositions,  Up: Compositions
 
-8.8.10.4 Other Compositions
+7.8.10.4 Other Compositions
 ...........................
 
 The `csup' function builds a superscripted expression.  For example,
@@ -11677,7 +11799,7 @@ a/b) + ctspace(2, a/b) + cbspace(2, a/b)' displays as:
 
 File: calc.info,  Node: Information about Compositions,  Next: User-Defined Compositions,  Prev: Other Compositions,  Up: Compositions
 
-8.8.10.5 Information about Compositions
+7.8.10.5 Information about Compositions
 .......................................
 
 The functions in this section are actual functions; they compose their
@@ -11704,7 +11826,7 @@ return zero is `cvspace(0)' or equivalents.
 
 File: calc.info,  Node: User-Defined Compositions,  Prev: Information about Compositions,  Up: Compositions
 
-8.8.10.6 User-Defined Compositions
+7.8.10.6 User-Defined Compositions
 ..................................
 
 The `Z C' (`calc-user-define-composition') command lets you define the
@@ -11811,7 +11933,7 @@ command (*note Creating User Keys::).
 
 File: calc.info,  Node: Syntax Tables,  Prev: Compositions,  Up: Language Modes
 
-8.8.11 Syntax Tables
+7.8.11 Syntax Tables
 --------------------
 
 Syntax tables do for input what compositions do for output:  They allow
@@ -11838,7 +11960,7 @@ settings; *note General Mode Commands::.
 
 File: calc.info,  Node: Syntax Table Basics,  Next: Precedence in Syntax Tables,  Prev: Syntax Tables,  Up: Syntax Tables
 
-8.8.11.1 Syntax Table Basics
+7.8.11.1 Syntax Table Basics
 ............................
 
 "Parsing" is the process of converting a raw string of characters, such
@@ -11966,7 +12088,7 @@ rest of the line to be ignored as a comment.
 
 File: calc.info,  Node: Precedence in Syntax Tables,  Next: Advanced Syntax Patterns,  Prev: Syntax Table Basics,  Up: Syntax Tables
 
-8.8.11.2 Precedence
+7.8.11.2 Precedence
 ...................
 
 Different operators are generally assigned different "precedences".  By
@@ -11995,7 +12117,7 @@ language modes, look in the Calc source file `calc-lang.el'.
 
 File: calc.info,  Node: Advanced Syntax Patterns,  Next: Conditional Syntax Rules,  Prev: Precedence in Syntax Tables,  Up: Syntax Tables
 
-8.8.11.3 Advanced Syntax Patterns
+7.8.11.3 Advanced Syntax Patterns
 .................................
 
 To match a function with a variable number of arguments, you could write
@@ -12092,7 +12214,7 @@ matched before finalizing the choice.
 
 File: calc.info,  Node: Conditional Syntax Rules,  Prev: Advanced Syntax Patterns,  Up: Syntax Tables
 
-8.8.11.4 Conditional Syntax Rules
+7.8.11.4 Conditional Syntax Rules
 .................................
 
 It is possible to attach a "condition" to a syntax rule.  For example,
@@ -12155,7 +12277,7 @@ mode interval `1..10'.
 
 File: calc.info,  Node: Modes Variable,  Next: Calc Mode Line,  Prev: Language Modes,  Up: Mode Settings
 
-8.9 The `Modes' Variable
+7.9 The `Modes' Variable
 ========================
 
 The `m g' (`calc-get-modes') command pushes onto the stack a vector of
@@ -12237,7 +12359,7 @@ Conditionals in Macros::.)
 
 File: calc.info,  Node: Calc Mode Line,  Prev: Modes Variable,  Up: Mode Settings
 
-8.10 The Calc Mode Line
+7.10 The Calc Mode Line
 =======================
 
 This section is a summary of all symbols that can appear on the Calc
@@ -12456,7 +12578,7 @@ modes on an Embedded buffer's mode line.  *Note Embedded Mode::.
 
 File: calc.info,  Node: Arithmetic,  Next: Scientific Functions,  Prev: Mode Settings,  Up: Top
 
-9 Arithmetic Functions
+8 Arithmetic Functions
 **********************
 
 This chapter describes the Calc commands for doing simple calculations
@@ -12488,7 +12610,7 @@ interpret a prefix argument.
 
 File: calc.info,  Node: Basic Arithmetic,  Next: Integer Truncation,  Prev: Arithmetic,  Up: Arithmetic
 
-9.1 Basic Arithmetic
+8.1 Basic Arithmetic
 ====================
 
 The `+' (`calc-plus') command adds two numbers.  The numbers may be any
@@ -12737,7 +12859,7 @@ of days.
 
 File: calc.info,  Node: Integer Truncation,  Next: Complex Number Functions,  Prev: Basic Arithmetic,  Up: Arithmetic
 
-9.2 Integer Truncation
+8.2 Integer Truncation
 ======================
 
 There are four commands for truncating a real number to an integer,
@@ -12808,7 +12930,7 @@ return the result rounded down to an integer.
 
 File: calc.info,  Node: Complex Number Functions,  Next: Conversions,  Prev: Integer Truncation,  Up: Arithmetic
 
-9.3 Complex Number Functions
+8.3 Complex Number Functions
 ============================
 
 The `J' (`calc-conj') [`conj'] command computes the complex conjugate
@@ -12851,7 +12973,7 @@ separate components.
 
 File: calc.info,  Node: Conversions,  Next: Date Arithmetic,  Prev: Complex Number Functions,  Up: Arithmetic
 
-9.4 Conversions
+8.4 Conversions
 ===============
 
 The commands described in this section convert numbers from one form to
@@ -12980,7 +13102,7 @@ operate non-pervasively [`clean'].
 
 File: calc.info,  Node: Date Arithmetic,  Next: Financial Functions,  Prev: Conversions,  Up: Arithmetic
 
-9.5 Date Arithmetic
+8.5 Date Arithmetic
 ===================
 
 The commands described in this section perform various conversions and
@@ -13008,7 +13130,7 @@ additional argument from the top of the stack.
 
 File: calc.info,  Node: Date Conversions,  Next: Date Functions,  Prev: Date Arithmetic,  Up: Date Arithmetic
 
-9.5.1 Date Conversions
+8.5.1 Date Conversions
 ----------------------
 
 The `t D' (`calc-date') [`date'] command converts a date form into a
@@ -13076,7 +13198,7 @@ the stack (and the date to be converted from the third stack level).
 
 File: calc.info,  Node: Date Functions,  Next: Business Days,  Prev: Date Conversions,  Up: Date Arithmetic
 
-9.5.2 Date Functions
+8.5.2 Date Functions
 --------------------
 
 The `t N' (`calc-now') [`now'] command pushes the current date and time
@@ -13199,7 +13321,7 @@ adjust a date/time form by a certain number of seconds.
 
 File: calc.info,  Node: Business Days,  Next: Time Zones,  Prev: Date Functions,  Up: Date Arithmetic
 
-9.5.3 Business Days
+8.5.3 Business Days
 -------------------
 
 Often time is measured in "business days" or "working days," where
@@ -13318,7 +13440,7 @@ defined in `Holidays', or 0 if the date is a business day.
 
 File: calc.info,  Node: Time Zones,  Prev: Business Days,  Up: Date Arithmetic
 
-9.5.4 Time Zones
+8.5.4 Time Zones
 ----------------
 
 Time zones and daylight saving time are a complicated business.  The
@@ -13503,7 +13625,7 @@ for the current time zone.
 
 File: calc.info,  Node: Financial Functions,  Next: Binary Functions,  Prev: Date Arithmetic,  Up: Arithmetic
 
-9.6 Financial Functions
+8.6 Financial Functions
 =======================
 
 Calc's financial or business functions use the `b' prefix key followed
@@ -13532,7 +13654,7 @@ section to make sure the functions have the meaning you expect.
 
 File: calc.info,  Node: Percentages,  Next: Future Value,  Prev: Financial Functions,  Up: Financial Functions
 
-9.6.1 Percentages
+8.6.1 Percentages
 -----------------
 
 The `M-%' (`calc-percent') command takes a percentage value, say 5.4,
@@ -13586,7 +13708,7 @@ percentage form as if by `c %'.
 
 File: calc.info,  Node: Future Value,  Next: Present Value,  Prev: Percentages,  Up: Financial Functions
 
-9.6.2 Future Value
+8.6.2 Future Value
 ------------------
 
 The `b F' (`calc-fin-fv') [`fv'] command computes the future value of
@@ -13638,7 +13760,7 @@ to earn interest, counts as $1000).  Indeed, `5569.96 = 5870.73 -
 
 File: calc.info,  Node: Present Value,  Next: Related Financial Functions,  Prev: Future Value,  Up: Financial Functions
 
-9.6.3 Present Value
+8.6.3 Present Value
 -------------------
 
 The `b P' (`calc-fin-pv') [`pv'] command computes the present value of
@@ -13706,7 +13828,7 @@ payments occur at the beginning of each interval rather than at the end.
 
 File: calc.info,  Node: Related Financial Functions,  Next: Depreciation Functions,  Prev: Present Value,  Up: Financial Functions
 
-9.6.4 Related Financial Functions
+8.6.4 Related Financial Functions
 ---------------------------------
 
 The functions in this section are basically inverses of the present
@@ -13764,7 +13886,7 @@ assuming payments occur at the beginning of each period.
 
 File: calc.info,  Node: Depreciation Functions,  Next: Definitions of Financial Functions,  Prev: Related Financial Functions,  Up: Financial Functions
 
-9.6.5 Depreciation Functions
+8.6.5 Depreciation Functions
 ----------------------------
 
 The functions in this section calculate "depreciation", which is the
@@ -13821,7 +13943,7 @@ between the cost and the salvage value.
 
 File: calc.info,  Node: Definitions of Financial Functions,  Prev: Depreciation Functions,  Up: Financial Functions
 
-9.6.6 Definitions
+8.6.6 Definitions
 -----------------
 
 For your reference, here are the actual formulas used to compute Calc's
@@ -13950,7 +14072,7 @@ value decreased in the specified period.
 
 File: calc.info,  Node: Binary Functions,  Prev: Financial Functions,  Up: Arithmetic
 
-9.7 Binary Number Functions
+8.7 Binary Number Functions
 ===========================
 
 The commands in this chapter all use two-letter sequences beginning with
@@ -14078,8 +14200,8 @@ integer.
 
 File: calc.info,  Node: Scientific Functions,  Next: Matrix Functions,  Prev: Arithmetic,  Up: Top
 
-10 Scientific Functions
-***********************
+9 Scientific Functions
+**********************
 
 The functions described here perform trigonometric and other
 transcendental calculations.  They generally produce floating-point
@@ -14119,8 +14241,8 @@ interpret a prefix argument.
 
 File: calc.info,  Node: Logarithmic Functions,  Next: Trigonometric and Hyperbolic Functions,  Prev: Scientific Functions,  Up: Scientific Functions
 
-10.1 Logarithmic Functions
-==========================
+9.1 Logarithmic Functions
+=========================
 
 The shift-`L' (`calc-ln') [`ln'] command computes the natural logarithm
 of the real or complex number on the top of the stack.  With the
@@ -14163,8 +14285,8 @@ producing a more accurate answer when `x' is close to zero.
 
 File: calc.info,  Node: Trigonometric and Hyperbolic Functions,  Next: Advanced Math Functions,  Prev: Logarithmic Functions,  Up: Scientific Functions
 
-10.2 Trigonometric/Hyperbolic Functions
-=======================================
+9.2 Trigonometric/Hyperbolic Functions
+======================================
 
 The shift-`S' (`calc-sin') [`sin'] command computes the sine of an
 angle or complex number.  If the input is an HMS form, it is interpreted
@@ -14235,8 +14357,8 @@ Inverse flag.)
 
 File: calc.info,  Node: Advanced Math Functions,  Next: Branch Cuts,  Prev: Trigonometric and Hyperbolic Functions,  Up: Scientific Functions
 
-10.3 Advanced Mathematical Functions
-====================================
+9.3 Advanced Mathematical Functions
+===================================
 
 Calc can compute a variety of less common functions that arise in
 various branches of mathematics.  All of the functions described in
@@ -14301,8 +14423,8 @@ Use with care!
 
 File: calc.info,  Node: Branch Cuts,  Next: Random Numbers,  Prev: Advanced Math Functions,  Up: Scientific Functions
 
-10.4 Branch Cuts and Principal Values
-=====================================
+9.4 Branch Cuts and Principal Values
+====================================
 
 All of the logarithmic, trigonometric, and other scientific functions
 are defined for complex numbers as well as for reals.  This section
@@ -14431,8 +14553,8 @@ values are not rigorously specified at present.
 
 File: calc.info,  Node: Random Numbers,  Next: Combinatorial Functions,  Prev: Branch Cuts,  Up: Scientific Functions
 
-10.5 Random Numbers
-===================
+9.5 Random Numbers
+==================
 
 The `k r' (`calc-random') [`random'] command produces random numbers of
 various sorts.
@@ -14535,8 +14657,8 @@ Functions::.
 
 File: calc.info,  Node: Random Number Generator,  Prev: Random Numbers,  Up: Random Numbers
 
-10.5.1 Random Number Generator
-------------------------------
+9.5.1 Random Number Generator
+-----------------------------
 
 Calc's random number generator uses several methods to ensure that the
 numbers it produces are highly random.  Knuth's _Art of Computer
@@ -14619,8 +14741,8 @@ other call to `random(0.0)' will require significant calculations.
 
 File: calc.info,  Node: Combinatorial Functions,  Next: Probability Distribution Functions,  Prev: Random Numbers,  Up: Scientific Functions
 
-10.6 Combinatorial Functions
-============================
+9.6 Combinatorial Functions
+===========================
 
 Commands relating to combinatorics and number theory begin with the `k'
 key prefix.
@@ -14747,8 +14869,8 @@ result is zero.
 
 File: calc.info,  Node: Probability Distribution Functions,  Prev: Combinatorial Functions,  Up: Scientific Functions
 
-10.7 Probability Distribution Functions
-=======================================
+9.7 Probability Distribution Functions
+======================================
 
 The functions in this section compute various probability distributions.
 For continuous distributions, this is the integral of the probability
@@ -14817,7 +14939,7 @@ Solutions::.
 
 File: calc.info,  Node: Matrix Functions,  Next: Algebra,  Prev: Scientific Functions,  Up: Top
 
-11 Vector/Matrix Functions
+10 Vector/Matrix Functions
 **************************
 
 Many of the commands described here begin with the `v' prefix.  (For
@@ -14847,7 +14969,7 @@ of matrices, and so on.)
 
 File: calc.info,  Node: Packing and Unpacking,  Next: Building Vectors,  Prev: Matrix Functions,  Up: Matrix Functions
 
-11.1 Packing and Unpacking
+10.1 Packing and Unpacking
 ==========================
 
 Calc's "pack" and "unpack" commands collect stack entries to build
@@ -15032,7 +15154,7 @@ can use `unpack(-10, X)_1'.
 
 File: calc.info,  Node: Building Vectors,  Next: Extracting Elements,  Prev: Packing and Unpacking,  Up: Matrix Functions
 
-11.2 Building Vectors
+10.2 Building Vectors
 =====================
 
 Vectors and matrices can be added, subtracted, multiplied, and divided;
@@ -15138,7 +15260,7 @@ c, d]) = d'.
 
 File: calc.info,  Node: Extracting Elements,  Next: Manipulating Vectors,  Prev: Building Vectors,  Up: Matrix Functions
 
-11.3 Extracting Vector Elements
+10.3 Extracting Vector Elements
 ===============================
 
 The `v r' (`calc-mrow') [`mrow'] command extracts one row of the matrix
@@ -15220,7 +15342,7 @@ vectors one element at a time.
 
 File: calc.info,  Node: Manipulating Vectors,  Next: Vector and Matrix Arithmetic,  Prev: Extracting Elements,  Up: Matrix Functions
 
-11.4 Manipulating Vectors
+10.4 Manipulating Vectors
 =========================
 
 The `v l' (`calc-vlength') [`vlen'] command computes the length of a
@@ -15374,7 +15496,7 @@ vectors.
 
 File: calc.info,  Node: Vector and Matrix Arithmetic,  Next: Set Operations,  Prev: Manipulating Vectors,  Up: Matrix Functions
 
-11.5 Vector and Matrix Arithmetic
+10.5 Vector and Matrix Arithmetic
 =================================
 
 Basic arithmetic operations like addition and multiplication are defined
@@ -15444,7 +15566,7 @@ product of two matrices.
 
 File: calc.info,  Node: Set Operations,  Next: Statistical Operations,  Prev: Vector and Matrix Arithmetic,  Up: Matrix Functions
 
-11.6 Set Operations using Vectors
+10.6 Set Operations using Vectors
 =================================
 
 Calc includes several commands which interpret vectors as "sets" of
@@ -15571,7 +15693,7 @@ huge integer representation (`2^100', a 31-digit integer, in this case).
 
 File: calc.info,  Node: Statistical Operations,  Next: Reducing and Mapping,  Prev: Set Operations,  Up: Matrix Functions
 
-11.7 Statistical Operations on Vectors
+10.7 Statistical Operations on Vectors
 ======================================
 
 The commands in this section take vectors as arguments and compute
@@ -15600,7 +15722,7 @@ probability distribution functions.
 
 File: calc.info,  Node: Single-Variable Statistics,  Next: Paired-Sample Statistics,  Prev: Statistical Operations,  Up: Statistical Operations
 
-11.7.1 Single-Variable Statistics
+10.7.1 Single-Variable Statistics
 ---------------------------------
 
 These functions do various statistical computations on single vectors.
@@ -15710,9 +15832,6 @@ mean" of two numbers taken from the stack.  This is computed by
 replacing the two numbers with their arithmetic mean and geometric
 mean, then repeating until the two values converge.
 
-   Another commonly used mean, the RMS (root-mean-square), can be
-computed for a vector of numbers simply by using the `A' command.
-
    The `u S' (`calc-vector-sdev') [`vsdev'] command computes the
 standard deviation of the data values.  If the values are error forms,
 the errors are used as weights just as for `u M'.  This is the _sample_
@@ -15754,7 +15873,7 @@ For example, `vflat(1, [2, [3, 4]], 5)' returns `[1, 2, 3, 4, 5]'.
 
 File: calc.info,  Node: Paired-Sample Statistics,  Prev: Single-Variable Statistics,  Up: Statistical Operations
 
-11.7.2 Paired-Sample Statistics
+10.7.2 Paired-Sample Statistics
 -------------------------------
 
 The functions in this section take two arguments, which must be vectors
@@ -15788,7 +15907,7 @@ statistics here.)
 
 File: calc.info,  Node: Reducing and Mapping,  Next: Vector and Matrix Formats,  Prev: Statistical Operations,  Up: Matrix Functions
 
-11.8 Reducing and Mapping Vectors
+10.8 Reducing and Mapping Vectors
 =================================
 
 The commands in this section allow for more general operations on the
@@ -15816,7 +15935,7 @@ either `V R' or `V M', described below, is closer to what you want.
 
 File: calc.info,  Node: Specifying Operators,  Next: Mapping,  Prev: Reducing and Mapping,  Up: Reducing and Mapping
 
-11.8.1 Specifying Operators
+10.8.1 Specifying Operators
 ---------------------------
 
 Commands in this section (like `V A') prompt you to press the key
@@ -15927,7 +16046,7 @@ makes this translation, so you don't have to worry about it.)
 
 File: calc.info,  Node: Mapping,  Next: Reducing,  Prev: Specifying Operators,  Up: Reducing and Mapping
 
-11.8.2 Mapping
+10.8.2 Mapping
 --------------
 
 The `V M' (`calc-map') [`map'] command applies a given operator
@@ -16014,7 +16133,7 @@ stored value using a `V M'-like operator.
 
 File: calc.info,  Node: Reducing,  Next: Nesting and Fixed Points,  Prev: Mapping,  Up: Reducing and Mapping
 
-11.8.3 Reducing
+10.8.3 Reducing
 ---------------
 
 The `V R' (`calc-reduce') [`reduce'] command applies a given binary
@@ -16073,7 +16192,7 @@ r' to grab a rectangle of data into Calc, and then typing `V R : +' or
 
 File: calc.info,  Node: Nesting and Fixed Points,  Next: Generalized Products,  Prev: Reducing,  Up: Reducing and Mapping
 
-11.8.4 Nesting and Fixed Points
+10.8.4 Nesting and Fixed Points
 -------------------------------
 
 The `H V R' [`nest'] command applies a function to a given argument
@@ -16139,7 +16258,7 @@ steps have been taken, whichever is sooner.
 
 File: calc.info,  Node: Generalized Products,  Prev: Nesting and Fixed Points,  Up: Reducing and Mapping
 
-11.8.5 Generalized Products
+10.8.5 Generalized Products
 ---------------------------
 
 The `V O' (`calc-outer-product') [`outer'] command applies a given
@@ -16170,7 +16289,7 @@ second (additive) operator is taken from second-to-top.
 
 File: calc.info,  Node: Vector and Matrix Formats,  Prev: Reducing and Mapping,  Up: Matrix Functions
 
-11.9 Vector and Matrix Display Formats
+10.9 Vector and Matrix Display Formats
 ======================================
 
 Commands for controlling vector and matrix display use the `v' prefix
@@ -16263,7 +16382,7 @@ still use the normal linear form.
 
 File: calc.info,  Node: Algebra,  Next: Units,  Prev: Matrix Functions,  Up: Top
 
-12 Algebra
+11 Algebra
 **********
 
 This section covers the Calc features that help you work with algebraic
@@ -16303,7 +16422,7 @@ mode (`d B').  *Note Normal Language Modes::.
 
 File: calc.info,  Node: Selecting Subformulas,  Next: Algebraic Manipulation,  Prev: Algebra,  Up: Algebra
 
-12.1 Selecting Sub-Formulas
+11.1 Selecting Sub-Formulas
 ===========================
 
 When working with an algebraic formula it is often necessary to
@@ -16328,7 +16447,7 @@ on one element of a vector in-place, simply select that element as a
 
 File: calc.info,  Node: Making Selections,  Next: Changing Selections,  Prev: Selecting Subformulas,  Up: Selecting Subformulas
 
-12.1.1 Making Selections
+11.1.1 Making Selections
 ------------------------
 
 To select a sub-formula, move the Emacs cursor to any character in that
@@ -16354,7 +16473,7 @@ to the letter `b' and press `j s', the display changes to
 
 Every character not part of the sub-formula `b' has been changed to a
 dot. (If the customizable variable
-`calc-highlight-selections-with-faces' is non-nil, then the characters
+`calc-highlight-selections-with-faces' is non-`nil', then the characters
 not part of the sub-formula are de-emphasized by using a less
 noticeable face instead of using dots. *note Displaying Selections::.)
 The `*' next to the line number is to remind you that the formula has a
@@ -16453,7 +16572,7 @@ elements.
 
 File: calc.info,  Node: Changing Selections,  Next: Displaying Selections,  Prev: Making Selections,  Up: Selecting Subformulas
 
-12.1.2 Changing Selections
+11.1.2 Changing Selections
 --------------------------
 
 Once you have selected a sub-formula, you can expand it using the `j m'
@@ -16525,7 +16644,7 @@ sub-component of the hierarchy simply by pointing to it with the cursor.
 
 File: calc.info,  Node: Displaying Selections,  Next: Operating on Selections,  Prev: Changing Selections,  Up: Selecting Subformulas
 
-12.1.3 Displaying Selections
+11.1.3 Displaying Selections
 ----------------------------
 
 The `j d' (`calc-show-selections') command controls how selected
@@ -16538,7 +16657,7 @@ which the selected portion itself is obscured by `#' signs:
      1*  ...............       1*  ---------------
              . . . .                   2 x + 1
 If the customizable variable `calc-highlight-selections-with-faces' is
-non-nil, then the non-selected portion of the formula will be
+non-`nil', then the non-selected portion of the formula will be
 de-emphasized by using a less noticeable face (`calc-nonselected-face')
 instead of dots and the selected sub-formula will be highlighted by
 using a more noticeable face (`calc-selected-face') instead of `#'
@@ -16547,7 +16666,7 @@ signs. (*note Customizing Calc::.)
 
 File: calc.info,  Node: Operating on Selections,  Next: Rearranging with Selections,  Prev: Displaying Selections,  Up: Selecting Subformulas
 
-12.1.4 Operating on Selections
+11.1.4 Operating on Selections
 ------------------------------
 
 Once a selection is made, all Calc commands that manipulate items on
@@ -16672,7 +16791,7 @@ simplified.
 
 File: calc.info,  Node: Rearranging with Selections,  Prev: Operating on Selections,  Up: Selecting Subformulas
 
-12.1.5 Rearranging Formulas using Selections
+11.1.5 Rearranging Formulas using Selections
 --------------------------------------------
 
 The `j R' (`calc-commute-right') command moves the selected sub-formula
@@ -16868,7 +16987,7 @@ other algebraic operations on sub-formulas.  *Note Rewrite Rules::.
 
 File: calc.info,  Node: Algebraic Manipulation,  Next: Simplifying Formulas,  Prev: Selecting Subformulas,  Up: Algebra
 
-12.2 Algebraic Manipulation
+11.2 Algebraic Manipulation
 ===========================
 
 The commands in this section perform general-purpose algebraic
@@ -17008,7 +17127,7 @@ simplifications off first (with `m O').
 
 File: calc.info,  Node: Simplifying Formulas,  Next: Polynomials,  Prev: Algebraic Manipulation,  Up: Algebra
 
-12.3 Simplifying Formulas
+11.3 Simplifying Formulas
 =========================
 
 
@@ -17053,7 +17172,7 @@ appropriate combinations of `sinh's and `cosh's before simplifying.
 
 File: calc.info,  Node: Basic Simplifications,  Next: Algebraic Simplifications,  Prev: Simplifying Formulas,  Up: Simplifying Formulas
 
-12.3.1 Basic Simplifications
+11.3.1 Basic Simplifications
 ----------------------------
 
 This section describes basic simplifications which Calc performs in many
@@ -17300,7 +17419,7 @@ suitable numbers.
 
 File: calc.info,  Node: Algebraic Simplifications,  Next: Unsafe Simplifications,  Prev: Basic Simplifications,  Up: Simplifying Formulas
 
-12.3.2 Algebraic Simplifications
+11.3.2 Algebraic Simplifications
 --------------------------------
 
 This section describes all simplifications that are performed by the
@@ -17477,7 +17596,7 @@ if `x' is known to be real.
 
 File: calc.info,  Node: Unsafe Simplifications,  Next: Simplification of Units,  Prev: Algebraic Simplifications,  Up: Simplifying Formulas
 
-12.3.3 "Unsafe" Simplifications
+11.3.3 "Unsafe" Simplifications
 -------------------------------
 
 Calc is capable of performing some simplifications which may sometimes
@@ -17547,7 +17666,7 @@ both sides of an inequality.
 
 File: calc.info,  Node: Simplification of Units,  Prev: Unsafe Simplifications,  Up: Simplifying Formulas
 
-12.3.4 Simplification of Units
+11.3.4 Simplification of Units
 ------------------------------
 
 The simplifications described in this section (as well as the algebraic
@@ -17622,7 +17741,7 @@ set to radians.
 
 File: calc.info,  Node: Polynomials,  Next: Calculus,  Prev: Simplifying Formulas,  Up: Algebra
 
-12.4 Polynomials
+11.4 Polynomials
 ================
 
 A "polynomial" is a sum of terms which are coefficients times various
@@ -17790,7 +17909,7 @@ extracting the individual coefficients of a polynomial.
 
 File: calc.info,  Node: Calculus,  Next: Solving Equations,  Prev: Polynomials,  Up: Algebra
 
-12.5 Calculus
+11.5 Calculus
 =============
 
 The following calculus commands do not automatically simplify their
@@ -17809,7 +17928,7 @@ and/or `a c' to arrange a result in the most readable way.
 
 File: calc.info,  Node: Differentiation,  Next: Integration,  Prev: Calculus,  Up: Calculus
 
-12.5.1 Differentiation
+11.5.1 Differentiation
 ----------------------
 
 The `a d' (`calc-derivative') [`deriv'] command computes the derivative
@@ -17860,7 +17979,7 @@ differentiated with respect to each argument once).
 
 File: calc.info,  Node: Integration,  Next: Customizing the Integrator,  Prev: Differentiation,  Up: Calculus
 
-12.5.2 Integration
+11.5.2 Integration
 ------------------
 
 The `a i' (`calc-integral') [`integ'] command computes the indefinite
@@ -17928,7 +18047,7 @@ and so on.  *Note Rewrite Rules::.
 
 File: calc.info,  Node: Customizing the Integrator,  Next: Numerical Integration,  Prev: Integration,  Up: Calculus
 
-12.5.3 Customizing the Integrator
+11.5.3 Customizing the Integrator
 ---------------------------------
 
 Calc has two built-in rewrite rules called `IntegRules' and
@@ -18036,7 +18155,7 @@ and `IntegSimpRules'.
 
 File: calc.info,  Node: Numerical Integration,  Next: Taylor Series,  Prev: Customizing the Integrator,  Up: Calculus
 
-12.5.4 Numerical Integration
+11.5.4 Numerical Integration
 ----------------------------
 
 If you want a purely numerical answer to an integration problem, you can
@@ -18073,7 +18192,7 @@ because the integrand goes to infinity at one of the endpoints.
 
 File: calc.info,  Node: Taylor Series,  Prev: Numerical Integration,  Up: Calculus
 
-12.5.5 Taylor Series
+11.5.5 Taylor Series
 --------------------
 
 The `a t' (`calc-taylor') [`taylor'] command computes a power series
@@ -18093,7 +18212,7 @@ Taylor series.
 
 File: calc.info,  Node: Solving Equations,  Next: Numerical Solutions,  Prev: Calculus,  Up: Algebra
 
-12.6 Solving Equations
+11.6 Solving Equations
 ======================
 
 The `a S' (`calc-solve-for') [`solve'] command rearranges an equation
@@ -18125,7 +18244,7 @@ with `x' set equal to `y/3 - 2'.
 
 File: calc.info,  Node: Multiple Solutions,  Next: Solving Systems of Equations,  Prev: Solving Equations,  Up: Solving Equations
 
-12.6.1 Multiple Solutions
+11.6.1 Multiple Solutions
 -------------------------
 
 Some equations have more than one solution.  The Hyperbolic flag (`H a
@@ -18217,7 +18336,7 @@ polynomial coefficients are all numbers (real or complex).
 
 File: calc.info,  Node: Solving Systems of Equations,  Next: Decomposing Polynomials,  Prev: Multiple Solutions,  Up: Solving Equations
 
-12.6.2 Solving Systems of Equations
+11.6.2 Solving Systems of Equations
 -----------------------------------
 
 You can also use the commands described above to solve systems of
@@ -18275,7 +18394,7 @@ satisfy the equations.  *Note Curve Fitting::.
 
 File: calc.info,  Node: Decomposing Polynomials,  Prev: Solving Systems of Equations,  Up: Solving Equations
 
-12.6.3 Decomposing Polynomials
+11.6.3 Decomposing Polynomials
 ------------------------------
 
 The `poly' function takes a polynomial and a variable as arguments, and
@@ -18382,7 +18501,7 @@ result will have integer coefficients in simplest terms.
 
 File: calc.info,  Node: Numerical Solutions,  Next: Curve Fitting,  Prev: Solving Equations,  Up: Algebra
 
-12.7 Numerical Solutions
+11.7 Numerical Solutions
 ========================
 
 Not all equations can be solved symbolically.  The commands in this
@@ -18403,7 +18522,7 @@ on numerical data.)
 
 File: calc.info,  Node: Root Finding,  Next: Minimization,  Prev: Numerical Solutions,  Up: Numerical Solutions
 
-12.7.1 Root Finding
+11.7.1 Root Finding
 -------------------
 
 The `a R' (`calc-find-root') [`root'] command finds a numerical
@@ -18472,7 +18591,7 @@ back.
 
 File: calc.info,  Node: Minimization,  Next: Numerical Systems of Equations,  Prev: Root Finding,  Up: Numerical Solutions
 
-12.7.2 Minimization
+11.7.2 Minimization
 -------------------
 
 The `a N' (`calc-find-minimum') [`minimize'] command finds a minimum
@@ -18525,7 +18644,7 @@ over the reals.
 
 File: calc.info,  Node: Numerical Systems of Equations,  Prev: Minimization,  Up: Numerical Solutions
 
-12.7.3 Systems of Equations
+11.7.3 Systems of Equations
 ---------------------------
 
 The `a R' command can also solve systems of equations.  In this case,
@@ -18551,7 +18670,7 @@ minimization is currently _very_ slow.
 
 File: calc.info,  Node: Curve Fitting,  Next: Summations,  Prev: Numerical Solutions,  Up: Algebra
 
-12.8 Curve Fitting
+11.8 Curve Fitting
 ==================
 
 The `a F' command fits a set of data to a "model formula", such as `y =
@@ -18578,7 +18697,7 @@ plotted after the formula is determined.  This will be indicated by a
 
 File: calc.info,  Node: Linear Fits,  Next: Polynomial and Multilinear Fits,  Prev: Curve Fitting,  Up: Curve Fitting
 
-12.8.1 Linear Fits
+11.8.1 Linear Fits
 ------------------
 
 The `a F' (`calc-curve-fit') [`fit'] command attempts to fit a set of
@@ -18691,7 +18810,7 @@ can be either a one-row matrix or a plain vector, in which case the
 
 File: calc.info,  Node: Polynomial and Multilinear Fits,  Next: Error Estimates for Fits,  Prev: Linear Fits,  Up: Curve Fitting
 
-12.8.2 Polynomial and Multilinear Fits
+11.8.2 Polynomial and Multilinear Fits
 --------------------------------------
 
 To fit the data to higher-order polynomials, just type one of the
@@ -18782,7 +18901,7 @@ are multinomial fits, e.g., `a + b x + c y + d x^2 + e y^2 + f x y'.
 
 File: calc.info,  Node: Error Estimates for Fits,  Next: Standard Nonlinear Models,  Prev: Polynomial and Multilinear Fits,  Up: Curve Fitting
 
-12.8.3 Error Estimates for Fits
+11.8.3 Error Estimates for Fits
 -------------------------------
 
 With the Hyperbolic flag, `H a F' [`efit'] performs the same fitting
@@ -18879,7 +18998,7 @@ information.  The result is a vector of six items:
 
 File: calc.info,  Node: Standard Nonlinear Models,  Next: Curve Fitting Details,  Prev: Error Estimates for Fits,  Up: Curve Fitting
 
-12.8.4 Standard Nonlinear Models
+11.8.4 Standard Nonlinear Models
 --------------------------------
 
 The `a F' command also accepts other kinds of models besides lines and
@@ -19044,7 +19163,7 @@ Fourier and related transforms.)
 
 File: calc.info,  Node: Curve Fitting Details,  Next: Interpolation,  Prev: Standard Nonlinear Models,  Up: Curve Fitting
 
-12.8.5 Curve Fitting Details
+11.8.5 Curve Fitting Details
 ----------------------------
 
 Calc's internal least-squares fitter can only handle multilinear
@@ -19315,7 +19434,7 @@ functions are completely analogous.
 
 File: calc.info,  Node: Interpolation,  Prev: Curve Fitting Details,  Up: Curve Fitting
 
-12.8.6 Polynomial Interpolation
+11.8.6 Polynomial Interpolation
 -------------------------------
 
 The `a p' (`calc-poly-interp') [`polint'] command does a polynomial
@@ -19369,7 +19488,7 @@ capabilities to fit.)
 
 File: calc.info,  Node: Summations,  Next: Logical Operations,  Prev: Curve Fitting,  Up: Algebra
 
-12.9 Summations
+11.9 Summations
 ===============
 
 The `a +' (`calc-summation') [`sum'] command computes the sum of a
@@ -19496,7 +19615,7 @@ result is simply a vector of the results.  For example, `table(a_i, i,
 
 File: calc.info,  Node: Logical Operations,  Next: Rewrite Rules,  Prev: Summations,  Up: Algebra
 
-12.10 Logical Operations
+11.10 Logical Operations
 ========================
 
 The following commands and algebraic functions return true/false values,
@@ -19717,7 +19836,7 @@ return 0 or leave itself in symbolic form.)
 
 File: calc.info,  Node: Rewrite Rules,  Prev: Logical Operations,  Up: Algebra
 
-12.11 Rewrite Rules
+11.11 Rewrite Rules
 ===================
 
 The `a r' (`calc-rewrite') [`rewrite'] command makes substitutions in a
@@ -19754,7 +19873,7 @@ being parsed, converting strings of characters into Calc formulas.
 
 File: calc.info,  Node: Entering Rewrite Rules,  Next: Basic Rewrite Rules,  Prev: Rewrite Rules,  Up: Rewrite Rules
 
-12.11.1 Entering Rewrite Rules
+11.11.1 Entering Rewrite Rules
 ------------------------------
 
 Rewrite rules normally use the "assignment" operator `OLD := NEW'.
@@ -19818,7 +19937,7 @@ the use of this notation is no longer recommended.
 
 File: calc.info,  Node: Basic Rewrite Rules,  Next: Conditional Rewrite Rules,  Prev: Entering Rewrite Rules,  Up: Rewrite Rules
 
-12.11.2 Basic Rewrite Rules
+11.11.2 Basic Rewrite Rules
 ---------------------------
 
 To match a particular formula `x' with a particular rewrite rule `OLD
@@ -19861,7 +19980,7 @@ time.
 
 File: calc.info,  Node: Conditional Rewrite Rules,  Next: Algebraic Properties of Rewrite Rules,  Prev: Basic Rewrite Rules,  Up: Rewrite Rules
 
-12.11.3 Conditional Rewrite Rules
+11.11.3 Conditional Rewrite Rules
 ---------------------------------
 
 A rewrite rule can also be "conditional", written in the form `OLD :=
@@ -19941,7 +20060,7 @@ the speed of matching the rule.)
 
 File: calc.info,  Node: Algebraic Properties of Rewrite Rules,  Next: Other Features of Rewrite Rules,  Prev: Conditional Rewrite Rules,  Up: Rewrite Rules
 
-12.11.4 Algebraic Properties of Rewrite Rules
+11.11.4 Algebraic Properties of Rewrite Rules
 ---------------------------------------------
 
 The rewrite mechanism understands the algebraic properties of functions
@@ -20200,7 +20319,7 @@ to a literal addition like `f((-y) + x)'.
 
 File: calc.info,  Node: Other Features of Rewrite Rules,  Next: Composing Patterns in Rewrite Rules,  Prev: Algebraic Properties of Rewrite Rules,  Up: Rewrite Rules
 
-12.11.5 Other Features of Rewrite Rules
+11.11.5 Other Features of Rewrite Rules
 ---------------------------------------
 
 Certain "function names" serve as markers in rewrite rules.  Here is a
@@ -20494,7 +20613,7 @@ import-with-renaming feature may fail to rename sub-imports properly.
 
 File: calc.info,  Node: Composing Patterns in Rewrite Rules,  Next: Nested Formulas with Rewrite Rules,  Prev: Other Features of Rewrite Rules,  Up: Rewrite Rules
 
-12.11.6 Composing Patterns in Rewrite Rules
+11.11.6 Composing Patterns in Rewrite Rules
 -------------------------------------------
 
 There are three operators, `&&&', `|||', and `!!!', that combine
@@ -20619,7 +20738,7 @@ at all!
 
 File: calc.info,  Node: Nested Formulas with Rewrite Rules,  Next: Multi-Phase Rewrite Rules,  Prev: Composing Patterns in Rewrite Rules,  Up: Rewrite Rules
 
-12.11.7 Nested Formulas with Rewrite Rules
+11.11.7 Nested Formulas with Rewrite Rules
 ------------------------------------------
 
 When `a r' (`calc-rewrite') is used, it takes an expression from the
@@ -20693,7 +20812,7 @@ rule set is used; if both are omitted, 100 is used.
 
 File: calc.info,  Node: Multi-Phase Rewrite Rules,  Next: Selections with Rewrite Rules,  Prev: Nested Formulas with Rewrite Rules,  Up: Rewrite Rules
 
-12.11.8 Multi-Phase Rewrite Rules
+11.11.8 Multi-Phase Rewrite Rules
 ---------------------------------
 
 It is possible to separate a rewrite rule set into several "phases".
@@ -20799,7 +20918,7 @@ phases, this problem is neatly avoided.
 
 File: calc.info,  Node: Selections with Rewrite Rules,  Next: Matching Commands,  Prev: Multi-Phase Rewrite Rules,  Up: Rewrite Rules
 
-12.11.9 Selections with Rewrite Rules
+11.11.9 Selections with Rewrite Rules
 -------------------------------------
 
 If a sub-formula of the current formula is selected (as by `j s'; *note
@@ -20867,7 +20986,7 @@ both `a r' and `j r', both with and without selections.
 
 File: calc.info,  Node: Matching Commands,  Next: Automatic Rewrites,  Prev: Selections with Rewrite Rules,  Up: Rewrite Rules
 
-12.11.10 Matching Commands
+11.11.10 Matching Commands
 --------------------------
 
 The `a m' (`calc-match') [`match'] function takes a vector of formulas
@@ -20907,7 +21026,7 @@ the number 0.
 
 File: calc.info,  Node: Automatic Rewrites,  Next: Debugging Rewrites,  Prev: Matching Commands,  Up: Rewrite Rules
 
-12.11.11 Automatic Rewrites
+11.11.11 Automatic Rewrites
 ---------------------------
 
 It is possible to get Calc to apply a set of rewrite rules on all
@@ -21061,7 +21180,7 @@ simplification rules that are used only during integration by `a i'.
 
 File: calc.info,  Node: Debugging Rewrites,  Next: Examples of Rewrite Rules,  Prev: Automatic Rewrites,  Up: Rewrite Rules
 
-12.11.12 Debugging Rewrites
+11.11.12 Debugging Rewrites
 ---------------------------
 
 If a buffer named `*Trace*' exists, the rewrite mechanism will record
@@ -21081,7 +21200,7 @@ about it, all your future rewrite commands will be needlessly slow.
 
 File: calc.info,  Node: Examples of Rewrite Rules,  Prev: Debugging Rewrites,  Up: Rewrite Rules
 
-12.11.13 Examples of Rewrite Rules
+11.11.13 Examples of Rewrite Rules
 ----------------------------------
 
 Returning to the example of substituting the pattern `sin(x)^2 +
@@ -21166,7 +21285,7 @@ quat(w, [x, y, z]) := quat(w, x, y, z)' to the end of the rule set.
 
 File: calc.info,  Node: Units,  Next: Store and Recall,  Prev: Algebra,  Up: Top
 
-13 Operating on Units
+12 Operating on Units
 *********************
 
 One special interpretation of algebraic formulas is as numbers with
@@ -21187,7 +21306,7 @@ units expressions in this form.  Units-related commands begin with the
 
 File: calc.info,  Node: Basic Operations on Units,  Next: The Units Table,  Prev: Units,  Up: Units
 
-13.1 Basic Operations on Units
+12.1 Basic Operations on Units
 ==============================
 
 A "units expression" is a formula which is basically a number
@@ -21262,17 +21381,12 @@ while typing `u c au/yr <RET>' produces `5.18665819999e-3 au/yr'.
 
    If the units you request are inconsistent with the original units,
 the number will be converted into your units times whatever "remainder"
-units are left over.  For example, converting `55 mph' into acres
-produces `6.08e-3 acre / m s'.  (Recall that multiplication binds more
-strongly than division in Calc formulas, so the units here are acres
-per meter-second.)  Remainder units are expressed in terms of
-"fundamental" units like `m' and `s', regardless of the input units.
-
-   If you want to disallow using inconsistent units, you can set the
-customizable variable `calc-ensure-consistent-units' to `t' (*note
-Customizing Calc::).  In this case, if you request units which are
-inconsistent with the original units, you will be warned about it and
-no conversion will occur.
+units are left over.  (This can be disabled; *note Customizing Calc::.)
+For example, converting `55 mph' into acres produces `6.08e-3 acre / m
+s'.  (Recall that multiplication binds more strongly than division in
+Calc formulas, so the units here are acres per meter-second.)
+Remainder units are expressed in terms of "fundamental" units like `m'
+and `s', regardless of the input units.
 
    One special exception is that if you specify a single unit name, and
 a compatible unit appears somewhere in the units expression, then that
@@ -21310,10 +21424,13 @@ x', so that `(ft+in)/hr' is first converted to `ft/hr+in/hr'.
 
    If the value on the stack does not contain any units, `u c' will
 prompt first for the old units which this value should be considered to
-have, then for the new units.  Assuming the old and new units you give
-are consistent with each other, the result also will not contain any
-units.  For example, `u c cm <RET> in <RET>' converts the number 2 on
-the stack to 5.08.
+have, then for the new units.  (If the value on the stack can be
+simplified so that it doesn't contain any units, like `ft/in' can be
+simplified to 12, then `u c' will still prompt for both old units and
+new units.   Assuming the old and new units you give are consistent
+with each other, the result also will not contain any units.  For
+example, `u c cm <RET> in <RET>' converts the number 2 on the stack to
+5.08.
 
    The `u b' (`calc-base-units') command is shorthand for `u c base';
 it converts the units expression on the top of the stack into `base'
@@ -21359,7 +21476,7 @@ normally be considered a "femto-ton," but it is written as `1000 at'
 
 File: calc.info,  Node: The Units Table,  Next: Predefined Units,  Prev: Basic Operations on Units,  Up: Units
 
-13.2 The Units Table
+12.2 The Units Table
 ====================
 
 The `u v' (`calc-enter-units-table') command displays the units table
@@ -21411,7 +21528,7 @@ column of the Units Table.
 
 File: calc.info,  Node: Predefined Units,  Next: User-Defined Units,  Prev: The Units Table,  Up: Units
 
-13.3 Predefined Units
+12.3 Predefined Units
 =====================
 
 The definitions of many units have changed over the years.  For example,
@@ -21426,11 +21543,11 @@ currently defined as 9192631770 periods of a certain radiation related
 to the cesium-133 atom.  The only SI unit that is not based on a
 fundamental physical process (although there are efforts to change
 this) is the kilogram, which was originally defined as the mass of one
-liter of water, but is now defined as the mass of the International
-Prototype Kilogram (IPK), a cylinder of platinum-iridium kept at the
-Bureau International des Poids et Mesures in Se`vres, France.  (There
-are several copies of the IPK throughout the world.)  The British
-imperial units, once defined in terms of physical objects, were
+liter of water, but is now defined as the mass of the international
+prototype of the kilogram (IPK), a cylinder of platinum-iridium kept at
+the Bureau international des poids et mesures in Sèvres, France.
+(There are several copies of the IPK throughout the world.)  The
+British imperial units, once defined in terms of physical objects, were
 redefined in 1963 in terms of SI units.  The US customary units, which
 were the same as British units until the British imperial system was
 created in 1824, were also defined in terms of the SI units in 1893.
@@ -21511,7 +21628,7 @@ unitless.)
 
 File: calc.info,  Node: User-Defined Units,  Next: Logarithmic Units,  Prev: Predefined Units,  Up: Units
 
-13.4 User-Defined Units
+12.4 User-Defined Units
 =======================
 
 Calc provides ways to get quick access to your selected "favorite"
@@ -21582,7 +21699,7 @@ tell Calc to use a different file for the Calc init file.)
 
 File: calc.info,  Node: Logarithmic Units,  Next: Musical Notes,  Prev: User-Defined Units,  Up: Units
 
-13.5 Logarithmic Units
+12.5 Logarithmic Units
 ======================
 
 The units `dB' (decibels) and `Np' (nepers) are logarithmic units which
@@ -21691,7 +21808,7 @@ quantities don't play a role in this arithmetic.
 
 File: calc.info,  Node: Musical Notes,  Prev: Logarithmic Units,  Up: Units
 
-13.6 Musical Notes
+12.6 Musical Notes
 ==================
 
 Calc can convert between musical notes and their associated
@@ -21740,7 +21857,7 @@ with the default value of `1', Calc converts `261.625 Hz' to `C_4'.
 
 File: calc.info,  Node: Store and Recall,  Next: Graphics,  Prev: Units,  Up: Top
 
-14 Storing and Recalling
+13 Storing and Recalling
 ************************
 
 Calculator variables are really just Lisp variables that contain numbers
@@ -21759,7 +21876,7 @@ related to variables use the `s' prefix key.
 
 File: calc.info,  Node: Storing Variables,  Next: Recalling Variables,  Prev: Store and Recall,  Up: Store and Recall
 
-14.1 Storing Variables
+13.1 Storing Variables
 ======================
 
 The `s s' (`calc-store') command stores the value at the top of the
@@ -21907,7 +22024,7 @@ restored by voiding it with `s u'.
 
 File: calc.info,  Node: Recalling Variables,  Next: Operations on Variables,  Prev: Storing Variables,  Up: Store and Recall
 
-14.2 Recalling Variables
+13.2 Recalling Variables
 ========================
 
 The most straightforward way to extract the stored value from a variable
@@ -21928,7 +22045,7 @@ equivalent to `s r 9'.
 
 File: calc.info,  Node: Operations on Variables,  Next: Let Command,  Prev: Recalling Variables,  Up: Store and Recall
 
-14.3 Other Operations on Variables
+13.3 Other Operations on Variables
 ==================================
 
 The `s e' (`calc-edit-variable') command edits the stored value of a
@@ -22024,7 +22141,7 @@ in any buffer, and it also stores in a more human-readable format.)
 
 File: calc.info,  Node: Let Command,  Next: Evaluates-To Operator,  Prev: Operations on Variables,  Up: Store and Recall
 
-14.4 The Let Command
+13.4 The Let Command
 ====================
 
 If you have an expression like `a+b^2' on the stack and you wish to
@@ -22060,7 +22177,7 @@ evaluate `pi'.
 
 File: calc.info,  Node: Evaluates-To Operator,  Prev: Let Command,  Up: Store and Recall
 
-14.5 The Evaluates-To Operator
+13.5 The Evaluates-To Operator
 ==============================
 
 The special algebraic symbol `=>' is known as the "evaluates-to
@@ -22161,7 +22278,7 @@ TeX language output.  The "eqn" mode gives similar treatment to `=>'.
 
 File: calc.info,  Node: Graphics,  Next: Kill and Yank,  Prev: Store and Recall,  Up: Top
 
-15 Graphics
+14 Graphics
 ***********
 
 The commands for graphing data begin with the `g' prefix key.  Calc
@@ -22193,7 +22310,7 @@ Posix-compatible terminal.
 
 File: calc.info,  Node: Basic Graphics,  Next: Three Dimensional Graphics,  Prev: Graphics,  Up: Graphics
 
-15.1 Basic Graphics
+14.1 Basic Graphics
 ===================
 
 The easiest graphics command is `g f' (`calc-graph-fast').  This
@@ -22268,7 +22385,7 @@ is one.
 
 File: calc.info,  Node: Three Dimensional Graphics,  Next: Managing Curves,  Prev: Basic Graphics,  Up: Graphics
 
-15.2 Three-Dimensional Graphics
+14.2 Three-Dimensional Graphics
 ===============================
 
 The `g F' (`calc-graph-fast-3d') command makes a three-dimensional
@@ -22327,7 +22444,7 @@ containing the relevant data.
 
 File: calc.info,  Node: Managing Curves,  Next: Graphics Options,  Prev: Three Dimensional Graphics,  Up: Graphics
 
-15.3 Managing Curves
+14.3 Managing Curves
 ====================
 
 The `g f' command is really shorthand for the following commands: `C-u
@@ -22464,7 +22581,7 @@ printer.
 
 File: calc.info,  Node: Graphics Options,  Next: Devices,  Prev: Managing Curves,  Up: Graphics
 
-15.4 Graphics Options
+14.4 Graphics Options
 =====================
 
 The `g g' (`calc-graph-grid') command turns the "grid" on and off.  It
@@ -22586,7 +22703,7 @@ still be assigned automatically, but you could store another vector in
 
 File: calc.info,  Node: Devices,  Prev: Graphics Options,  Up: Graphics
 
-15.5 Graphical Devices
+14.5 Graphical Devices
 ======================
 
 The `g D' (`calc-graph-device') command sets the device name (or
@@ -22748,7 +22865,7 @@ usage of GNUPLOT.
 
 File: calc.info,  Node: Kill and Yank,  Next: Keypad Mode,  Prev: Graphics,  Up: Top
 
-16 Kill and Yank Functions
+15 Kill and Yank Functions
 **************************
 
 The commands in this chapter move information between the Calculator and
@@ -22770,7 +22887,7 @@ work with Calc from a regular editing buffer.  *Note Embedded Mode::.
 
 File: calc.info,  Node: Killing From Stack,  Next: Yanking Into Stack,  Prev: Kill and Yank,  Up: Kill and Yank
 
-16.1 Killing from the Stack
+15.1 Killing from the Stack
 ===========================
 
 "Kill" commands are Emacs commands that insert text into the "kill
@@ -22805,7 +22922,7 @@ newline.
 
 File: calc.info,  Node: Yanking Into Stack,  Next: Saving Into Registers,  Prev: Killing From Stack,  Up: Kill and Yank
 
-16.2 Yanking into the Stack
+15.2 Yanking into the Stack
 ===========================
 
 The `C-y' command yanks the most recently killed text back into the
@@ -22824,7 +22941,7 @@ precision, this feature normally makes no difference.)
 
 File: calc.info,  Node: Saving Into Registers,  Next: Inserting From Registers,  Prev: Yanking Into Stack,  Up: Kill and Yank
 
-16.3 Saving into Registers
+15.3 Saving into Registers
 ==========================
 
 An alternative to killing and yanking stack entries is using registers
@@ -22854,7 +22971,7 @@ to the register.
 
 File: calc.info,  Node: Inserting From Registers,  Next: Grabbing From Buffers,  Prev: Saving Into Registers,  Up: Kill and Yank
 
-16.4 Inserting from Registers
+15.4 Inserting from Registers
 =============================
 
 The command `r i' (`calc-insert-register') will prompt for a register,
@@ -22867,7 +22984,7 @@ then inserted into the Calculator.
 
 File: calc.info,  Node: Grabbing From Buffers,  Next: Yanking Into Buffers,  Prev: Inserting From Registers,  Up: Kill and Yank
 
-16.5 Grabbing from Other Buffers
+15.5 Grabbing from Other Buffers
 ================================
 
 The `C-x * g' (`calc-grab-region') command takes the text between point
@@ -22973,7 +23090,7 @@ reduction command, `V R : *'.
 
 File: calc.info,  Node: Yanking Into Buffers,  Next: X Cut and Paste,  Prev: Grabbing From Buffers,  Up: Kill and Yank
 
-16.6 Yanking into Other Buffers
+15.6 Yanking into Other Buffers
 ===============================
 
 The plain `y' (`calc-copy-to-buffer') command inserts the number at the
@@ -23027,7 +23144,7 @@ guarantee that Calc knows which editing buffer you want to use!
 
 File: calc.info,  Node: X Cut and Paste,  Prev: Yanking Into Buffers,  Up: Kill and Yank
 
-16.7 X Cut and Paste
+15.7 X Cut and Paste
 ====================
 
 If you are using Emacs with the X window system, there is an easier way
@@ -23057,7 +23174,7 @@ shell, then middle-clicking in the Calc window.
 
 File: calc.info,  Node: Keypad Mode,  Next: Embedded Mode,  Prev: Kill and Yank,  Up: Top
 
-17 Keypad Mode
+16 Keypad Mode
 **************
 
 The `C-x * k' (`calc-keypad') command starts the Calculator and
@@ -23106,7 +23223,7 @@ the keys, then switching back to your original buffer.
 
 File: calc.info,  Node: Keypad Main Menu,  Next: Keypad Functions Menu,  Prev: Keypad Mode,  Up: Keypad Mode
 
-17.1 Main Menu
+16.1 Main Menu
 ==============
 
      |----+----+--Calc---+----+----1
@@ -23252,7 +23369,7 @@ exits Emacs itself.
 
 File: calc.info,  Node: Keypad Functions Menu,  Next: Keypad Binary Menu,  Prev: Keypad Main Menu,  Up: Keypad Mode
 
-17.2 Functions Menu
+16.2 Functions Menu
 ===================
 
      |----+----+----+----+----+----2
@@ -23289,7 +23406,7 @@ previous prime.
 
 File: calc.info,  Node: Keypad Binary Menu,  Next: Keypad Vectors Menu,  Prev: Keypad Functions Menu,  Up: Keypad Mode
 
-17.3 Binary Menu
+16.3 Binary Menu
 ================
 
      |----+----+----+----+----+----3
@@ -23320,7 +23437,7 @@ The initial word size is 32 bits.
 
 File: calc.info,  Node: Keypad Vectors Menu,  Next: Keypad Modes Menu,  Prev: Keypad Binary Menu,  Up: Keypad Mode
 
-17.4 Vectors Menu
+16.4 Vectors Menu
 =================
 
      |----+----+----+----+----+----4
@@ -23393,7 +23510,7 @@ pushes the variable names `y', `z', and `t', respectively.
 
 File: calc.info,  Node: Keypad Modes Menu,  Prev: Keypad Vectors Menu,  Up: Keypad Mode
 
-17.5 Modes Menu
+16.5 Modes Menu
 ===============
 
      |----+----+----+----+----+----5
@@ -23446,7 +23563,7 @@ mode.)  You can also use, for example, `STO + 3' to add to register 3.
 
 File: calc.info,  Node: Embedded Mode,  Next: Programming,  Prev: Keypad Mode,  Up: Top
 
-18 Embedded Mode
+17 Embedded Mode
 ****************
 
 Embedded mode in Calc provides an alternative to copying numbers and
@@ -23465,7 +23582,7 @@ stack and this copying is taken care of automatically.
 
 File: calc.info,  Node: Basic Embedded Mode,  Next: More About Embedded Mode,  Prev: Embedded Mode,  Up: Embedded Mode
 
-18.1 Basic Embedded Mode
+17.1 Basic Embedded Mode
 ========================
 
 To enter Embedded mode, position the Emacs point (cursor) on a formula
@@ -23604,7 +23721,7 @@ you haven't done anything with this formula yet.
 
 File: calc.info,  Node: More About Embedded Mode,  Next: Assignments in Embedded Mode,  Prev: Basic Embedded Mode,  Up: Embedded Mode
 
-18.2 More About Embedded Mode
+17.2 More About Embedded Mode
 =============================
 
 When Embedded mode "activates" a formula, i.e., when it examines the
@@ -23743,7 +23860,7 @@ finish the edit, or `C-x k' to cancel.
 
 File: calc.info,  Node: Assignments in Embedded Mode,  Next: Mode Settings in Embedded Mode,  Prev: More About Embedded Mode,  Up: Embedded Mode
 
-18.3 Assignments in Embedded Mode
+17.3 Assignments in Embedded Mode
 =================================
 
 The `:=' (assignment) and `=>' ("evaluates-to") operators are
@@ -23935,7 +24052,7 @@ by hand.
 
 File: calc.info,  Node: Mode Settings in Embedded Mode,  Next: Customizing Embedded Mode,  Prev: Assignments in Embedded Mode,  Up: Embedded Mode
 
-18.4 Mode Settings in Embedded Mode
+17.4 Mode Settings in Embedded Mode
 ===================================
 
 The mode settings can be changed while Calc is in embedded mode, but by
@@ -24065,7 +24182,7 @@ mode-changing commands do not leave any annotations at all.
 
 File: calc.info,  Node: Customizing Embedded Mode,  Prev: Mode Settings in Embedded Mode,  Up: Embedded Mode
 
-18.5 Customizing Embedded Mode
+17.5 Customizing Embedded Mode
 ==============================
 
 You can modify Embedded mode's behavior by setting various Lisp
@@ -24200,7 +24317,7 @@ mode annotations will appear on lines by themselves.
 
 File: calc.info,  Node: Programming,  Next: Copying,  Prev: Embedded Mode,  Up: Top
 
-19 Programming
+18 Programming
 **************
 
 There are several ways to "program" the Emacs Calculator, depending on
@@ -24246,7 +24363,7 @@ prefix.  (The `Z T' (`calc-timing') command is described elsewhere;
 
 File: calc.info,  Node: Creating User Keys,  Next: Keyboard Macros,  Prev: Programming,  Up: Programming
 
-19.1 Creating User Keys
+18.1 Creating User Keys
 =======================
 
 Any Calculator command may be bound to a key using the `Z D'
@@ -24311,7 +24428,7 @@ relevant following sections.
 
 File: calc.info,  Node: Keyboard Macros,  Next: Invocation Macros,  Prev: Creating User Keys,  Up: Programming
 
-19.2 Programming with Keyboard Macros
+18.2 Programming with Keyboard Macros
 =====================================
 
 The easiest way to "program" the Emacs Calculator is to use standard
@@ -24352,7 +24469,7 @@ analogous to those provided by a traditional programmable calculator.
 
 File: calc.info,  Node: Naming Keyboard Macros,  Next: Conditionals in Macros,  Prev: Keyboard Macros,  Up: Keyboard Macros
 
-19.2.1 Naming Keyboard Macros
+18.2.1 Naming Keyboard Macros
 -----------------------------
 
 Once you have defined a keyboard macro, you can bind it to a `z' key
@@ -24396,7 +24513,7 @@ in a file, or to define a macro without executing it at the same time.
 
 File: calc.info,  Node: Conditionals in Macros,  Next: Loops in Macros,  Prev: Naming Keyboard Macros,  Up: Keyboard Macros
 
-19.2.2 Conditionals in Keyboard Macros
+18.2.2 Conditionals in Keyboard Macros
 --------------------------------------
 
 The `Z [' (`calc-kbd-if') and `Z ]' (`calc-kbd-end-if') commands allow
@@ -24460,7 +24577,7 @@ actually adds a `C-g' keystroke to the macro.)
 
 File: calc.info,  Node: Loops in Macros,  Next: Local Values in Macros,  Prev: Conditionals in Macros,  Up: Keyboard Macros
 
-19.2.3 Loops in Keyboard Macros
+18.2.3 Loops in Keyboard Macros
 -------------------------------
 
 The `Z <' (`calc-kbd-repeat') and `Z >' (`calc-kbd-end-repeat')
@@ -24534,7 +24651,7 @@ conditional and looping commands.
 
 File: calc.info,  Node: Local Values in Macros,  Next: Queries in Macros,  Prev: Loops in Macros,  Up: Keyboard Macros
 
-19.2.4 Local Values in Macros
+18.2.4 Local Values in Macros
 -----------------------------
 
 Keyboard macros sometimes want to operate under known conditions
@@ -24593,7 +24710,7 @@ modes, are _not_ affected by `Z `' and `Z ''.
 
 File: calc.info,  Node: Queries in Macros,  Prev: Local Values in Macros,  Up: Keyboard Macros
 
-19.2.5 Queries in Keyboard Macros
+18.2.5 Queries in Keyboard Macros
 ---------------------------------
 
 The `Z #' (`calc-kbd-query') command prompts for an algebraic entry
@@ -24623,7 +24740,7 @@ return control to the keyboard macro.
 
 File: calc.info,  Node: Invocation Macros,  Next: Algebraic Definitions,  Prev: Keyboard Macros,  Up: Programming
 
-19.3 Invocation Macros
+18.3 Invocation Macros
 ======================
 
 Calc provides one special keyboard macro, called up by `C-x * z'
@@ -24655,7 +24772,7 @@ Commands::.
 
 File: calc.info,  Node: Algebraic Definitions,  Next: Lisp Definitions,  Prev: Invocation Macros,  Up: Programming
 
-19.4 Programming with Formulas
+18.4 Programming with Formulas
 ==============================
 
 Another way to create a new Calculator command uses algebraic formulas.
@@ -24761,7 +24878,7 @@ simplifications back on afterwards.
 
 File: calc.info,  Node: Lisp Definitions,  Prev: Algebraic Definitions,  Up: Programming
 
-19.5 Programming with Lisp
+18.5 Programming with Lisp
 ==========================
 
 The Calculator can be programmed quite extensively in Lisp.  All you do
@@ -24799,7 +24916,7 @@ for the true Lisp enthusiast.
 
 File: calc.info,  Node: Defining Functions,  Next: Defining Simple Commands,  Prev: Lisp Definitions,  Up: Lisp Definitions
 
-19.5.1 Defining New Functions
+18.5.1 Defining New Functions
 -----------------------------
 
 The `defmath' function (actually a Lisp macro) is like `defun' except
@@ -24984,7 +25101,7 @@ Ordinary `defun's need not be enclosed with `calc-define'.
 
 File: calc.info,  Node: Defining Simple Commands,  Next: Defining Stack Commands,  Prev: Defining Functions,  Up: Lisp Definitions
 
-19.5.2 Defining New Simple Commands
+18.5.2 Defining New Simple Commands
 -----------------------------------
 
 If a `defmath' form contains an `interactive' clause, it defines a
@@ -25128,7 +25245,7 @@ decreases the precision.
 
 File: calc.info,  Node: Defining Stack Commands,  Next: Argument Qualifiers,  Prev: Defining Simple Commands,  Up: Lisp Definitions
 
-19.5.3 Defining New Stack-Based Commands
+18.5.3 Defining New Stack-Based Commands
 ----------------------------------------
 
 To define a new computational command which takes and/or leaves
@@ -25218,7 +25335,7 @@ to be used when no prefix is supplied.
 
 File: calc.info,  Node: Argument Qualifiers,  Next: Example Definitions,  Prev: Defining Stack Commands,  Up: Lisp Definitions
 
-19.5.4 Argument Qualifiers
+18.5.4 Argument Qualifiers
 --------------------------
 
 Anywhere a parameter name can appear in the parameter list you can also
@@ -25291,7 +25408,7 @@ body of the function.
 
 File: calc.info,  Node: Example Definitions,  Next: Calling Calc from Your Programs,  Prev: Argument Qualifiers,  Up: Lisp Definitions
 
-19.5.5 Example Definitions
+18.5.5 Example Definitions
 --------------------------
 
 This section includes some Lisp programming examples on a larger scale.
@@ -25306,7 +25423,7 @@ These programs make use of some of the Calculator's internal functions;
 
 File: calc.info,  Node: Bit Counting Example,  Next: Sine Example,  Prev: Example Definitions,  Up: Example Definitions
 
-19.5.5.1 Bit-Counting
+18.5.5.1 Bit-Counting
 .....................
 
 Calc does not include a built-in function for counting the number of
@@ -25378,7 +25495,7 @@ because each operation is really a division by 512 in disguise;
 
 File: calc.info,  Node: Sine Example,  Prev: Bit Counting Example,  Up: Example Definitions
 
-19.5.5.2 The Sine Function
+18.5.5.2 The Sine Function
 ..........................
 
 A somewhat limited sine function could be defined as follows, using the
@@ -25454,7 +25571,7 @@ shown is fine.
 
 File: calc.info,  Node: Calling Calc from Your Programs,  Next: Internals,  Prev: Example Definitions,  Up: Lisp Definitions
 
-19.5.6 Calling Calc from Your Lisp Programs
+18.5.6 Calling Calc from Your Lisp Programs
 -------------------------------------------
 
 A later section (*note Internals::) gives a full description of Calc's
@@ -25480,7 +25597,7 @@ initialized for you.
 evaluating the expression and formatting the result.
 
 
-19.5.6.1 Additional Arguments to `calc-eval'
+18.5.6.1 Additional Arguments to `calc-eval'
 ............................................
 
 If the input string parses to a list of expressions, Calc returns the
@@ -25499,7 +25616,7 @@ and so on in the main expression.  For example, `(calc-eval "$/$$" nil
 as a placeholder for the item-separator argument.
 
 
-19.5.6.2 Error Handling
+18.5.6.2 Error Handling
 .......................
 
 If `calc-eval' encounters an error, it returns a list containing the
@@ -25523,7 +25640,7 @@ bind `calc-eval-error' using `let' rather than changing it permanently
 with `setq'.
 
 
-19.5.6.3 Numbers Only
+18.5.6.3 Numbers Only
 .....................
 
 Sometimes it is preferable to treat `1 / 0' as an error rather than
@@ -25537,7 +25654,7 @@ that does not include variables or function calls.  If it is a vector,
 the components must themselves be constants.
 
 
-19.5.6.4 Default Modes
+18.5.6.4 Default Modes
 ......................
 
 If the first argument to `calc-eval' is a list whose first element is a
@@ -25574,7 +25691,7 @@ formats which would be hard to test for conveniently: `"1"', `"8#1"',
 `"00001"'.  (But see "Predicates" mode, below.)
 
 
-19.5.6.5 Raw Numbers
+18.5.6.5 Raw Numbers
 ....................
 
 Normally all input and output for `calc-eval' is done with strings.
@@ -25615,7 +25732,7 @@ containing a string.  Thus you can still safely distinguish all the
 various kinds of error returns discussed above.
 
 
-19.5.6.6 Predicates
+18.5.6.6 Predicates
 ...................
 
 If the separator symbol is `pred', the result of the formula is treated
@@ -25633,7 +25750,7 @@ to have an error register as "false", use something like `(eq
 (calc-eval ...) t)'.
 
 
-19.5.6.7 Variable Values
+18.5.6.7 Variable Values
 ........................
 
 Variables in the formula passed to `calc-eval' are not normally
@@ -25652,7 +25769,7 @@ much more efficient.  For example, to increment the Calc variable `a':
      (setq var-a (calc-eval "evalv(a+1)" 'raw))
 
 
-19.5.6.8 Stack Access
+18.5.6.8 Stack Access
 .....................
 
 If the separator symbol is `push', the formula argument is evaluated
@@ -25691,7 +25808,7 @@ buffer in order to use `calc-eval'; it temporarily switches into the
 stack buffer if necessary.
 
 
-19.5.6.9 Keyboard Macros
+18.5.6.9 Keyboard Macros
 ........................
 
 If the separator symbol is `macro', the first argument must be a string
@@ -25714,7 +25831,7 @@ a tag string.  Normally the Trail is unaffected.
    The return value in this case is always `nil'.
 
 
-19.5.6.10 Lisp Evaluation
+18.5.6.10 Lisp Evaluation
 .........................
 
 Finally, if the separator symbol is `eval', then the Lisp `eval'
@@ -25743,7 +25860,7 @@ expression to use default instead of current mode settings.
 by the evaluated Lisp expression.
 
 
-19.5.6.11 Example
+18.5.6.11 Example
 .................
 
 Here is a sample Emacs command that uses `calc-eval'.  Suppose you have
@@ -25785,7 +25902,7 @@ after it.
 
 File: calc.info,  Node: Internals,  Prev: Calling Calc from Your Programs,  Up: Lisp Definitions
 
-19.5.7 Calculator Internals
+18.5.7 Calculator Internals
 ---------------------------
 
 This section describes the Lisp functions defined by the Calculator that
@@ -25828,7 +25945,7 @@ already be loaded.
 
 File: calc.info,  Node: Data Type Formats,  Next: Interactive Lisp Functions,  Prev: Internals,  Up: Internals
 
-19.5.7.1 Data Type Formats
+18.5.7.1 Data Type Formats
 ..........................
 
 Integers are stored in either of two ways, depending on their magnitude.
@@ -25837,11 +25954,13 @@ Lisp integers.  This is the only storage format for Calc data objects
 which is not a Lisp list.
 
    Large integers are stored as lists of the form `(bigpos D0 D1 D2
-...)' for positive integers 1000000 or more, or `(bigneg D0 D1 D2 ...)'
-for negative integers -1000000 or less.  Each D is a base-1000 "digit,"
-a Lisp integer from 0 to 999.  The least significant digit is D0; the
-last digit, DN, which is always nonzero, is the most significant digit.
-For example, the integer -12345678 is stored as `(bigneg 678 345 12)'.
+...)' for sufficiently large positive integers (where "sufficiently
+large" depends on the machine), or `(bigneg D0 D1 D2 ...)' for negative
+integers.  Each D is a base-`10^n' "digit" (where again, `n' depends on
+the machine), a Lisp integer from 0 to 99...9.  The least significant
+digit is D0; the last digit, DN, which is always nonzero, is the most
+significant digit.  For example, the integer -12345678 might be stored
+as `(bigneg 678 345 12)'.
 
    The distinction between small and large integers is entirely hidden
 from the user.  In `defmath' definitions, the Lisp predicate `integerp'
@@ -25960,7 +26079,7 @@ is considered obsolete and is not used by any built-in Calc functions.)
 
 File: calc.info,  Node: Interactive Lisp Functions,  Next: Stack Lisp Functions,  Prev: Data Type Formats,  Up: Internals
 
-19.5.7.2 Interactive Functions
+18.5.7.2 Interactive Functions
 ..............................
 
 The functions described here are used in implementing interactive Calc
@@ -26017,7 +26136,7 @@ command.
 
 File: calc.info,  Node: Stack Lisp Functions,  Next: Predicates,  Prev: Interactive Lisp Functions,  Up: Internals
 
-19.5.7.3 Stack-Oriented Functions
+18.5.7.3 Stack-Oriented Functions
 .................................
 
 The functions described here perform various operations on the Calc
@@ -26191,7 +26310,7 @@ stack and trail.  They are to be used in interactive Calc commands.
 
 File: calc.info,  Node: Predicates,  Next: Computational Lisp Functions,  Prev: Stack Lisp Functions,  Up: Internals
 
-19.5.7.4 Predicates
+18.5.7.4 Predicates
 ...................
 
 The functions described here are predicates, that is, they return a
@@ -26419,7 +26538,7 @@ Calc data types.
 
 File: calc.info,  Node: Computational Lisp Functions,  Next: Vector Lisp Functions,  Prev: Predicates,  Up: Internals
 
-19.5.7.5 Computational Functions
+18.5.7.5 Computational Functions
 ................................
 
 The functions described here do the actual computational work of the
@@ -26702,7 +26821,7 @@ unary `-', respectively, instead.
 
 File: calc.info,  Node: Vector Lisp Functions,  Next: Symbolic Lisp Functions,  Prev: Computational Lisp Functions,  Up: Internals
 
-19.5.7.6 Vector Functions
+18.5.7.6 Vector Functions
 .........................
 
 The functions described here perform various operations on vectors and
@@ -26819,7 +26938,7 @@ matrices.
 
 File: calc.info,  Node: Symbolic Lisp Functions,  Next: Formatting Lisp Functions,  Prev: Vector Lisp Functions,  Up: Internals
 
-19.5.7.7 Symbolic Functions
+18.5.7.7 Symbolic Functions
 ...........................
 
 The functions described here operate on symbolic formulas in the
@@ -27321,7 +27440,7 @@ Calculator.
 
 File: calc.info,  Node: Formatting Lisp Functions,  Next: Hooks,  Prev: Symbolic Lisp Functions,  Up: Internals
 
-19.5.7.8 I/O and Formatting Functions
+18.5.7.8 I/O and Formatting Functions
 .....................................
 
 The functions described here are responsible for parsing and formatting
@@ -27446,7 +27565,7 @@ Calc numbers and formulas.
 
 File: calc.info,  Node: Hooks,  Prev: Formatting Lisp Functions,  Up: Internals
 
-19.5.7.9 Hooks
+18.5.7.9 Hooks
 ..............
 
 Hooks are variables which contain Lisp functions (or lists of functions)
@@ -28315,7 +28434,7 @@ Appendix B GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -29128,6 +29247,14 @@ regular expressions work.
      since `ft/s' and `m' have different dimensions. The default value
      of `calc-ensure-consistent-units' is `nil'.
 
+ -- Variable: calc-context-sensitive-enter
+     The commands `calc-enter' and `calc-pop' will typically duplicate
+     the top of the stack.  If `calc-context-sensitive-enter' is
+     non-`nil', then the `calc-enter' will copy the element at the
+     cursor to the top of the stack and `calc-pop' will delete the
+     element at the cursor.  The default value of
+     `calc-context-sensitive-enter' is `nil'.
+
  -- Variable: calc-undo-length
      The variable `calc-undo-length' determines the number of undo
      steps that Calc will keep track of when `calc-quit' is called.  If
@@ -29135,6 +29262,19 @@ regular expressions work.
      number of undo steps that will be preserved; if `calc-undo-length'
      has any other value, then all undo steps will be preserved.  The
      default value of `calc-undo-length' is `100'.
+
+ -- Variable: calc-gregorian-switch
+     See *note Date Forms::.
+     The variable `calc-gregorian-switch' is either a list of integers
+     `(YEAR MONTH DAY)' or `nil'.  If it is `nil', then Calc's date
+     forms always represent Gregorian dates.  Otherwise,
+     `calc-gregorian-switch' represents the date that the calendar
+     switches from Julian dates to Gregorian dates; `(YEAR MONTH DAY)'
+     will be the first Gregorian date.  The customization buffer will
+     offer several standard dates to choose from, or the user can enter
+     their own date.
+
+     The default value of `calc-gregorian-switch' is `nil'.
 
 
 File: calc.info,  Node: Reporting Bugs,  Next: Summary,  Prev: Customizing Calc,  Up: Top
@@ -30263,7 +30403,7 @@ Index of Key Sequences
 * <LFD>:                                 Stack Manipulation.  (line  16)
 * <RET>:                                 Stack Manipulation.  (line   6)
 * <SPC>:                                 Stack Manipulation.  (line   6)
-* <TAB>:                                 Stack Manipulation.  (line  39)
+* <TAB>:                                 Stack Manipulation.  (line  50)
 * =:                                     Variables.           (line  30)
 * >:                                     Basic Commands.      (line  95)
 * ?:                                     Help Commands.       (line   6)
@@ -30430,7 +30570,7 @@ Index of Key Sequences
 * C-x * y:                               Yanking Into Buffers.
                                                               (line  50)
 * C-x * z:                               Invocation Macros.   (line   6)
-* C-xC-t:                                Stack Manipulation.  (line  72)
+* C-xC-t:                                Stack Manipulation.  (line  83)
 * C-y:                                   Yanking Into Stack.  (line   6)
 * D:                                     Undo.                (line  23)
 * d ":                                   Strings.             (line  25)
@@ -30618,9 +30758,9 @@ Index of Key Sequences
 * H c c:                                 Conversions.         (line 126)
 * H c F:                                 Conversions.         (line  52)
 * H c f:                                 Conversions.         (line  30)
-* h C-c:                                 Help Commands.       (line  84)
-* h C-d:                                 Help Commands.       (line  84)
-* h C-w:                                 Help Commands.       (line  84)
+* h C-c:                                 Help Commands.       (line  85)
+* h C-d:                                 Help Commands.       (line  85)
+* h C-w:                                 Help Commands.       (line  85)
 * H E:                                   Logarithmic Functions.
                                                               (line  16)
 * H F:                                   Integer Truncation.  (line  15)
@@ -30651,7 +30791,7 @@ Index of Key Sequences
 * H I u M:                               Single-Variable Statistics.
                                                               (line  99)
 * H I u S:                               Single-Variable Statistics.
-                                                              (line 143)
+                                                              (line 140)
 * H I V h:                               Building Vectors.    (line  98)
 * H I v h:                               Building Vectors.    (line  98)
 * H I V R:                               Nesting and Fixed Points.
@@ -30693,7 +30833,7 @@ Index of Key Sequences
 * H u M:                                 Single-Variable Statistics.
                                                               (line  85)
 * H u S:                                 Single-Variable Statistics.
-                                                              (line 143)
+                                                              (line 140)
 * h v:                                   Help Commands.       (line  74)
 * H V e:                                 Manipulating Vectors.
                                                               (line 138)
@@ -30786,7 +30926,7 @@ Index of Key Sequences
 * I u M:                                 Single-Variable Statistics.
                                                               (line  73)
 * I u S:                                 Single-Variable Statistics.
-                                                              (line 130)
+                                                              (line 127)
 * I V G:                                 Manipulating Vectors.
                                                               (line  53)
 * I v G:                                 Manipulating Vectors.
@@ -30974,7 +31114,7 @@ Index of Key Sequences
 * M-%:                                   Percentages.         (line   6)
 * M-<DEL>:                               Stack Manipulation.  (line  33)
 * M-<RET>:                               Undo.                (line  31)
-* M-<TAB>:                               Stack Manipulation.  (line  49)
+* M-<TAB>:                               Stack Manipulation.  (line  60)
 * M-C-w:                                 Killing From Stack.  (line   6)
 * M-k:                                   Killing From Stack.  (line   6)
 * M-w:                                   Killing From Stack.  (line   6)
@@ -31104,9 +31244,9 @@ Index of Key Sequences
 * u 0-9:                                 User-Defined Units.  (line   9)
 * u ?:                                   Help Commands.       (line   6)
 * u a:                                   Basic Operations on Units.
-                                                              (line 146)
+                                                              (line 144)
 * u b:                                   Basic Operations on Units.
-                                                              (line 131)
+                                                              (line 129)
 * u c:                                   Basic Operations on Units.
                                                               (line  51)
 * u C:                                   Paired-Sample Statistics.
@@ -31122,18 +31262,18 @@ Index of Key Sequences
                                                               (line  48)
 * u p:                                   User-Defined Units.  (line  63)
 * u r:                                   Basic Operations on Units.
-                                                              (line 139)
+                                                              (line 137)
 * u s:                                   Basic Operations on Units.
                                                               (line  31)
 * u S:                                   Single-Variable Statistics.
-                                                              (line 116)
+                                                              (line 113)
 * u t:                                   Basic Operations on Units.
                                                               (line  60)
 * u u:                                   User-Defined Units.  (line  40)
 * u V:                                   The Units Table.     (line  27)
 * u v:                                   The Units Table.     (line   6)
 * u x:                                   Basic Operations on Units.
-                                                              (line 139)
+                                                              (line 137)
 * u X:                                   Single-Variable Statistics.
                                                               (line  48)
 * V #:                                   Set Operations.      (line  95)
@@ -31445,9 +31585,9 @@ key has been provided as a variant of `M-x' which automatically types
                                                               (line  11)
 * calc-auto-why:                         Error Messages.      (line  20)
 * calc-autorange-units:                  Basic Operations on Units.
-                                                              (line 146)
+                                                              (line 144)
 * calc-base-units:                       Basic Operations on Units.
-                                                              (line 131)
+                                                              (line 129)
 * calc-basic-simplify-mode:              Simplification Modes.
                                                               (line  38)
 * calc-bernoulli-number:                 Combinatorial Functions.
@@ -31606,7 +31746,7 @@ key has been provided as a variant of `M-x' which automatically types
 * calc-extended-gcd:                     Combinatorial Functions.
                                                               (line  20)
 * calc-extract-units:                    Basic Operations on Units.
-                                                              (line 139)
+                                                              (line 137)
 * calc-factor:                           Polynomials.         (line  13)
 * calc-factorial:                        Combinatorial Functions.
                                                               (line  24)
@@ -31941,7 +32081,7 @@ key has been provided as a variant of `M-x' which automatically types
 * calc-remove-duplicates:                Set Operations.      (line  34)
 * calc-remove-equal:                     Logical Operations.  (line  65)
 * calc-remove-units:                     Basic Operations on Units.
-                                                              (line 139)
+                                                              (line 137)
 * calc-reset:                            Basic Commands.      (line 105)
 * calc-reverse-vector:                   Manipulating Vectors.
                                                               (line 114)
@@ -31952,8 +32092,8 @@ key has been provided as a variant of `M-x' which automatically types
 * calc-right-label:                      Labels.              (line  16)
 * calc-rnorm:                            Vector and Matrix Arithmetic.
                                                               (line  25)
-* calc-roll-down:                        Stack Manipulation.  (line  39)
-* calc-roll-up:                          Stack Manipulation.  (line  49)
+* calc-roll-down:                        Stack Manipulation.  (line  50)
+* calc-roll-up:                          Stack Manipulation.  (line  60)
 * calc-rotate-binary:                    Binary Functions.    (line 111)
 * calc-round:                            Integer Truncation.  (line  23)
 * calc-rrandom:                          Random Numbers.      (line  60)
@@ -32131,7 +32271,7 @@ key has been provided as a variant of `M-x' which automatically types
 * calc-trail-yank:                       Trail Commands.      (line  30)
 * calc-transpose:                        Manipulating Vectors.
                                                               (line 109)
-* calc-transpose-lines:                  Stack Manipulation.  (line  72)
+* calc-transpose-lines:                  Stack Manipulation.  (line  83)
 * calc-trunc:                            Integer Truncation.  (line  29)
 * calc-truncate-down:                    Truncating the Stack.
                                                               (line  25)
@@ -32209,17 +32349,17 @@ key has been provided as a variant of `M-x' which automatically types
 * calc-vector-pop-covariance:            Paired-Sample Statistics.
                                                               (line  24)
 * calc-vector-pop-sdev:                  Single-Variable Statistics.
-                                                              (line 130)
+                                                              (line 127)
 * calc-vector-pop-variance:              Single-Variable Statistics.
-                                                              (line 143)
+                                                              (line 140)
 * calc-vector-prod:                      Single-Variable Statistics.
                                                               (line  42)
 * calc-vector-sdev:                      Single-Variable Statistics.
-                                                              (line 116)
+                                                              (line 113)
 * calc-vector-sum:                       Single-Variable Statistics.
                                                               (line  42)
 * calc-vector-variance:                  Single-Variable Statistics.
-                                                              (line 143)
+                                                              (line 140)
 * calc-view-units-table:                 The Units Table.     (line  27)
 * calc-vlength:                          Manipulating Vectors.
                                                               (line   6)
@@ -32986,7 +33126,7 @@ expressions.  Their full Lisp names are derived by adding the prefix
 * vexp:                                  Manipulating Vectors.
                                                               (line 128)
 * vflat:                                 Single-Variable Statistics.
-                                                              (line 150)
+                                                              (line 147)
 * vfloor:                                Set Operations.      (line  75)
 * vgmean:                                Single-Variable Statistics.
                                                               (line 103)
@@ -33014,18 +33154,18 @@ expressions.  Their full Lisp names are derived by adding the prefix
 * vprod:                                 Single-Variable Statistics.
                                                               (line  42)
 * vpsdev:                                Single-Variable Statistics.
-                                                              (line 130)
+                                                              (line 127)
 * vpvar:                                 Single-Variable Statistics.
-                                                              (line 143)
+                                                              (line 140)
 * vsdev:                                 Single-Variable Statistics.
-                                                              (line 116)
+                                                              (line 113)
 * vspan:                                 Set Operations.      (line  89)
 * vsum:                                  Single-Variable Statistics.
                                                               (line  42)
 * vunion:                                Set Operations.      (line  42)
 * vunpack:                               Set Operations.      (line 111)
 * vvar:                                  Single-Variable Statistics.
-                                                              (line 143)
+                                                              (line 140)
 * vxor:                                  Set Operations.      (line  65)
 * weekday:                               Date Functions.      (line  41)
 * wmaximize:                             Minimization.        (line  39)
@@ -33102,7 +33242,7 @@ Concept Index
 * Common logarithm:                      Arithmetic Tutorial. (line 175)
 * Complex numbers:                       Complex Numbers.     (line   6)
 * Composite units:                       Basic Operations on Units.
-                                                              (line 112)
+                                                              (line 107)
 * Compositions:                          Compositions.        (line   6)
 * Conditional structures:                Conditionals in Macros.
                                                               (line   6)
@@ -33211,7 +33351,7 @@ Concept Index
                                                               (line  12)
 * Golden ratio:                          Programming Tutorial.
                                                               (line 151)
-* Gregorian calendar:                    Date Forms.          (line  48)
+* Gregorian calendar:                    Date Forms.          (line  51)
 * Grouping digits:                       Grouping Digits.     (line   6)
 * Guard digits:                          Modes Tutorial.      (line 104)
 * Harmonic mean:                         Single-Variable Statistics.
@@ -33250,9 +33390,10 @@ Concept Index
 * Interval forms:                        Interval Forms.      (line   6)
 * Inverse of permutation:                Manipulating Vectors.
                                                               (line  53)
+* ISO 8601:                              ISO 8601.            (line   6)
 * Iterative structures:                  Loops in Macros.     (line   6)
-* Julian calendar:                       Date Forms.          (line  48)
-* Julian day counting:                   Date Forms.          (line  83)
+* Julian calendar:                       Date Forms.          (line  51)
+* Julian day counting:                   Date Forms.          (line  95)
 * Julian day counts, conversions:        Date Conversions.    (line  35)
 * Keyboard macros:                       Keyboard Macros.     (line   6)
 * Keyboard macros, editing:              Naming Keyboard Macros.
@@ -33311,7 +33452,7 @@ Concept Index
 * Modes variable:                        Modes Variable.      (line  12)
 * Modulo division:                       Modulo Forms.        (line  35)
 * Modulo forms:                          Modulo Forms.        (line   6)
-* Moving stack entries:                  Stack Manipulation.  (line  72)
+* Moving stack entries:                  Stack Manipulation.  (line  83)
 * Multiplication, implicit:              Formulas.            (line  64)
 * Nameless functions:                    Specifying Operators.
                                                               (line  54)
@@ -33370,7 +33511,7 @@ Concept Index
 * Polynomial, list of coefficients:      Programming Tutorial.
                                                               (line 397)
 * Population statistics:                 Single-Variable Statistics.
-                                                              (line 130)
+                                                              (line 127)
 * Positive Infinite mode:                Infinite Mode.       (line  25)
 * Precedence of operators:               Formulas.            (line   6)
 * Precision of calculations:             Precision.           (line   6)
@@ -33407,8 +33548,6 @@ Concept Index
                                                               (line   6)
 * Retrieving previous results:           Trail Commands.      (line  30)
 * Rewrite rules:                         Rewrite Rules.       (line   6)
-* Root-mean-square:                      Single-Variable Statistics.
-                                                              (line 113)
 * Roots of equations:                    Root Finding.        (line   6)
 * Round-off errors:                      Modes Tutorial.      (line  89)
 * Roundoff errors, correcting:           Conversions.         (line  96)
@@ -33418,7 +33557,7 @@ Concept Index
 * RPN notation:                          RPN Tutorial.        (line   6)
 * Running the Calculator:                Basic Commands.      (line   6)
 * Sample statistics:                     Single-Variable Statistics.
-                                                              (line 116)
+                                                              (line 113)
 * Saving mode settings:                  General Mode Commands.
                                                               (line   6)
 * Scalar mode:                           Matrix Mode.         (line   6)
@@ -33446,7 +33585,7 @@ Concept Index
 * Standalone Operation:                  Standalone Operation.
                                                               (line   6)
 * Standard deviation:                    Single-Variable Statistics.
-                                                              (line 116)
+                                                              (line 113)
 * Standard deviations:                   Error Forms.         (line   6)
 * Standard user interface:               The Standard Interface.
                                                               (line   6)
@@ -33501,7 +33640,7 @@ Concept Index
                                                               (line  84)
 * Units variable:                        User-Defined Units.  (line   9)
 * UnitSimpRules variable:                Automatic Rewrites.  (line 149)
-* Unix time format:                      Date Forms.          (line 120)
+* Unix time format:                      Date Forms.          (line 134)
 * Unix time format, conversions:         Date Conversions.    (line  50)
 * Unsafe simplifications:                Unsafe Simplifications.
                                                               (line   6)
@@ -33510,7 +33649,7 @@ Concept Index
 * Variables, in formulas:                Variables.           (line   6)
 * Variables, temporary assignment:       Let Command.         (line   6)
 * Variance of data values:               Single-Variable Statistics.
-                                                              (line 143)
+                                                              (line 140)
 * Vectors:                               Vectors and Matrices.
                                                               (line   6)
 * Vertical scrolling:                    Basic Commands.      (line 101)
@@ -33542,6 +33681,7 @@ your Calc init file or `.emacs' file.
                                                               (line  11)
 * All:                                   Declaration Basics.  (line  48)
 * calc-alg-ent-map:                      Hooks.               (line 112)
+* calc-context-sensitive-enter:          Customizing Calc.    (line 336)
 * calc-define:                           Defining Functions.  (line 144)
 * calc-digit-map:                        Hooks.               (line 106)
 * calc-edit-mode-hook:                   Hooks.               (line  74)
@@ -33599,6 +33739,7 @@ your Calc init file or `.emacs' file.
 * calc-gnuplot-print-command:            Devices.             (line  77)
 * calc-gnuplot-print-device:             Devices.             (line  77)
 * calc-gnuplot-print-output:             Devices.             (line  77)
+* calc-gregorian-switch:                 Customizing Calc.    (line 352)
 * calc-highlight-selections-with-faces <1>: Customizing Calc. (line 295)
 * calc-highlight-selections-with-faces:  Displaying Selections.
                                                               (line   6)
@@ -33628,7 +33769,7 @@ your Calc init file or `.emacs' file.
 * calc-store-var-map:                    Hooks.               (line 116)
 * calc-trail-mode-hook:                  Hooks.               (line  37)
 * calc-trail-window-hook:                Hooks.               (line  57)
-* calc-undo-length:                      Customizing Calc.    (line 336)
+* calc-undo-length:                      Customizing Calc.    (line 344)
 * calc-window-hook:                      Hooks.               (line  49)
 * calc-Y-help-msgs:                      Defining Simple Commands.
                                                               (line  87)
@@ -34110,375 +34251,381 @@ corresponding full Lisp name is derived by adding a prefix of `math-'.
 
 
 Tag Table:
-Node: Top1041
-Node: Getting Started4312
-Node: What is Calc4781
-Node: About This Manual6836
-Node: Notations Used in This Manual10248
-Node: Demonstration of Calc12155
-Node: Using Calc17064
-Node: Starting Calc17580
-Node: The Standard Interface18972
-Node: Quick Mode Overview23537
-Node: Keypad Mode Overview24602
-Node: Standalone Operation27460
-Node: Embedded Mode Overview28113
-Node: Other C-x * Commands31990
-Node: History and Acknowledgments36436
-Node: Interactive Tutorial41471
-Node: Tutorial42506
-Node: Basic Tutorial44279
-Node: RPN Tutorial44853
-Node: Algebraic Tutorial59029
-Node: Undo Tutorial69479
-Node: Modes Tutorial75328
-Node: Arithmetic Tutorial91594
-Node: Vector/Matrix Tutorial103889
-Node: Vector Analysis Tutorial104366
-Node: Matrix Tutorial108451
-Node: List Tutorial115660
-Node: Types Tutorial136621
-Node: Algebra Tutorial154575
-Node: Basic Algebra Tutorial154955
-Node: Rewrites Tutorial169070
-Node: Programming Tutorial184211
-Node: Answers to Exercises205289
-Node: RPN Answer 1208835
-Node: RPN Answer 2209093
-Node: RPN Answer 3210726
-Node: RPN Answer 4211806
-Node: Algebraic Answer 1213148
-Node: Algebraic Answer 2213642
-Node: Algebraic Answer 3214093
-Node: Modes Answer 1214908
-Node: Modes Answer 2218417
-Node: Modes Answer 3219544
-Node: Modes Answer 4220923
-Node: Arithmetic Answer 1221975
-Node: Arithmetic Answer 2222910
-Node: Vector Answer 1223495
-Node: Vector Answer 2224108
-Node: Matrix Answer 1224542
-Node: Matrix Answer 2224870
-Node: Matrix Answer 3225643
-Node: List Answer 1227800
-Node: List Answer 2228601
-Node: List Answer 3230260
-Node: List Answer 4231342
-Node: List Answer 5232510
-Node: List Answer 6233827
-Node: List Answer 7234107
-Node: List Answer 8235827
-Node: List Answer 9238385
-Node: List Answer 10241127
-Node: List Answer 11241879
-Node: List Answer 12243692
-Node: List Answer 13246722
-Node: List Answer 14250070
-Node: Types Answer 1252239
-Node: Types Answer 2253533
-Node: Types Answer 3255115
-Node: Types Answer 4256201
-Node: Types Answer 5256847
-Node: Types Answer 6258266
-Node: Types Answer 7259868
-Node: Types Answer 8260919
-Node: Types Answer 9262512
-Node: Types Answer 10263350
-Node: Types Answer 11264975
-Node: Types Answer 12266114
-Node: Types Answer 13266670
-Node: Types Answer 14266924
-Node: Types Answer 15267679
-Node: Algebra Answer 1268594
-Node: Algebra Answer 2269114
-Node: Algebra Answer 3270141
-Node: Algebra Answer 4270957
-Node: Rewrites Answer 1272440
-Node: Rewrites Answer 2273584
-Node: Rewrites Answer 3274990
-Node: Rewrites Answer 4276182
-Node: Rewrites Answer 5277918
-Node: Rewrites Answer 6278485
-Node: Programming Answer 1281775
-Node: Programming Answer 2282402
-Node: Programming Answer 3283146
-Node: Programming Answer 4284138
-Node: Programming Answer 5284407
-Node: Programming Answer 6284907
-Node: Programming Answer 7285762
-Node: Programming Answer 8287040
-Node: Programming Answer 9289954
-Node: Programming Answer 10293403
-Node: Programming Answer 11296036
-Node: Programming Answer 12299409
-Node: Introduction300401
-Node: Basic Commands300916
-Node: Help Commands307086
-Node: Stack Basics311522
-Node: Numeric Entry313778
-Node: Algebraic Entry315242
-Node: Quick Calculator320353
-Node: Prefix Arguments323568
-Node: Undo326049
-Node: Error Messages328256
-Node: Multiple Calculators329533
-Node: Troubleshooting Commands330763
-Node: Autoloading Problems331226
-Node: Recursion Depth332016
-Node: Caches333028
-Node: Debugging Calc334275
-Node: Data Types336839
-Node: Integers338113
-Node: Fractions339303
-Node: Floats340167
-Node: Complex Numbers343927
-Node: Infinities345276
-Node: Vectors and Matrices349193
-Node: Strings350881
-Node: HMS Forms353557
-Node: Date Forms355091
-Node: Modulo Forms362732
-Node: Error Forms365946
-Node: Interval Forms369720
-Node: Incomplete Objects374166
-Node: Variables376140
-Node: Formulas378919
-Node: Stack and Trail385031
-Node: Stack Manipulation385492
-Node: Editing Stack Entries390207
-Node: Trail Commands392848
-Node: Keep Arguments396518
-Node: Mode Settings398628
-Node: General Mode Commands399172
-Node: Precision403010
-Node: Inverse and Hyperbolic405799
-Node: Calculation Modes407526
-Node: Angular Modes408079
-Node: Polar Mode409267
-Node: Fraction Mode409928
-Node: Infinite Mode410888
-Node: Symbolic Mode412670
-Node: Matrix Mode413894
-Node: Automatic Recomputation417500
-Node: Working Message418529
-Node: Simplification Modes419655
-Node: Declarations423053
-Node: Declaration Basics423534
-Node: Kinds of Declarations426243
-Node: Functions for Declarations434126
-Node: Display Modes438488
-Node: Radix Modes440223
-Node: Grouping Digits442879
-Node: Float Formats444565
-Node: Complex Formats447469
-Node: Fraction Formats448540
-Node: HMS Formats450316
-Node: Date Formats451646
-Node: Date Formatting Codes452755
-Node: Free-Form Dates457874
-Node: Standard Date Formats460507
-Node: Truncating the Stack461723
-Node: Justification463145
-Node: Labels465885
-Node: Language Modes467139
-Node: Normal Language Modes469531
-Node: C FORTRAN Pascal472900
-Node: TeX and LaTeX Language Modes476478
-Node: Eqn Language Mode483910
-Node: Yacas Language Mode487547
-Node: Maxima Language Mode488799
-Node: Giac Language Mode489869
-Node: Mathematica Language Mode490972
-Node: Maple Language Mode491949
-Node: Compositions493302
-Node: Composition Basics494829
-Node: Horizontal Compositions499708
-Node: Vertical Compositions501185
-Node: Other Compositions503752
-Node: Information about Compositions505969
-Node: User-Defined Compositions507280
-Node: Syntax Tables512241
-Node: Syntax Table Basics513201
-Node: Precedence in Syntax Tables519296
-Node: Advanced Syntax Patterns520513
-Node: Conditional Syntax Rules524901
-Node: Modes Variable527942
-Node: Calc Mode Line531634
-Node: Arithmetic536595
-Node: Basic Arithmetic537743
-Node: Integer Truncation551300
-Node: Complex Number Functions554943
-Node: Conversions556905
-Node: Date Arithmetic563528
-Node: Date Conversions564565
-Node: Date Functions568060
-Node: Business Days574334
-Node: Time Zones580887
-Node: Financial Functions590706
-Node: Percentages591724
-Node: Future Value594432
-Node: Present Value597212
-Node: Related Financial Functions600789
-Node: Depreciation Functions603611
-Node: Definitions of Financial Functions606242
-Node: Binary Functions611607
-Node: Scientific Functions617957
-Node: Logarithmic Functions619590
-Node: Trigonometric and Hyperbolic Functions621679
-Node: Advanced Math Functions625412
-Node: Branch Cuts628800
-Node: Random Numbers635076
-Node: Random Number Generator640352
-Node: Combinatorial Functions645053
-Node: Probability Distribution Functions651848
-Node: Matrix Functions655455
-Node: Packing and Unpacking656473
-Node: Building Vectors665014
-Node: Extracting Elements670459
-Node: Manipulating Vectors674703
-Node: Vector and Matrix Arithmetic683361
-Node: Set Operations686724
-Node: Statistical Operations693746
-Node: Single-Variable Statistics694744
-Node: Paired-Sample Statistics702919
-Node: Reducing and Mapping704663
-Node: Specifying Operators705639
-Node: Mapping711862
-Node: Reducing716527
-Node: Nesting and Fixed Points719559
-Node: Generalized Products723048
-Node: Vector and Matrix Formats724667
-Node: Algebra729247
-Node: Selecting Subformulas730570
-Node: Making Selections731410
-Node: Changing Selections737299
-Node: Displaying Selections741073
-Node: Operating on Selections742111
-Node: Rearranging with Selections748114
-Node: Algebraic Manipulation758329
-Node: Simplifying Formulas765939
-Node: Basic Simplifications768001
-Node: Algebraic Simplifications780513
-Node: Unsafe Simplifications789758
-Node: Simplification of Units793258
-Node: Polynomials796911
-Node: Calculus806447
-Node: Differentiation806961
-Node: Integration809455
-Node: Customizing the Integrator813136
-Node: Numerical Integration819423
-Node: Taylor Series821406
-Node: Solving Equations822263
-Node: Multiple Solutions823629
-Node: Solving Systems of Equations828787
-Node: Decomposing Polynomials831887
-Node: Numerical Solutions837722
-Node: Root Finding838386
-Node: Minimization841967
-Node: Numerical Systems of Equations844557
-Node: Curve Fitting845918
-Node: Linear Fits846890
-Node: Polynomial and Multilinear Fits852052
-Node: Error Estimates for Fits856236
-Node: Standard Nonlinear Models860897
-Node: Curve Fitting Details868049
-Node: Interpolation881942
-Node: Summations884653
-Node: Logical Operations891818
-Node: Rewrite Rules903409
-Node: Entering Rewrite Rules904792
-Node: Basic Rewrite Rules907666
-Node: Conditional Rewrite Rules909796
-Node: Algebraic Properties of Rewrite Rules914229
-Node: Other Features of Rewrite Rules924999
-Node: Composing Patterns in Rewrite Rules939773
-Node: Nested Formulas with Rewrite Rules944598
-Node: Multi-Phase Rewrite Rules948292
-Node: Selections with Rewrite Rules953712
-Node: Matching Commands957284
-Node: Automatic Rewrites959060
-Node: Debugging Rewrites967576
-Node: Examples of Rewrite Rules968511
-Node: Units973099
-Node: Basic Operations on Units973669
-Node: The Units Table983150
-Node: Predefined Units985818
-Node: User-Defined Units991095
-Node: Logarithmic Units994854
-Node: Musical Notes1000303
-Node: Store and Recall1002837
-Node: Storing Variables1003354
-Node: Recalling Variables1011108
-Node: Operations on Variables1012010
-Node: Let Command1015782
-Node: Evaluates-To Operator1017503
-Node: Graphics1022965
-Node: Basic Graphics1024180
-Node: Three Dimensional Graphics1028106
-Node: Managing Curves1031127
-Node: Graphics Options1038411
-Node: Devices1044902
-Ref: Devices-Footnote-11053355
-Node: Kill and Yank1053651
-Node: Killing From Stack1054218
-Node: Yanking Into Stack1056114
-Node: Saving Into Registers1057118
-Node: Inserting From Registers1058615
-Node: Grabbing From Buffers1059193
-Node: Yanking Into Buffers1064719
-Node: X Cut and Paste1067739
-Node: Keypad Mode1069242
-Node: Keypad Main Menu1071319
-Node: Keypad Functions Menu1075904
-Node: Keypad Binary Menu1077148
-Node: Keypad Vectors Menu1078328
-Node: Keypad Modes Menu1081579
-Node: Embedded Mode1083655
-Node: Basic Embedded Mode1084208
-Node: More About Embedded Mode1090966
-Node: Assignments in Embedded Mode1097387
-Node: Mode Settings in Embedded Mode1105939
-Node: Customizing Embedded Mode1112012
-Node: Programming1119225
-Node: Creating User Keys1121094
-Node: Keyboard Macros1124367
-Node: Naming Keyboard Macros1126323
-Node: Conditionals in Macros1128769
-Node: Loops in Macros1132190
-Node: Local Values in Macros1136180
-Node: Queries in Macros1139109
-Node: Invocation Macros1140632
-Node: Algebraic Definitions1142163
-Node: Lisp Definitions1147984
-Node: Defining Functions1149480
-Node: Defining Simple Commands1158171
-Node: Defining Stack Commands1163834
-Node: Argument Qualifiers1167777
-Node: Example Definitions1170112
-Node: Bit Counting Example1170521
-Node: Sine Example1173285
-Node: Calling Calc from Your Programs1176854
-Node: Internals1191352
-Node: Data Type Formats1193153
-Node: Interactive Lisp Functions1200523
-Node: Stack Lisp Functions1203396
-Node: Predicates1212655
-Node: Computational Lisp Functions1222057
-Node: Vector Lisp Functions1234839
-Node: Symbolic Lisp Functions1239884
-Node: Formatting Lisp Functions1265671
-Node: Hooks1271695
-Node: Copying1278222
-Node: GNU Free Documentation License1315804
-Node: Customizing Calc1340980
-Node: Reporting Bugs1358097
-Node: Summary1359289
-Node: Key Index1409216
-Node: Command Index1491343
-Node: Function Index1551735
-Node: Concept Index1609045
-Node: Variable Index1642348
-Node: Lisp Function Index1654070
+Node: Top965
+Node: Getting Started4232
+Node: What is Calc4701
+Node: About This Manual6756
+Node: Notations Used in This Manual10168
+Node: Demonstration of Calc12075
+Node: Using Calc16984
+Node: Starting Calc17500
+Node: The Standard Interface18892
+Node: Quick Mode Overview23457
+Node: Keypad Mode Overview24522
+Node: Standalone Operation27380
+Node: Embedded Mode Overview28033
+Node: Other C-x * Commands31910
+Node: History and Acknowledgments36356
+Node: Interactive Tutorial41391
+Node: Tutorial42426
+Node: Basic Tutorial44199
+Node: RPN Tutorial44773
+Node: Algebraic Tutorial58949
+Node: Undo Tutorial69399
+Node: Modes Tutorial75248
+Node: Arithmetic Tutorial91514
+Node: Vector/Matrix Tutorial103809
+Node: Vector Analysis Tutorial104286
+Node: Matrix Tutorial108371
+Node: List Tutorial115580
+Node: Types Tutorial136541
+Node: Algebra Tutorial154493
+Node: Basic Algebra Tutorial154873
+Node: Rewrites Tutorial168988
+Node: Programming Tutorial184129
+Node: Answers to Exercises205207
+Node: RPN Answer 1208753
+Node: RPN Answer 2209011
+Node: RPN Answer 3210644
+Node: RPN Answer 4211724
+Node: Algebraic Answer 1213066
+Node: Algebraic Answer 2213560
+Node: Algebraic Answer 3214011
+Node: Modes Answer 1214826
+Node: Modes Answer 2218335
+Node: Modes Answer 3219462
+Node: Modes Answer 4220841
+Node: Arithmetic Answer 1221893
+Node: Arithmetic Answer 2222828
+Node: Vector Answer 1223413
+Node: Vector Answer 2224026
+Node: Matrix Answer 1224460
+Node: Matrix Answer 2224788
+Node: Matrix Answer 3225561
+Node: List Answer 1227718
+Node: List Answer 2228519
+Node: List Answer 3230178
+Node: List Answer 4231260
+Node: List Answer 5232428
+Node: List Answer 6233745
+Node: List Answer 7234025
+Node: List Answer 8235745
+Node: List Answer 9238303
+Node: List Answer 10241045
+Node: List Answer 11241797
+Node: List Answer 12243610
+Node: List Answer 13246640
+Node: List Answer 14249988
+Node: Types Answer 1252157
+Node: Types Answer 2253451
+Node: Types Answer 3255033
+Node: Types Answer 4256119
+Node: Types Answer 5256765
+Node: Types Answer 6258184
+Node: Types Answer 7259786
+Node: Types Answer 8260837
+Node: Types Answer 9262430
+Node: Types Answer 10263268
+Node: Types Answer 11264893
+Node: Types Answer 12266032
+Node: Types Answer 13266588
+Node: Types Answer 14266842
+Node: Types Answer 15267597
+Node: Algebra Answer 1268512
+Node: Algebra Answer 2269032
+Node: Algebra Answer 3270059
+Node: Algebra Answer 4270875
+Node: Rewrites Answer 1272358
+Node: Rewrites Answer 2273502
+Node: Rewrites Answer 3274908
+Node: Rewrites Answer 4276100
+Node: Rewrites Answer 5277836
+Node: Rewrites Answer 6278403
+Node: Programming Answer 1281693
+Node: Programming Answer 2282320
+Node: Programming Answer 3283064
+Node: Programming Answer 4284056
+Node: Programming Answer 5284325
+Node: Programming Answer 6284825
+Node: Programming Answer 7285680
+Node: Programming Answer 8286958
+Node: Programming Answer 9289872
+Node: Programming Answer 10293321
+Node: Programming Answer 11295954
+Node: Programming Answer 12299327
+Node: Introduction300319
+Node: Basic Commands300834
+Node: Help Commands307004
+Node: Stack Basics311479
+Node: Numeric Entry313735
+Node: Algebraic Entry315199
+Node: Quick Calculator320310
+Node: Prefix Arguments323525
+Node: Undo326006
+Node: Error Messages328213
+Node: Multiple Calculators329490
+Node: Troubleshooting Commands330720
+Node: Autoloading Problems331183
+Node: Recursion Depth331973
+Node: Caches332985
+Node: Debugging Calc334232
+Node: Data Types336796
+Node: Integers338070
+Node: Fractions339260
+Node: Floats340124
+Node: Complex Numbers343884
+Node: Infinities345233
+Node: Vectors and Matrices349150
+Node: Strings350838
+Node: HMS Forms353514
+Node: Date Forms355048
+Node: Modulo Forms363472
+Node: Error Forms366686
+Node: Interval Forms370460
+Node: Incomplete Objects374906
+Node: Variables376880
+Node: Formulas379659
+Node: Stack and Trail385771
+Node: Stack Manipulation386232
+Node: Editing Stack Entries391630
+Node: Trail Commands394271
+Node: Keep Arguments397941
+Node: Mode Settings400051
+Node: General Mode Commands400595
+Node: Precision404433
+Node: Inverse and Hyperbolic407222
+Node: Calculation Modes408949
+Node: Angular Modes409502
+Node: Polar Mode410690
+Node: Fraction Mode411351
+Node: Infinite Mode412311
+Node: Symbolic Mode414093
+Node: Matrix Mode415317
+Node: Automatic Recomputation418923
+Node: Working Message419952
+Node: Simplification Modes421078
+Node: Declarations424476
+Node: Declaration Basics424957
+Node: Kinds of Declarations427666
+Node: Functions for Declarations435549
+Node: Display Modes439911
+Node: Radix Modes441646
+Node: Grouping Digits444302
+Node: Float Formats445988
+Node: Complex Formats448892
+Node: Fraction Formats449963
+Node: HMS Formats451739
+Node: Date Formats453069
+Node: ISO 8601454191
+Node: Date Formatting Codes457405
+Node: Free-Form Dates462783
+Node: Standard Date Formats465805
+Node: Truncating the Stack467139
+Node: Justification468561
+Node: Labels471301
+Node: Language Modes472555
+Node: Normal Language Modes474947
+Node: C FORTRAN Pascal478316
+Node: TeX and LaTeX Language Modes481894
+Node: Eqn Language Mode489326
+Node: Yacas Language Mode492963
+Node: Maxima Language Mode494215
+Node: Giac Language Mode495285
+Node: Mathematica Language Mode496388
+Node: Maple Language Mode497365
+Node: Compositions498718
+Node: Composition Basics500245
+Node: Horizontal Compositions505124
+Node: Vertical Compositions506601
+Node: Other Compositions509168
+Node: Information about Compositions511385
+Node: User-Defined Compositions512696
+Node: Syntax Tables517657
+Node: Syntax Table Basics518617
+Node: Precedence in Syntax Tables524712
+Node: Advanced Syntax Patterns525929
+Node: Conditional Syntax Rules530317
+Node: Modes Variable533358
+Node: Calc Mode Line537050
+Node: Arithmetic542011
+Node: Basic Arithmetic543159
+Node: Integer Truncation556716
+Node: Complex Number Functions560359
+Node: Conversions562321
+Node: Date Arithmetic568944
+Node: Date Conversions569981
+Node: Date Functions573476
+Node: Business Days579750
+Node: Time Zones586303
+Node: Financial Functions596122
+Node: Percentages597140
+Node: Future Value599848
+Node: Present Value602628
+Node: Related Financial Functions606205
+Node: Depreciation Functions609027
+Node: Definitions of Financial Functions611658
+Node: Binary Functions617023
+Node: Scientific Functions623373
+Node: Logarithmic Functions625004
+Node: Trigonometric and Hyperbolic Functions627091
+Node: Advanced Math Functions630822
+Node: Branch Cuts634208
+Node: Random Numbers640482
+Node: Random Number Generator645756
+Node: Combinatorial Functions650455
+Node: Probability Distribution Functions657248
+Node: Matrix Functions660853
+Node: Packing and Unpacking661871
+Node: Building Vectors670412
+Node: Extracting Elements675857
+Node: Manipulating Vectors680101
+Node: Vector and Matrix Arithmetic688759
+Node: Set Operations692122
+Node: Statistical Operations699144
+Node: Single-Variable Statistics700142
+Node: Paired-Sample Statistics708184
+Node: Reducing and Mapping709928
+Node: Specifying Operators710904
+Node: Mapping717127
+Node: Reducing721792
+Node: Nesting and Fixed Points724824
+Node: Generalized Products728313
+Node: Vector and Matrix Formats729932
+Node: Algebra734512
+Node: Selecting Subformulas735835
+Node: Making Selections736675
+Node: Changing Selections742566
+Node: Displaying Selections746340
+Node: Operating on Selections747380
+Node: Rearranging with Selections753383
+Node: Algebraic Manipulation763598
+Node: Simplifying Formulas771208
+Node: Basic Simplifications773270
+Node: Algebraic Simplifications785782
+Node: Unsafe Simplifications795027
+Node: Simplification of Units798527
+Node: Polynomials802180
+Node: Calculus811716
+Node: Differentiation812230
+Node: Integration814724
+Node: Customizing the Integrator818405
+Node: Numerical Integration824692
+Node: Taylor Series826675
+Node: Solving Equations827532
+Node: Multiple Solutions828898
+Node: Solving Systems of Equations834056
+Node: Decomposing Polynomials837156
+Node: Numerical Solutions842991
+Node: Root Finding843655
+Node: Minimization847236
+Node: Numerical Systems of Equations849826
+Node: Curve Fitting851187
+Node: Linear Fits852159
+Node: Polynomial and Multilinear Fits857321
+Node: Error Estimates for Fits861505
+Node: Standard Nonlinear Models866166
+Node: Curve Fitting Details873318
+Node: Interpolation887211
+Node: Summations889922
+Node: Logical Operations897087
+Node: Rewrite Rules908678
+Node: Entering Rewrite Rules910061
+Node: Basic Rewrite Rules912935
+Node: Conditional Rewrite Rules915065
+Node: Algebraic Properties of Rewrite Rules919498
+Node: Other Features of Rewrite Rules930268
+Node: Composing Patterns in Rewrite Rules945042
+Node: Nested Formulas with Rewrite Rules949867
+Node: Multi-Phase Rewrite Rules953561
+Node: Selections with Rewrite Rules958981
+Node: Matching Commands962553
+Node: Automatic Rewrites964329
+Node: Debugging Rewrites972845
+Node: Examples of Rewrite Rules973780
+Node: Units978368
+Node: Basic Operations on Units978938
+Node: The Units Table988354
+Node: Predefined Units991022
+Node: User-Defined Units996305
+Node: Logarithmic Units1000064
+Node: Musical Notes1005513
+Node: Store and Recall1008047
+Node: Storing Variables1008564
+Node: Recalling Variables1016318
+Node: Operations on Variables1017220
+Node: Let Command1020992
+Node: Evaluates-To Operator1022713
+Node: Graphics1028175
+Node: Basic Graphics1029390
+Node: Three Dimensional Graphics1033316
+Node: Managing Curves1036337
+Node: Graphics Options1043621
+Node: Devices1050112
+Ref: Devices-Footnote-11058565
+Node: Kill and Yank1058861
+Node: Killing From Stack1059428
+Node: Yanking Into Stack1061324
+Node: Saving Into Registers1062328
+Node: Inserting From Registers1063825
+Node: Grabbing From Buffers1064403
+Node: Yanking Into Buffers1069929
+Node: X Cut and Paste1072949
+Node: Keypad Mode1074452
+Node: Keypad Main Menu1076529
+Node: Keypad Functions Menu1081114
+Node: Keypad Binary Menu1082358
+Node: Keypad Vectors Menu1083538
+Node: Keypad Modes Menu1086789
+Node: Embedded Mode1088865
+Node: Basic Embedded Mode1089418
+Node: More About Embedded Mode1096176
+Node: Assignments in Embedded Mode1102597
+Node: Mode Settings in Embedded Mode1111149
+Node: Customizing Embedded Mode1117222
+Node: Programming1124435
+Node: Creating User Keys1126304
+Node: Keyboard Macros1129577
+Node: Naming Keyboard Macros1131533
+Node: Conditionals in Macros1133979
+Node: Loops in Macros1137400
+Node: Local Values in Macros1141390
+Node: Queries in Macros1144319
+Node: Invocation Macros1145842
+Node: Algebraic Definitions1147373
+Node: Lisp Definitions1153194
+Node: Defining Functions1154690
+Node: Defining Simple Commands1163381
+Node: Defining Stack Commands1169044
+Node: Argument Qualifiers1172987
+Node: Example Definitions1175322
+Node: Bit Counting Example1175731
+Node: Sine Example1178495
+Node: Calling Calc from Your Programs1182064
+Node: Internals1196562
+Node: Data Type Formats1198363
+Node: Interactive Lisp Functions1205825
+Node: Stack Lisp Functions1208698
+Node: Predicates1217957
+Node: Computational Lisp Functions1227359
+Node: Vector Lisp Functions1240141
+Node: Symbolic Lisp Functions1245186
+Node: Formatting Lisp Functions1270973
+Node: Hooks1276997
+Node: Copying1283524
+Node: GNU Free Documentation License1321106
+Node: Customizing Calc1346276
+Node: Reporting Bugs1364427
+Node: Summary1365619
+Node: Key Index1415546
+Node: Command Index1497673
+Node: Function Index1558065
+Node: Concept Index1615375
+Node: Variable Index1648609
+Node: Lisp Function Index1660477
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

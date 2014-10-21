@@ -1,9 +1,9 @@
-;;; erc-track.el --- Track modified channel buffers
+;;; erc-track.el --- Track modified channel buffers  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2002-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2002-2014 Free Software Foundation, Inc.
 
 ;; Author: Mario Lang <mlang@delysid.org>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: comm, faces
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki.pl?ErcChannelTracking
 
@@ -34,7 +34,7 @@
 ;; * Add extensibility so that custom functions can track
 ;;   custom modification types.
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 (require 'erc)
 (require 'erc-compat)
 (require 'erc-match)
@@ -484,7 +484,7 @@ START is the minimum length of the name used."
 
 ;;; Test:
 
-(assert
+(cl-assert
  (and
   ;; verify examples from the doc strings
   (equal (let ((erc-track-shorten-aggressively nil))
@@ -710,7 +710,7 @@ inactive."
 to consider when `erc-track-visibility' is set to
 only consider active buffers visible.")
 
-(defun erc-user-is-active (&rest ignore)
+(defun erc-user-is-active (&rest _ignore)
   "Set `erc-buffer-activity'."
   (when erc-server-connected
     (setq erc-buffer-activity (erc-current-time))
@@ -745,7 +745,7 @@ only consider active buffers visible.")
 times.  Without it, you cannot debug `erc-modified-channels-display',
 because the debugger also cases changes to the window-configuration.")
 
-(defun erc-modified-channels-update (&rest args)
+(defun erc-modified-channels-update (&rest _args)
   "This function updates the information in `erc-modified-channels-alist'
 according to buffer visibility.  It calls
 `erc-modified-channels-display' at the end. This should usually be
@@ -767,8 +767,7 @@ ARGS are ignored."
 		  (erc-modified-channels-remove-buffer buffer))))
 	    erc-modified-channels-alist)
       (when removed-channel
-	(erc-modified-channels-display)
-	(force-mode-line-update t)))
+	(erc-modified-channels-display)))
     (remove-hook 'post-command-hook 'erc-modified-channels-update)))
 
 (defvar erc-track-mouse-face (if (featurep 'xemacs)
@@ -791,19 +790,19 @@ If FACES are provided, color STRING with them."
 			  (int-to-string count))
 		(copy-sequence string))))
     (define-key map (vector 'mode-line 'mouse-2)
-      `(lambda (e)
-	 (interactive "e")
-	 (save-selected-window
-	   (select-window
-	    (posn-window (event-start e)))
-	   (switch-to-buffer ,buffer))))
+      (lambda (e)
+	(interactive "e")
+	(save-selected-window
+	  (select-window
+	   (posn-window (event-start e)))
+	  (switch-to-buffer buffer))))
     (define-key map (vector 'mode-line 'mouse-3)
-      `(lambda (e)
-	 (interactive "e")
-	 (save-selected-window
-	   (select-window
-	    (posn-window (event-start e)))
-	   (switch-to-buffer-other-window ,buffer))))
+      (lambda (e)
+	(interactive "e")
+	(save-selected-window
+	  (select-window
+	   (posn-window (event-start e)))
+	  (switch-to-buffer-other-window buffer))))
     (put-text-property 0 (length name) 'local-map map name)
     (put-text-property
      0 (length name)
@@ -825,43 +824,45 @@ Use `erc-make-mode-line-buffer-name' to create buttons."
 	((eq 'importance erc-track-switch-direction)
 	 (erc-track-sort-by-importance)))
   (run-hooks 'erc-track-list-changed-hook)
-  (unless (eq erc-track-position-in-mode-line nil)
-  (if (null erc-modified-channels-alist)
-      (setq erc-modified-channels-object (erc-modified-channels-object nil))
-    ;; erc-modified-channels-alist contains all the data we need.  To
-    ;; better understand what is going on, we split things up into
-    ;; four lists: BUFFERS, COUNTS, SHORT-NAMES, and FACES.  These
-    ;; four lists we use to create a new
-    ;; `erc-modified-channels-object' using
-    ;; `erc-make-mode-line-buffer-name'.
-    (let* ((buffers (mapcar 'car erc-modified-channels-alist))
-	   (counts (mapcar 'cadr erc-modified-channels-alist))
-	   (faces (mapcar 'cddr erc-modified-channels-alist))
-	   (long-names (mapcar #'(lambda (buf)
-				   (or (buffer-name buf)
-				       ""))
-			       buffers))
-	   (short-names (if (functionp erc-track-shorten-function)
-			    (funcall erc-track-shorten-function
-				     long-names)
-			  long-names))
-	   strings)
-      (while buffers
-	(when (car short-names)
-	  (setq strings (cons (erc-make-mode-line-buffer-name
-			       (car short-names)
-			       (car buffers)
-			       (car faces)
-			       (car counts))
-			      strings)))
-	(setq short-names (cdr short-names)
-	      buffers (cdr buffers)
-	      counts (cdr counts)
-	      faces (cdr faces)))
-      (when (featurep 'xemacs)
-	(erc-modified-channels-object nil))
-      (setq erc-modified-channels-object
-	    (erc-modified-channels-object strings))))))
+  (when erc-track-position-in-mode-line
+    (let* ((oldobject erc-modified-channels-object)
+	   (strings
+	    (when erc-modified-channels-alist
+	      ;; erc-modified-channels-alist contains all the data we need.  To
+	      ;; better understand what is going on, we split things up into
+	      ;; four lists: BUFFERS, COUNTS, SHORT-NAMES, and FACES.  These
+	      ;; four lists we use to create a new
+	      ;; `erc-modified-channels-object' using
+	      ;; `erc-make-mode-line-buffer-name'.
+	      (let* ((buffers (mapcar 'car erc-modified-channels-alist))
+		     (counts (mapcar 'cadr erc-modified-channels-alist))
+		     (faces (mapcar 'cddr erc-modified-channels-alist))
+		     (long-names (mapcar #'(lambda (buf)
+					     (or (buffer-name buf)
+						 ""))
+					 buffers))
+		     (short-names (if (functionp erc-track-shorten-function)
+				      (funcall erc-track-shorten-function
+					       long-names)
+				    long-names))
+		     strings)
+		(while buffers
+		  (when (car short-names)
+		    (setq strings (cons (erc-make-mode-line-buffer-name
+					 (car short-names)
+					 (car buffers)
+					 (car faces)
+					 (car counts))
+					strings)))
+		  (setq short-names (cdr short-names)
+			buffers (cdr buffers)
+			counts (cdr counts)
+			faces (cdr faces)))
+		strings)))
+	   (newobject (erc-modified-channels-object strings)))
+      (unless (equal oldobject newobject)
+	(setq erc-modified-channels-object newobject)
+	(force-mode-line-update t)))))
 
 (defun erc-modified-channels-remove-buffer (buffer)
   "Remove BUFFER from `erc-modified-channels-alist'."
@@ -869,7 +870,7 @@ Use `erc-make-mode-line-buffer-name' to create buttons."
   (setq erc-modified-channels-alist
 	(delete (assq buffer erc-modified-channels-alist)
 		erc-modified-channels-alist))
-  (when (interactive-p)
+  (when (called-interactively-p 'interactive)
     (erc-modified-channels-display)))
 
 (defun erc-track-find-face (faces)
@@ -976,11 +977,12 @@ is in `erc-mode'."
 	cur)
     (while (and (setq i (next-single-property-change i 'face str m))
 		(not (= i m)))
-      (when (setq cur (get-text-property i 'face str))
-	(add-to-list 'faces cur)))
+      (and (setq cur (get-text-property i 'face str))
+	   (not (member cur faces))
+	   (push cur faces)))
     faces))
 
-(assert
+(cl-assert
  (let ((str "is bold"))
    (put-text-property 3 (length str)
 		      'face '(bold erc-current-nick-face)
@@ -1030,17 +1032,17 @@ relative to `erc-track-switch-direction'"
   (let ((dir erc-track-switch-direction)
 	offset)
     (when (< arg 0)
-      (setq dir (case dir
-		  (oldest      'newest)
-		  (newest      'oldest)
-		  (mostactive  'leastactive)
-		  (leastactive 'mostactive)
-		  (importance  'oldest)))
+      (setq dir (pcase dir
+		  (`oldest      'newest)
+		  (`newest      'oldest)
+		  (`mostactive  'leastactive)
+		  (`leastactive 'mostactive)
+		  (`importance  'oldest)))
       (setq arg (- arg)))
-    (setq offset (case dir
-		   ((oldest leastactive)
+    (setq offset (pcase dir
+		   ((or `oldest `leastactive)
 		    (- (length erc-modified-channels-alist) arg))
-		   (t (1- arg))))
+		   (_ (1- arg))))
     ;; normalize out of range user input
     (cond ((>= offset (length erc-modified-channels-alist))
 	   (setq offset (1- (length erc-modified-channels-alist))))

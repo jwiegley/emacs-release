@@ -1,15 +1,14 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/forms.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/forms.texi.
+This is ../../info/forms.info, produced by makeinfo version 4.13 from
+./forms.texi.
 
 This file documents Forms mode, a form-editing major mode for GNU Emacs.
 
-   Copyright (C) 1989, 1997, 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1997, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -43,12 +42,12 @@ it.
    This file documents Forms mode, a form-editing major mode for GNU
 Emacs.
 
-   Copyright (C) 1989, 1997, 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1997, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -810,7 +809,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1364,19 +1363,24 @@ Index
 
 
 Tag Table:
-Node: Top1066
-Node: Forms Example3251
-Node: Entering and Exiting Forms Mode4459
-Node: Forms Commands6673
-Node: Data File Format10480
-Node: Control File Format11825
-Node: Format Description16459
-Node: Modifying Forms Contents19797
-Node: Miscellaneous21680
-Node: Error Messages23225
-Node: Long Example27474
-Node: Credits30600
-Node: GNU Free Documentation License31386
-Node: Index56552
+Node: Top990
+Node: Forms Example3175
+Node: Entering and Exiting Forms Mode4383
+Node: Forms Commands6597
+Node: Data File Format10404
+Node: Control File Format11749
+Node: Format Description16383
+Node: Modifying Forms Contents19721
+Node: Miscellaneous21604
+Node: Error Messages23149
+Node: Long Example27398
+Node: Credits30524
+Node: GNU Free Documentation License31310
+Node: Index56470
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

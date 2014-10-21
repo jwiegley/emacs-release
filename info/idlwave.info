@@ -1,18 +1,17 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/idlwave.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/idlwave.texi.
+This is ../../info/idlwave.info, produced by makeinfo version 4.13 from
+./idlwave.texi.
 
 This file documents IDLWAVE, a major mode for editing IDL files with
 Emacs, and interacting with an IDL shell run as a subprocess.
 
    This is edition 6.1 of the IDLWAVE User Manual for IDLWAVE 6.1.
 
-   Copyright (C) 1999-2013 Free Software Foundation, Inc.
+   Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -26,7 +25,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: idlwave.info,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
+File: idlwave.info,  Node: Top,  Next: Introduction,  Up: (dir)
 
 IDLWAVE
 *******
@@ -39,12 +38,12 @@ Emacs, and interacting with an IDL shell run as a subprocess.
 
    This is edition 6.1 of the IDLWAVE User Manual for IDLWAVE 6.1.
 
-   Copyright (C) 1999-2013 Free Software Foundation, Inc.
+   Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -214,22 +213,6 @@ development environment. Here is a brief summary of what IDLWAVE does:
 
    * And much, much more...
 
-   Here are a number of screenshots showing IDLWAVE in action:
-
-   * An IDLWAVE buffer (http://idlwave.org/screenshots/emacs_21_nav.gif)
-
-   * A keyword being completed
-     (http://idlwave.org/screenshots/emacs_21_keys.gif)
-
-   * Online help text.
-     (http://idlwave.org/screenshots/emacs_21_help.gif)
-
-   * Routine information displayed
-     (http://idlwave.org/screenshots/emacs_21_ri.gif)
-
-   * Debugging code stopped at a breakpoint
-     (http://idlwave.org/screenshots/emacs_21_bp.gif)
-
    IDLWAVE is the distant successor to the `idl.el' and `idl-shell.el'
 files written by Chris Chase.  The modes and files had to be renamed
 because of a name space conflict with CORBA's `idl-mode', defined in
@@ -335,7 +318,7 @@ File: idlwave.info,  Node: Getting Started,  Next: The IDLWAVE Major Mode,  Prev
 * Lesson III---User Catalog::
 
 
-File: idlwave.info,  Node: Lesson I---Development Cycle,  Next: Lesson II---Customization,  Prev: Getting Started,  Up: Getting Started
+File: idlwave.info,  Node: Lesson I---Development Cycle,  Next: Lesson II---Customization,  Up: Getting Started
 
 3.1 Lesson I: Development Cycle
 ===============================
@@ -533,7 +516,7 @@ slightly from the margin and use only 3 spaces as indentation between
 
    Restart Emacs, and re-indent the program we developed in the first
 part of this tutorial with `C-c h' and `C-M-\'.  You may want to keep
-these lines in `.emacs', with values adjusted to your likings.  If you
+these lines in `.emacs', with values adjusted to your liking.  If you
 want to get more information about any of these variables, type, e.g.,
 `C-h v idlwave-main-block-indent <RET>'.  To find which variables can
 be customized, look for items marked `User Option:' throughout this
@@ -628,13 +611,13 @@ want; directories with existing library catalogs will not be selected
 by default) and click on the `Scan&Save' button.  Then go for a cup of
 coffee while IDLWAVE collects information for each and every IDL
 routine on your search path.  All this information is written to the
-file `.idlwave/idlusercat.el' in your home directory and will from now
-on automatically load whenever you use IDLWAVE.  You may find it
-necessary to rebuild the catalog on occasion as your local libraries
-change, or build a library catalog for those directories instead.
-Invoke routine info (`C-c ?') or completion (`M-<TAB>') on any routine
-or partial routine name you know to be located in the library.  E.g.,
-if you have scanned the IDL-Astro library:
+file `~/.emacs.d/idlwave/idlusercat.el' and will from now on
+automatically load whenever you use IDLWAVE.  You may find it necessary
+to rebuild the catalog on occasion as your local libraries change, or
+build a library catalog for those directories instead.  Invoke routine
+info (`C-c ?') or completion (`M-<TAB>') on any routine or partial
+routine name you know to be located in the library.  E.g., if you have
+scanned the IDL-Astro library:
 
          a=readf<M-<TAB>>
 
@@ -680,7 +663,7 @@ them.
 * Misc Options::                Things that fit nowhere else
 
 
-File: idlwave.info,  Node: Code Formatting,  Next: Routine Info,  Prev: The IDLWAVE Major Mode,  Up: The IDLWAVE Major Mode
+File: idlwave.info,  Node: Code Formatting,  Next: Routine Info,  Up: The IDLWAVE Major Mode
 
 4.1 Code Formatting
 ===================
@@ -708,7 +691,7 @@ After configuring it to match your coding standards, you can rely on it
 to help keep your code neat and organized.
 
 
-File: idlwave.info,  Node: Code Indentation,  Next: Continued Statement Indentation,  Prev: Code Formatting,  Up: Code Formatting
+File: idlwave.info,  Node: Code Indentation,  Next: Continued Statement Indentation,  Up: Code Formatting
 
 4.1.1 Code Indentation
 ----------------------
@@ -1095,8 +1078,8 @@ is distributed directly with IDL, along with an XML-based catalog of
 routine information.  By default, IDLWAVE automatically attempts to
 convert this XML catalog into a format Emacs can more easily
 understand, and caches this information in your
-`idlwave_config_directory' (`~/.idlwave/', by default).  It also
-re-scans the XML catalog if it is newer than the current cached
+`idlwave_config_directory' (`~/.emacs.d/idlwave/', by default).  It
+also re-scans the XML catalog if it is newer than the current cached
 version.  You can force rescan with the menu entry `IDLWAVE->Routine
 Info->Rescan XML Help Catalog'.
 
@@ -1162,7 +1145,7 @@ directly in the originating source file.
 * Help with Source::
 
 
-File: idlwave.info,  Node: Help with HTML Documentation,  Next: Help with Source,  Prev: Online Help,  Up: Online Help
+File: idlwave.info,  Node: Help with HTML Documentation,  Next: Help with Source,  Up: Online Help
 
 4.3.1 Help with HTML Documentation
 ----------------------------------
@@ -1386,7 +1369,7 @@ negative consequences.
 * Structure Tag Completion::    Completing state.Tag
 
 
-File: idlwave.info,  Node: Case of Completed Words,  Next: Object Method Completion and Class Ambiguity,  Prev: Completion,  Up: Completion
+File: idlwave.info,  Node: Case of Completed Words,  Next: Object Method Completion and Class Ambiguity,  Up: Completion
 
 4.4.1 Case of Completed Words
 -----------------------------
@@ -1413,9 +1396,9 @@ items, independent of buffer context, set
 
  -- User Option: idlwave-completion-force-default-case (`nil')
      Non-`nil' means completion will always honor the settings in
-     `idlwave-completion-case'.  When nil (the default), entirely lower
-     case strings will always be completed to lower case, no matter
-     what the settings in `idlwave-completion-case'.
+     `idlwave-completion-case'.  When `nil' (the default), entirely
+     lower case strings will always be completed to lower case, no
+     matter what the settings in `idlwave-completion-case'.
 
  -- User Option: idlwave-complete-empty-string-as-lower-case (`nil')
      Non-`nil' means the empty string is considered lower case for
@@ -1798,7 +1781,7 @@ can be helpful.
 * Case Changes::                Enforcing upper case keywords
 
 
-File: idlwave.info,  Node: Block Boundary Check,  Next: Padding Operators,  Prev: Actions,  Up: Actions
+File: idlwave.info,  Node: Block Boundary Check,  Next: Padding Operators,  Up: Actions
 
 4.9.1 Block Boundary Check
 --------------------------
@@ -2011,7 +1994,7 @@ currently only works under Unix and MacOSX.
 * Custom Expression Examination::
 
 
-File: idlwave.info,  Node: Starting the Shell,  Next: Using the Shell,  Prev: The IDLWAVE Shell,  Up: The IDLWAVE Shell
+File: idlwave.info,  Node: Starting the Shell,  Next: Using the Shell,  Up: The IDLWAVE Shell
 
 5.1 Starting the Shell
 ======================
@@ -2070,7 +2053,7 @@ which matches the prompt for both ENVI and IDL simultaneously is `"^
      Non-`nil' means preserve command history between sessions.
 
  -- User Option: idlwave-shell-command-history-file
-          (`~/.idlwave/.idlwhist')
+          (`~/.emacs.d/idlwave/.idlwhist')
      The file in which the command history of the idlwave shell is
      saved.  Unless it's an absolute path, it goes in
      `idlwave-config-directory'.
@@ -2267,7 +2250,7 @@ also installed.  The toolbar display can be toggled with `C-c C-d C-t'
 * Electric Debug Mode::
 
 
-File: idlwave.info,  Node: A Tale of Two Modes,  Next: Debug Key Bindings,  Prev: Debugging IDL Programs,  Up: Debugging IDL Programs
+File: idlwave.info,  Node: A Tale of Two Modes,  Next: Debug Key Bindings,  Up: Debugging IDL Programs
 
 5.4.1 A Tale of Two Modes
 -------------------------
@@ -2857,7 +2840,7 @@ know about the accessible routines.
 * Documentation Scan::          Scanning the IDL Manuals
 
 
-File: idlwave.info,  Node: Routine Definitions,  Next: Routine Information Sources,  Prev: Sources of Routine Info,  Up: Sources of Routine Info
+File: idlwave.info,  Node: Routine Definitions,  Next: Routine Information Sources,  Up: Sources of Routine Info
 
 A.1 Routine Definitions
 =======================
@@ -2986,9 +2969,9 @@ information (e.g., Windows), a library path must be specified in
 setup directories for user catalog scan (*note User Catalog:: for more
 on this variable).  Note that, before the shell is running, IDLWAVE can
 only know about the IDL search path by consulting the file pointed to
-by `idlwave-path-file' (`~/.idlwave/idlpath.el', by default).  If
-`idlwave-auto-write-path' is enabled (which is the default), the paths
-are written out whenever the IDLWAVE shell is started.
+by `idlwave-path-file' (`~/.emacs.d/idlwave/idlpath.el', by default).
+If `idlwave-auto-write-path' is enabled (which is the default), the
+paths are written out whenever the IDLWAVE shell is started.
 
  -- User Option: idlwave-auto-write-path (`t')
      Write out information on the !PATH and !DIR paths from IDL
@@ -3005,7 +2988,7 @@ are written out whenever the IDLWAVE shell is started.
      Under Unix/MacOSX, will be obtained from the Shell and recorded,
      if run.
 
- -- User Option: idlwave-config-directory (`~/.idlwave')
+ -- User Option: idlwave-config-directory (`~/.emacs.d/idlwave')
      Default path where IDLWAVE saves configuration information, a user
      catalog (if any), and a cached scan of the XML catalog (IDL v6.2
      and later).
@@ -3016,7 +2999,7 @@ are written out whenever the IDLWAVE shell is started.
 * User Catalog::
 
 
-File: idlwave.info,  Node: Library Catalogs,  Next: User Catalog,  Prev: Catalogs,  Up: Catalogs
+File: idlwave.info,  Node: Library Catalogs,  Next: User Catalog,  Up: Catalogs
 
 A.3.1 Library Catalogs
 ----------------------
@@ -3081,9 +3064,9 @@ A.3.2 User Catalog
 
 The user catalog is the old routine catalog system.  It is produced
 within Emacs, and stored in a single file in the user's home directory
-(`.idlwave/idlusercat.el' by default).  Although library catalogs are
-more flexible, there may be reasons to prefer a user catalog instead,
-including:
+(`.emacs.d/idlwave/idlusercat.el' by default).  Although library
+catalogs are more flexible, there may be reasons to prefer a user
+catalog instead, including:
 
    * The scan is internal to Emacs, so you don't need a working Perl
      installation, as you do for library catalogs.
@@ -3700,7 +3683,7 @@ Appendix F GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -4630,7 +4613,6 @@ Index
                                                               (line   6)
 * Scanning buffers for routine info:     Routine Info.        (line   6)
 * Scanning the documentation:            Documentation Scan.  (line   6)
-* Screenshots:                           Introduction.        (line  64)
 * Scrolling the *Completions* window:    Completion.          (line  47)
 * self object, default class:            Object Method Completion and Class Ambiguity.
                                                               (line   6)
@@ -4688,77 +4670,82 @@ Index
 
 
 Tag Table:
-Node: Top1128
-Node: Introduction5602
-Ref: Introduction-Footnote-19266
-Node: IDLWAVE in a Nutshell9389
-Node: Getting Started12227
-Node: Lesson I---Development Cycle12506
-Node: Lesson II---Customization20415
-Node: Lesson III---User Catalog25402
-Node: The IDLWAVE Major Mode28172
-Node: Code Formatting29266
-Node: Code Indentation30581
-Node: Continued Statement Indentation32113
-Node: Comment Indentation35341
-Node: Continuation Lines36333
-Node: Syntax Highlighting38788
-Node: Octals and Highlighting39822
-Node: Routine Info40908
-Ref: Routine Info-Footnote-147553
-Node: Online Help47719
-Node: Help with HTML Documentation51770
-Node: Help with Source55334
-Node: Completion58257
-Node: Case of Completed Words62372
-Node: Object Method Completion and Class Ambiguity64191
-Node: Object Method Completion in the Shell66879
-Node: Class and Keyword Inheritance67734
-Node: Structure Tag Completion70055
-Node: Routine Source71812
-Node: Resolving Routines72923
-Node: Code Templates73908
-Node: Abbreviations74411
-Node: Actions78286
-Node: Block Boundary Check80129
-Node: Padding Operators81183
-Node: Case Changes83317
-Node: Doc Header84811
-Node: Motion Commands86075
-Node: Misc Options87159
-Node: The IDLWAVE Shell87762
-Node: Starting the Shell88771
-Node: Using the Shell92331
-Ref: Using the Shell-Footnote-196162
-Node: Commands Sent to the Shell96350
-Node: Debugging IDL Programs98473
-Node: A Tale of Two Modes99875
-Node: Debug Key Bindings101005
-Node: Breakpoints and Stepping102886
-Node: Compiling Programs108727
-Node: Walking the Calling Stack110189
-Node: Electric Debug Mode111287
-Ref: Electric Debug Mode-Footnote-1117256
-Node: Examining Variables117383
-Ref: Examining Variables-Footnote-1122251
-Node: Custom Expression Examination122337
-Ref: Custom Expression Examination-Footnote-1125831
-Node: Acknowledgments126035
-Node: Sources of Routine Info128060
-Node: Routine Definitions128774
-Node: Routine Information Sources130160
-Node: Catalogs133669
-Node: Library Catalogs136287
-Node: User Catalog139166
-Ref: User Catalog-Footnote-1142232
-Ref: User Catalog-Footnote-2142315
-Node: Load-Path Shadows142351
-Node: Documentation Scan144944
-Node: HTML Help Browser Tips146421
-Node: Configuration Examples149573
-Node: Windows and MacOS156668
-Node: Troubleshooting158865
-Node: GNU Free Documentation License168605
-Node: Index193781
+Node: Top1052
+Node: Introduction5512
+Ref: Introduction-Footnote-18681
+Node: IDLWAVE in a Nutshell8804
+Node: Getting Started11642
+Node: Lesson I---Development Cycle11921
+Node: Lesson II---Customization19806
+Node: Lesson III---User Catalog24792
+Node: The IDLWAVE Major Mode27550
+Node: Code Formatting28644
+Node: Code Indentation29928
+Node: Continued Statement Indentation31436
+Node: Comment Indentation34664
+Node: Continuation Lines35656
+Node: Syntax Highlighting38111
+Node: Octals and Highlighting39145
+Node: Routine Info40231
+Ref: Routine Info-Footnote-146876
+Node: Online Help47042
+Node: Help with HTML Documentation51101
+Node: Help with Source54645
+Node: Completion57568
+Node: Case of Completed Words61683
+Node: Object Method Completion and Class Ambiguity63485
+Node: Object Method Completion in the Shell66173
+Node: Class and Keyword Inheritance67028
+Node: Structure Tag Completion69349
+Node: Routine Source71106
+Node: Resolving Routines72217
+Node: Code Templates73202
+Node: Abbreviations73705
+Node: Actions77580
+Node: Block Boundary Check79423
+Node: Padding Operators80461
+Node: Case Changes82595
+Node: Doc Header84089
+Node: Motion Commands85353
+Node: Misc Options86437
+Node: The IDLWAVE Shell87040
+Node: Starting the Shell88049
+Node: Using the Shell91591
+Ref: Using the Shell-Footnote-195422
+Node: Commands Sent to the Shell95610
+Node: Debugging IDL Programs97733
+Node: A Tale of Two Modes99135
+Node: Debug Key Bindings100234
+Node: Breakpoints and Stepping102115
+Node: Compiling Programs107956
+Node: Walking the Calling Stack109418
+Node: Electric Debug Mode110516
+Ref: Electric Debug Mode-Footnote-1116485
+Node: Examining Variables116612
+Ref: Examining Variables-Footnote-1121480
+Node: Custom Expression Examination121566
+Ref: Custom Expression Examination-Footnote-1125060
+Node: Acknowledgments125264
+Node: Sources of Routine Info127289
+Node: Routine Definitions128003
+Node: Routine Information Sources129357
+Node: Catalogs132866
+Node: Library Catalogs135499
+Node: User Catalog138361
+Ref: User Catalog-Footnote-1141435
+Ref: User Catalog-Footnote-2141518
+Node: Load-Path Shadows141554
+Node: Documentation Scan144147
+Node: HTML Help Browser Tips145624
+Node: Configuration Examples148776
+Node: Windows and MacOS155871
+Node: Troubleshooting158068
+Node: GNU Free Documentation License167808
+Node: Index192978
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

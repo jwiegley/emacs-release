@@ -1,16 +1,15 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/reftex.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/reftex.texi.
+This is ../../info/reftex.info, produced by makeinfo version 4.13 from
+./reftex.texi.
 
-This manual documents RefTeX (version 24.3), a package to do labels,
+This manual documents RefTeX (version 24.4), a package to do labels,
 references, citations and indices for LaTeX documents with Emacs.
 
-   Copyright (C) 1997-2013 Free Software Foundation, Inc.
+   Copyright (C) 1997-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -25,15 +24,31 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: reftex.info,  Node: Top,  Up: (dir)
+File: reftex.info,  Node: Top,  Next: Introduction,  Up: (dir)
 
 RefTeX
 ******
 
-RefTeX is a package for managing Labels, References, Citations and
+This manual documents RefTeX (version 24.4), a package to do labels,
+references, citations and indices for LaTeX documents with Emacs.
+
+   Copyright (C) 1997-2014 Free Software Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
+     being "A GNU Manual", and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     "GNU Free Documentation License".
+
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual."
+
+   RefTeX is a package for managing Labels, References, Citations and
 index entries with GNU Emacs.
 
-   This manual documents RefTeX version 24.3.
+   This manual documents RefTeX version 24.4.
 
    Don't be discouraged by the size of this manual, which covers RefTeX
 in great depth.  All you need to know to use RefTeX can be summarized
@@ -56,14 +71,13 @@ other parts of this document when needed.
 * Multifile Documents::              Document spread over many files.
 * Language Support::                 How to support other languages.
 * Finding Files::                    Included TeX files and BibTeX .bib files.
-* AUCTeX::                           Cooperation with AUCTeX.
 * Optimizations::                    When RefTeX is too slow.
+* AUCTeX::                           Cooperation with AUCTeX.
 * Problems and Work-Arounds::        First Aid.
 * Imprint::                          Author, Web-site, Thanks
 
 * Commands::                         Which are the available commands.
 * Options::                          How to extend and configure RefTeX.
-* Keymaps and Hooks::                For customization.
 * Changes::                          A List of recent changes to RefTeX.
 * GNU Free Documentation License::   The license for this documentation.
 
@@ -86,7 +100,7 @@ Labels and References
 * Defining Label Environments::        ... and environments it doesn't.
 * Reference Info::                   View the label corresponding to a \ref.
 * Reference Styles::                 Macros to be used instead of \ref.
-* xr (LaTeX package)::               References to external documents.
+* LaTeX xr Package::                 References to external documents.
 
 Defining Label Environments
 
@@ -129,20 +143,20 @@ AUCTeX
 
 Options, Keymaps, Hooks
 
-* Options (Table of Contents)::
-* Options (Defining Label Environments)::
-* Options (Creating Labels)::
-* Options (Referencing Labels)::
-* Options (Creating Citations)::
-* Options (Index Support)::
-* Options (Viewing Cross-References)::
-* Options (Finding Files)::
-* Options (Optimizations)::
-* Options (Fontification)::
-* Options (Misc)::
+* Options - Table of Contents::
+* Options - Defining Label Environments::
+* Options - Creating Labels::
+* Options - Referencing Labels::
+* Options - Creating Citations::
+* Options - Index Support::
+* Options - Viewing Cross-References::
+* Options - Finding Files::
+* Options - Optimizations::
+* Options - Fontification::
+* Options - Misc::
 
 
-File: reftex.info,  Node: Introduction,  Next: Table of Contents,  Up: Top
+File: reftex.info,  Node: Introduction,  Next: Table of Contents,  Prev: Top,  Up: Top
 
 1 Introduction
 **************
@@ -463,7 +477,7 @@ Access to document locations
 `mouse-2'
      Clicking with mouse button 2 on a line has the same effect as
      <RET>.  See also variable `reftex-highlight-selection', *note
-     Options (Fontification)::.
+     Options - Fontification::.
 
 `f'
      Toggle follow mode.  When follow mode is active, the other window
@@ -575,8 +589,8 @@ Updating the buffer
 
 `x'
      Switch to the `*toc*' buffer of an external document.  When the
-     current document is using the `xr' package (*note xr (LaTeX
-     package)::), RefTeX will switch to one of the external documents.
+     current document is using the `xr' package (*note LaTeX xr
+     Package::), RefTeX will switch to one of the external documents.
 
 Automatic recentering
 .....................
@@ -650,7 +664,7 @@ counter: the equation counter.
 * Defining Label Environments::        ... and environments it doesn't.
 * Reference Info::                   View the label corresponding to a \ref.
 * Reference Styles::                 Macros to be used instead of \ref.
-* xr (LaTeX package)::               References to external documents.
+* LaTeX xr Package::                 References to external documents.
 
 
 File: reftex.info,  Node: Creating Labels,  Next: Referencing Labels,  Up: Labels and References
@@ -693,8 +707,8 @@ different modes to create this mark.
      document in order to access this label later.
 
    If you want to change the way certain labels are created, check out
-the variable `reftex-insert-label-flags' (*note Options (Creating
-Labels)::).
+the variable `reftex-insert-label-flags' (*note Options - Creating
+Labels::).
 
    If you are using AUCTeX to write your LaTeX documents, you can set
 it up to delegate the creation of labels to RefTeX. *Note AUCTeX::, for
@@ -822,7 +836,7 @@ Selecting a label and creating the reference
 `mouse-2'
      Clicking with mouse button 2 on a label will accept it like <RET>
      would.  See also variable `reftex-highlight-selection', *note
-     Options (Misc)::.
+     Options - Misc::.
 
 `m - + ,'
      Mark the current entry.  When several entries have been marked,
@@ -871,8 +885,8 @@ Controlling what gets displayed
 ...............................
 
      The defaults for the following flags can be configured with the
-     variable `reftex-label-menu-flags' (*note Options (Referencing
-     Labels)::).
+     variable `reftex-label-menu-flags' (*note Options - Referencing
+     Labels::).
 
 `c'
      Toggle the display of the one-line label definition context in the
@@ -921,8 +935,8 @@ Updating the buffer
      Reference a label from an external document.  With the LaTeX
      package `xr' it is possible to reference labels defined in another
      document.  This key will switch to the label menu of an external
-     document and let you select a label from there (*note xr: xr
-     (LaTeX package).).
+     document and let you select a label from there (*note xr: LaTeX xr
+     Package.).
 
 
    In order to define additional commands for the selection process, the
@@ -979,7 +993,7 @@ File: reftex.info,  Node: Defining Label Environments,  Next: Reference Info,  P
 
 RefTeX can be configured to recognize additional labeled environments
 and macros.  This is done with the variable `reftex-label-alist' (*note
-Options (Defining Label Environments)::).  If you are not familiar with
+Options - Defining Label Environments::).  If you are not familiar with
 Lisp, you can use the `custom' library to configure this rather complex
 variable.  To do this, use
 
@@ -1057,8 +1071,8 @@ The next item indicates how to grab context of the label definition.
    - `nil' means to use the text right after the label definition.
 
    - For more complex ways of getting context, see the variable
-     `reftex-label-alist' (*note Options (Defining Label
-     Environments)::).
+     `reftex-label-alist' (*note Options - Defining Label
+     Environments::).
 
    The following list of strings is used to guess the correct label type
 from the word before point when creating a reference.  For example if
@@ -1106,8 +1120,8 @@ this:
    Depending on how you would like the label insertion and selection for
 the new environments to work, you might want to add the letters `a' and
 `h' to some of the flags in the variables `reftex-insert-label-flags'
-(*note Options (Creating Labels)::) and `reftex-label-menu-flags'
-(*note Options (Referencing Labels)::).
+(*note Options - Creating Labels::) and `reftex-label-menu-flags'
+(*note Options - Referencing Labels::).
 
 
 File: reftex.info,  Node: Quick Equation,  Next: Figure Wrapper,  Prev: Theorem and Axiom,  Up: Defining Label Environments
@@ -1365,7 +1379,7 @@ displayed if the echo area is not occupied by a different message.
 macro.  *Note Viewing Cross-References::, for more information.
 
 
-File: reftex.info,  Node: Reference Styles,  Next: xr (LaTeX package),  Prev: Reference Info,  Up: Labels and References
+File: reftex.info,  Node: Reference Styles,  Next: LaTeX xr Package,  Prev: Reference Info,  Up: Labels and References
 
 3.6 Reference Styles
 ====================
@@ -1449,7 +1463,7 @@ should be adapted now.
 `reftex-fancyref-fref' to `C-c f'.
 
 
-File: reftex.info,  Node: xr (LaTeX package),  Prev: Reference Styles,  Up: Labels and References
+File: reftex.info,  Node: LaTeX xr Package,  Prev: Reference Styles,  Up: Labels and References
 
 3.7 `xr': Cross-Document References
 ===================================
@@ -1572,7 +1586,7 @@ Selecting entries and creating the citation
 `mouse-2'
      Clicking with mouse button 2 on a citation will accept it like
      <RET> would.  See also variable `reftex-highlight-selection',
-     *note Options (Misc)::.
+     *note Options - Misc::.
 
 `m'
      Mark the current entry.  When one or several entries are marked,
@@ -2049,8 +2063,8 @@ replacement string and offer you the following choices(1):
 
    The `Find and Index in Document' menu in the phrases buffer also
 lists a few options for the indexing process.  The options have
-associated customization variables to set the defaults (*note Options
-(Index Support)::).  Here is a short explanation of what the options do:
+associated customization variables to set the defaults (*note Options -
+Index Support::).  Here is a short explanation of what the options do:
 
 Match Whole Words
      When searching for index phrases, make sure whole words are
@@ -2392,7 +2406,7 @@ argument.  Here is what will happen for individual classes of macros:
      of the `\ref' macro are active for cross-reference display.  This
      works also for labels defined in an external document when the
      current document refers to them through the `xr' interface (*note
-     xr (LaTeX package)::).
+     LaTeX xr Package::).
 
 `\label'
      Display a document location which references this label.  Pressing
@@ -2438,8 +2452,8 @@ in the variable `reftex-view-crossref-extra'.
 
 File: reftex.info,  Node: RefTeXs Menu,  Next: Key Bindings,  Prev: Viewing Cross-References,  Up: Top
 
-6.1 RefTeX's Menu
-=================
+7 RefTeX's Menu
+***************
 
 RefTeX installs a `Ref' menu in the menu bar on systems which support
 this.  From this menu you can access all of RefTeX's commands and a few
@@ -2449,8 +2463,8 @@ to access RefTeX's entire set of options.
 
 File: reftex.info,  Node: Key Bindings,  Next: Faces,  Prev: RefTeXs Menu,  Up: Top
 
-6.2 Default Key Bindings
-========================
+8 Default Key Bindings
+**********************
 
 Here is a summary of the available key bindings.
 
@@ -2493,24 +2507,24 @@ file:
 used to add keys, see *note Keymaps and Hooks::.
 
 
-File: reftex.info,  Node: Faces,  Next: AUCTeX,  Prev: Key Bindings,  Up: Top
+File: reftex.info,  Node: Faces,  Next: Multifile Documents,  Prev: Key Bindings,  Up: Top
 
-6.3 Faces
-=========
+9 Faces
+*******
 
 RefTeX uses faces when available to structure the selection and table
 of contents buffers.  It does not create its own faces, but uses the
 ones defined in `font-lock.el'.  Therefore, RefTeX will use faces only
 when `font-lock' is loaded.  This seems to be reasonable because people
 who like faces will very likely have it loaded.  If you wish to turn
-off fontification or change the involved faces, see *note Options
-(Fontification)::.
+off fontification or change the involved faces, see *note Options -
+Fontification::.
 
 
-File: reftex.info,  Node: Multifile Documents,  Next: Language Support,  Prev: AUCTeX,  Up: Top
+File: reftex.info,  Node: Multifile Documents,  Next: Language Support,  Prev: Faces,  Up: Top
 
-6.4 Multifile Documents
-=======================
+10 Multifile Documents
+**********************
 
 The following is relevant when working with documents spread over many
 files:
@@ -2552,8 +2566,8 @@ files:
 
 File: reftex.info,  Node: Language Support,  Next: Finding Files,  Prev: Multifile Documents,  Up: Top
 
-6.5 Language Support
-====================
+11 Language Support
+*******************
 
 Some parts of RefTeX are language dependent.  The default settings work
 well for English.  If you are writing in a different language, the
@@ -2585,8 +2599,8 @@ following hints may be useful:
 
 File: reftex.info,  Node: Finding Files,  Next: Optimizations,  Prev: Language Support,  Up: Top
 
-6.6 Finding Files
-=================
+12 Finding Files
+****************
 
 In order to find files included in a document via `\input' or
 `\include', RefTeX searches all directories specified in the
@@ -2652,10 +2666,10 @@ new extension must also be known to AUCTeX via the variable
            '( "nw" "tex" "sty" "cls" "ltx" "texi" "texinfo"))
 
 
-File: reftex.info,  Node: Optimizations,  Next: Problems and Work-Arounds,  Prev: Finding Files,  Up: Top
+File: reftex.info,  Node: Optimizations,  Next: AUCTeX,  Prev: Finding Files,  Up: Top
 
-6.7 Optimizations
-=================
+13 Optimizations
+****************
 
 Note added 2002.  Computers have gotten a lot faster, so most of the
 optimizations discussed below will not be necessary on new machines.  I
@@ -2761,10 +2775,10 @@ with large documents:
            reftex-use-multiple-selection-buffers t)
 
 
-File: reftex.info,  Node: AUCTeX,  Next: Multifile Documents,  Prev: Faces,  Up: Top
+File: reftex.info,  Node: AUCTeX,  Next: Problems and Work-Arounds,  Prev: Optimizations,  Up: Top
 
-6.8 AUCTeX
-==========
+14 AUCTeX
+*********
 
 AUCTeX is without doubt the best major mode for editing TeX and LaTeX
 files with Emacs (*note AUCTeX: (auctex)Top.).  If AUCTeX is not part
@@ -2785,8 +2799,8 @@ package.
 
 File: reftex.info,  Node: AUCTeX-RefTeX Interface,  Next: Style Files,  Up: AUCTeX
 
-6.8.1 The AUCTeX-RefTeX Interface
----------------------------------
+14.1 The AUCTeX-RefTeX Interface
+================================
 
 RefTeX contains code to interface with AUCTeX.  When this interface is
 turned on, both packages will interact closely.  Instead of using
@@ -2849,8 +2863,8 @@ off the interface.
 
 File: reftex.info,  Node: Style Files,  Next: Bib-Cite,  Prev: AUCTeX-RefTeX Interface,  Up: AUCTeX
 
-6.8.2 Style Files
------------------
+14.2 Style Files
+================
 
 Style files are Emacs Lisp files which are evaluated by AUCTeX in
 association with the `\documentclass' and `\usepackage' commands of a
@@ -2947,8 +2961,8 @@ is still available as an alias for compatibility.
 
 File: reftex.info,  Node: Bib-Cite,  Prev: Style Files,  Up: AUCTeX
 
-6.8.3 Bib-Cite
---------------
+14.3 Bib-Cite
+=============
 
 Once you have written a document with labels, references and citations,
 it can be nice to read it like a hypertext document.  RefTeX has
@@ -2969,10 +2983,10 @@ of this feature, try
      (setq bib-cite-use-reftex-view-crossref t)
 
 
-File: reftex.info,  Node: Problems and Work-Arounds,  Next: Imprint,  Prev: Optimizations,  Up: Top
+File: reftex.info,  Node: Problems and Work-Arounds,  Next: Imprint,  Prev: AUCTeX,  Up: Top
 
-6.9 Problems and Work-arounds
-=============================
+15 Problems and Work-arounds
+****************************
 
    * LaTeX commands
      `\input', `\include', and `\section' (etc.) statements have to be
@@ -3061,14 +3075,13 @@ File: reftex.info,  Node: Problems and Work-Arounds,  Next: Imprint,  Prev: Opti
 
 File: reftex.info,  Node: Imprint,  Next: Commands,  Prev: Problems and Work-Arounds,  Up: Top
 
-6.10 Imprint
-============
+16 Imprint
+**********
 
-RefTeX was written by Carsten Dominik <dominik@science.uva.nl>, with
-contributions by Stephen Eglen.  RefTeX is currently maintained by
-the AUCTeX project, see the RefTeX web page
-(http://www.gnu.org/software/auctex/reftex.html) for detailed
-information.
+RefTeX was written by Carsten Dominik, with contributions by Stephen
+Eglen.  RefTeX is currently maintained by the AUCTeX project, see the
+RefTeX web page (http://www.gnu.org/software/auctex/reftex.html) for
+detailed information.
 
    If you have questions about RefTeX, you can send email to the
 AUCTeX user mailing list (<auctex@gnu.org>).  If you want to contribute
@@ -3105,8 +3118,8 @@ MicroEmacs at the time).
 
 File: reftex.info,  Node: Commands,  Next: Options,  Prev: Imprint,  Up: Top
 
-7 Commands
-**********
+17 Commands
+***********
 
 Here is a summary of RefTeX's commands which can be executed from LaTeX
 files.  Command which are executed from the special buffers are not
@@ -3285,10 +3298,10 @@ described here.  All commands are available from the `Ref' menu.  See
      removes the parse file associated with the current document.
 
 
-File: reftex.info,  Node: Options,  Next: Keymaps and Hooks,  Prev: Commands,  Up: Top
+File: reftex.info,  Node: Options,  Next: Changes,  Prev: Commands,  Up: Top
 
-8 Options, Keymaps, Hooks
-*************************
+18 Options, Keymaps, Hooks
+**************************
 
 Here is a complete list of RefTeX's configuration variables.  All
 variables have customize support, so if you are not familiar with Emacs
@@ -3298,23 +3311,24 @@ reftex-customize' will get you there.
 
 * Menu:
 
-* Options (Table of Contents)::
-* Options (Defining Label Environments)::
-* Options (Creating Labels)::
-* Options (Referencing Labels)::
-* Options (Creating Citations)::
-* Options (Index Support)::
-* Options (Viewing Cross-References)::
-* Options (Finding Files)::
-* Options (Optimizations)::
-* Options (Fontification)::
-* Options (Misc)::
+* Options - Table of Contents::
+* Options - Defining Label Environments::
+* Options - Creating Labels::
+* Options - Referencing Labels::
+* Options - Creating Citations::
+* Options - Index Support::
+* Options - Viewing Cross-References::
+* Options - Finding Files::
+* Options - Optimizations::
+* Options - Fontification::
+* Options - Misc::
+* Keymaps and Hooks::
 
 
-File: reftex.info,  Node: Options (Table of Contents),  Next: Options (Defining Label Environments),  Up: Options
+File: reftex.info,  Node: Options - Table of Contents,  Next: Options - Defining Label Environments,  Up: Options
 
-8.1 Table of Contents
-=====================
+18.1 Table of Contents
+======================
 
  -- User Option: reftex-include-file-commands
      List of LaTeX commands which input another file.  The file name is
@@ -3420,10 +3434,10 @@ File: reftex.info,  Node: Options (Table of Contents),  Next: Options (Defining 
      Contents::).
 
 
-File: reftex.info,  Node: Options (Defining Label Environments),  Next: Options (Creating Labels),  Prev: Options (Table of Contents),  Up: Options
+File: reftex.info,  Node: Options - Defining Label Environments,  Next: Options - Creating Labels,  Prev: Options - Table of Contents,  Up: Options
 
-8.2 Defining Label Environments
-===============================
+18.2 Defining Label Environments
+================================
 
  -- User Option: reftex-default-label-alist-entries
      Default label alist specifications.  It is a list of symbols with
@@ -3462,7 +3476,7 @@ File: reftex.info,  Node: Options (Defining Label Environments),  Next: Options 
           This may also be a function to do local parsing and identify
           point to be in a non-standard label environment.  The
           function must take an argument BOUND and limit backward
-          searches to this value.  It should return either nil or a
+          searches to this value.  It should return either `nil' or a
           cons cell `(FUNCTION . POSITION)' with the function symbol
           and the position where the special environment starts.  See
           the Info documentation for an example.
@@ -3608,7 +3622,7 @@ File: reftex.info,  Node: Options (Defining Label Environments),  Next: Options 
      label to detect the correct label type, but this process can be
      slow when a document contains thousands of labels.  If you use
      label prefixes consistently, you may speed up document parsing by
-     setting this variable to a non-nil value.  RefTeX will then
+     setting this variable to a non-`nil' value.  RefTeX will then
      compare the label prefix with the prefixes found in
      `reftex-label-alist' and derive the correct label type in this way.
      Possible values for this option are:
@@ -3630,10 +3644,10 @@ File: reftex.info,  Node: Options (Defining Label Environments),  Next: Options 
      still do extensive parsing for any non-footnote labels.
 
 
-File: reftex.info,  Node: Options (Creating Labels),  Next: Options (Referencing Labels),  Prev: Options (Defining Label Environments),  Up: Options
+File: reftex.info,  Node: Options - Creating Labels,  Next: Options - Referencing Labels,  Prev: Options - Defining Label Environments,  Up: Options
 
-8.3 Creating Labels
-===================
+18.3 Creating Labels
+====================
 
  -- User Option: reftex-insert-label-flags
      Flags governing label insertion.  The value has the form
@@ -3742,10 +3756,10 @@ File: reftex.info,  Node: Options (Creating Labels),  Next: Options (Referencing
           Character class after  abbrev point in word.
 
 
-File: reftex.info,  Node: Options (Referencing Labels),  Next: Options (Creating Citations),  Prev: Options (Creating Labels),  Up: Options
+File: reftex.info,  Node: Options - Referencing Labels,  Next: Options - Creating Citations,  Prev: Options - Creating Labels,  Up: Options
 
-8.4 Referencing Labels
-======================
+18.4 Referencing Labels
+=======================
 
  -- User Option: reftex-label-menu-flags
      List of flags governing the label menu makeup. The flags are:
@@ -3857,10 +3871,10 @@ File: reftex.info,  Node: Options (Referencing Labels),  Next: Options (Creating
      Referencing Labels::).
 
 
-File: reftex.info,  Node: Options (Creating Citations),  Next: Options (Index Support),  Prev: Options (Referencing Labels),  Up: Options
+File: reftex.info,  Node: Options - Creating Citations,  Next: Options - Index Support,  Prev: Options - Referencing Labels,  Up: Options
 
-8.5 Creating Citations
-======================
+18.5 Creating Citations
+=======================
 
  -- User Option: reftex-bibliography-commands
      LaTeX commands which specify the BibTeX databases to use with the
@@ -4016,10 +4030,10 @@ File: reftex.info,  Node: Options (Creating Citations),  Next: Options (Index Su
      `reftex-create-bibtex-file'.
 
 
-File: reftex.info,  Node: Options (Index Support),  Next: Options (Viewing Cross-References),  Prev: Options (Creating Citations),  Up: Options
+File: reftex.info,  Node: Options - Index Support,  Next: Options - Viewing Cross-References,  Prev: Options - Creating Citations,  Up: Options
 
-8.6 Index Support
-=================
+18.6 Index Support
+==================
 
  -- User Option: reftex-support-index
      Non-`nil' means, index entries are parsed as well.  Index support
@@ -4145,7 +4159,7 @@ File: reftex.info,  Node: Options (Index Support),  Next: Options (Viewing Cross
 
  -- User Option: reftex-index-verify-function
      A function which is called at each match during global indexing.
-     If the function returns nil, the current match is skipped.
+     If the function returns `nil', the current match is skipped.
 
  -- User Option: reftex-index-phrases-skip-indexed-matches
      Non-`nil' means, skip matches which appear to be indexed already.
@@ -4210,10 +4224,10 @@ File: reftex.info,  Node: Options (Index Support),  Next: Options (Viewing Cross
      Support::).
 
 
-File: reftex.info,  Node: Options (Viewing Cross-References),  Next: Options (Finding Files),  Prev: Options (Index Support),  Up: Options
+File: reftex.info,  Node: Options - Viewing Cross-References,  Next: Options - Finding Files,  Prev: Options - Index Support,  Up: Options
 
-8.7 Viewing Cross-References
-============================
+18.7 Viewing Cross-References
+=============================
 
  -- User Option: reftex-view-crossref-extra
      Macros which can be used for the display of cross references.
@@ -4250,7 +4264,7 @@ File: reftex.info,  Node: Options (Viewing Cross-References),  Next: Options (Fi
 
  -- User Option: reftex-revisit-to-echo
      Non-`nil' means, automatic citation display will revisit files if
-     necessary.  When nil, citation display in echo area will only be
+     necessary.  When `nil', citation display in echo area will only be
      active for cached echo strings (see `reftex-cache-cite-echo'), or
      for BibTeX database files which are already visited by a live
      associated buffers.
@@ -4262,10 +4276,10 @@ File: reftex.info,  Node: Options (Viewing Cross-References),  Next: Options (Fi
      document scans.  In order to clear it, use `M-x reftex-reset-mode'.
 
 
-File: reftex.info,  Node: Options (Finding Files),  Next: Options (Optimizations),  Prev: Options (Viewing Cross-References),  Up: Options
+File: reftex.info,  Node: Options - Finding Files,  Next: Options - Optimizations,  Prev: Options - Viewing Cross-References,  Up: Options
 
-8.8 Finding Files
-=================
+18.8 Finding Files
+==================
 
  -- User Option: reftex-texpath-environment-variables
      List of specifications how to retrieve the search path for TeX
@@ -4338,10 +4352,10 @@ File: reftex.info,  Node: Options (Finding Files),  Next: Options (Optimizations
      `reftex-use-external-file-finders' is non-`nil'.
 
 
-File: reftex.info,  Node: Options (Optimizations),  Next: Options (Fontification),  Prev: Options (Finding Files),  Up: Options
+File: reftex.info,  Node: Options - Optimizations,  Next: Options - Fontification,  Prev: Options - Finding Files,  Up: Options
 
-8.9 Optimizations
-=================
+18.9 Optimizations
+==================
 
  -- User Option: reftex-keep-temporary-buffers
      Non-`nil' means, keep buffers created for parsing and lookup.
@@ -4434,10 +4448,10 @@ File: reftex.info,  Node: Options (Optimizations),  Next: Options (Fontification
      non-`nil'.
 
 
-File: reftex.info,  Node: Options (Fontification),  Next: Options (Misc),  Prev: Options (Optimizations),  Up: Options
+File: reftex.info,  Node: Options - Fontification,  Next: Options - Misc,  Prev: Options - Optimizations,  Up: Options
 
-8.10 Fontification
-==================
+18.10 Fontification
+===================
 
  -- User Option: reftex-use-fonts
      Non-`nil' means, use fonts in label menu and on-the-fly help.
@@ -4528,10 +4542,10 @@ File: reftex.info,  Node: Options (Fontification),  Next: Options (Misc),  Prev:
      Face name for index entries.
 
 
-File: reftex.info,  Node: Options (Misc),  Prev: Options (Fontification),  Up: Options
+File: reftex.info,  Node: Options - Misc,  Next: Keymaps and Hooks,  Prev: Options - Fontification,  Up: Options
 
-8.11 Miscellaneous
-==================
+18.11 Miscellaneous
+===================
 
  -- User Option: reftex-extra-bindings
      Non-`nil' means, make additional key bindings on startup.  These
@@ -4548,8 +4562,8 @@ File: reftex.info,  Node: Options (Misc),  Prev: Options (Fontification),  Up: O
           - supply arguments for macros like `\cite'          (flag 4)
           - supply arguments for macros like `\index'         (flag 5)
 
-     You may also set the variable itself to t or nil in order to turn
-     all options on or off, respectively.
+     You may also set the variable itself to `t' or `nil' in order to
+     turn all options on or off, respectively.
      Supplying labels in new sections and environments applies when
      creating sections with `C-c C-s' and environments with `C-c C-e'.
      Supplying macro arguments applies when you insert such a macro
@@ -4558,7 +4572,7 @@ File: reftex.info,  Node: Options (Misc),  Prev: Options (Fontification),  Up: O
 
  -- User Option: reftex-revisit-to-follow
      Non-`nil' means, follow-mode will revisit files if necessary.
-     When nil, follow-mode will be suspended for stuff in unvisited
+     When `nil', follow-mode will be suspended for stuff in unvisited
      files.
 
  -- User Option: reftex-allow-detached-macro-args
@@ -4568,10 +4582,10 @@ File: reftex.info,  Node: Options (Misc),  Prev: Options (Fontification),  Up: O
      the case even if `\bb' is defined with zero or one argument.
 
 
-File: reftex.info,  Node: Keymaps and Hooks,  Next: Changes,  Prev: Options,  Up: Top
+File: reftex.info,  Node: Keymaps and Hooks,  Prev: Options - Misc,  Up: Options
 
-8.12 Keymaps and Hooks
-======================
+18.12 Keymaps and Hooks
+=======================
 
 RefTeX has the usual general keymap, load hook and mode hook.
 
@@ -4591,10 +4605,10 @@ are many more hooks which are described in the relevant sections about
 options for a specific part of RefTeX.
 
 
-File: reftex.info,  Node: Changes,  Next: GNU Free Documentation License,  Prev: Keymaps and Hooks,  Up: Top
+File: reftex.info,  Node: Changes,  Next: GNU Free Documentation License,  Prev: Options,  Up: Top
 
-9 Changes
-*********
+19 Changes
+**********
 
 Here is a list of recent changes to RefTeX.
 
@@ -4654,7 +4668,7 @@ Version 4.24
      a label.
 
    * Fixed bug in `reftex-create-bibtex-file' when
-     `reftex-comment-citations' is non-nil.
+     `reftex-comment-citations' is non-`nil'.
 
    * Fixed bugs in indexing: Case-sensitive search, quotes before and/or
      after words.  Disabled indexing in comment lines.
@@ -4765,7 +4779,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -5268,7 +5282,7 @@ Index
 * \endnote, LaTeX macro:                 Builtin Label Environments.
                                                               (line  19)
 * \eqref, AMS-LaTeX macro:               Using \eqref.        (line   6)
-* \externaldocument:                     xr (LaTeX package).  (line   6)
+* \externaldocument:                     LaTeX xr Package.    (line   6)
 * \footnote, LaTeX macro:                Builtin Label Environments.
                                                               (line  12)
 * \index <1>:                            Viewing Cross-References.
@@ -5380,18 +5394,18 @@ Index
 * Consistency check for index phrases:   Consistency Checks.  (line   6)
 * ConTeXt, citation style:               Citation Styles.     (line   6)
 * Creating citations:                    Creating Citations.  (line   6)
-* Creating citations, options:           Options (Creating Citations).
+* Creating citations, options:           Options - Creating Citations.
                                                               (line   6)
 * Creating index entries:                Creating Index Entries.
                                                               (line   6)
 * Creating labels:                       Creating Labels.     (line   6)
-* Creating labels, options:              Options (Creating Labels).
+* Creating labels, options:              Options - Creating Labels.
                                                               (line   6)
-* Cross-document references:             xr (LaTeX package).  (line   6)
+* Cross-document references:             LaTeX xr Package.    (line   6)
 * Cross-references, displaying:          Reference Info.      (line   6)
 * Defining Index Macros:                 Defining Index Macros.
                                                               (line   6)
-* Defining label environments, options:  Options (Defining Label Environments).
+* Defining label environments, options:  Options - Defining Label Environments.
                                                               (line   6)
 * Displaying citations:                  Citation Info.       (line   6)
 * Displaying cross-references:           Reference Info.      (line   6)
@@ -5422,7 +5436,7 @@ Index
                                                               (line  12)
 * equation, LaTeX environment:           Builtin Label Environments.
                                                               (line  12)
-* External documents:                    xr (LaTeX package).  (line   6)
+* External documents:                    LaTeX xr Package.    (line   6)
 * Faces:                                 Faces.               (line   6)
 * fancybox, LaTeX package:               Builtin Label Environments.
                                                               (line  21)
@@ -5436,7 +5450,7 @@ Index
                                                               (line  27)
 * Finding files <1>:                     Finding Files.       (line   6)
 * Finding files:                         Installation.        (line  95)
-* Finding files, options:                Options (Finding Files).
+* Finding files, options:                Options - Finding Files.
                                                               (line   6)
 * flalign, AMS-LaTeX environment:        Builtin Label Environments.
                                                               (line  15)
@@ -5444,7 +5458,7 @@ Index
                                                               (line  23)
 * floatingfig, LaTeX environment:        Builtin Label Environments.
                                                               (line  23)
-* Fontification, options:                Options (Fontification).
+* Fontification, options:                Options - Fontification.
                                                               (line   6)
 * ftp, RefTeX site:                      Imprint.             (line   6)
 * gather, AMS-LaTeX environment:         Builtin Label Environments.
@@ -5471,7 +5485,7 @@ Index
 * Index phrases, collection:             Collecting Phrases.  (line   6)
 * Index phrases, consistency checks:     Consistency Checks.  (line   6)
 * Index Support:                         Index Support.       (line   6)
-* Index support, options:                Options (Index Support).
+* Index support, options:                Options - Index Support.
                                                               (line   6)
 * Index, displaying:                     Displaying and Editing the Index.
                                                               (line   6)
@@ -5553,7 +5567,7 @@ Index
 * LaTeX packages, varioref:              Reference Styles.    (line  65)
 * LaTeX packages, wrapfig:               Builtin Label Environments.
                                                               (line  37)
-* LaTeX packages, xr:                    xr (LaTeX package).  (line   6)
+* LaTeX packages, xr:                    LaTeX xr Package.    (line   6)
 * LaTeX-add-environments, AUCTeX:        Style Files.         (line  33)
 * LaTeX-label-function, AUCTeX:          AUCTeX-RefTeX Interface.
                                                               (line  20)
@@ -5587,29 +5601,29 @@ Index
 * Nutshell, RefTeX in a:                 RefTeX in a Nutshell.
                                                               (line   6)
 * Optimizations:                         Optimizations.       (line   6)
-* Optimizations, options:                Options (Optimizations).
+* Optimizations, options:                Options - Optimizations.
                                                               (line   6)
-* Options, creating citations:           Options (Creating Citations).
+* Options, creating citations:           Options - Creating Citations.
                                                               (line   6)
-* Options, creating labels:              Options (Creating Labels).
+* Options, creating labels:              Options - Creating Labels.
                                                               (line   6)
-* Options, defining label environments:  Options (Defining Label Environments).
+* Options, defining label environments:  Options - Defining Label Environments.
                                                               (line   6)
-* Options, Finding Files:                Options (Finding Files).
+* Options, Finding Files:                Options - Finding Files.
                                                               (line   6)
-* Options, fontification:                Options (Fontification).
+* Options, fontification:                Options - Fontification.
                                                               (line   6)
-* Options, Index support:                Options (Index Support).
+* Options, Index support:                Options - Index Support.
                                                               (line   6)
 * Options, list of:                      Options.             (line   6)
-* Options, misc:                         Options (Misc).      (line   6)
-* Options, optimizations:                Options (Optimizations).
+* Options, misc:                         Options - Misc.      (line   6)
+* Options, optimizations:                Options - Optimizations.
                                                               (line   6)
-* Options, referencing labels:           Options (Referencing Labels).
+* Options, referencing labels:           Options - Referencing Labels.
                                                               (line   6)
-* Options, table of contents:            Options (Table of Contents).
+* Options, table of contents:            Options - Table of Contents.
                                                               (line   6)
-* Options, viewing cross-references:     Options (Viewing Cross-References).
+* Options, viewing cross-references:     Options - Viewing Cross-References.
                                                               (line   6)
 * Parse information, saving to a file:   Optimizations.       (line  44)
 * Parser functions, for special environments: Non-Standard Environments.
@@ -5631,13 +5645,13 @@ Index
 * Reference info:                        Reference Info.      (line   6)
 * References in LaTeX:                   Labels and References.
                                                               (line   6)
-* References to external documents:      xr (LaTeX package).  (line   6)
+* References to external documents:      LaTeX xr Package.    (line   6)
 * Referencing labels:                    Referencing Labels.  (line   6)
-* Referencing labels, options:           Options (Referencing Labels).
+* Referencing labels, options:           Options - Referencing Labels.
                                                               (line   6)
 * RefTeX in a Nutshell:                  RefTeX in a Nutshell.
                                                               (line   6)
-* reftex-abbrev-parameters <1>:          Options (Creating Labels).
+* reftex-abbrev-parameters <1>:          Options - Creating Labels.
                                                               (line  98)
 * reftex-abbrev-parameters <2>:          Language Support.    (line  10)
 * reftex-abbrev-parameters:              Creating Labels.     (line  13)
@@ -5649,10 +5663,10 @@ Index
                                                               (line  21)
 * reftex-add-section-levels:             Style Files.         (line  82)
 * reftex-add-to-label-alist:             Style Files.         (line  23)
-* reftex-allow-automatic-rescan <1>:     Options (Optimizations).
+* reftex-allow-automatic-rescan <1>:     Options - Optimizations.
                                                               (line  74)
 * reftex-allow-automatic-rescan:         Optimizations.       (line  73)
-* reftex-allow-detached-macro-args:      Options (Misc).      (line  35)
+* reftex-allow-detached-macro-args:      Options - Misc.      (line  35)
 * reftex-arg-cite:                       AUCTeX-RefTeX Interface.
                                                               (line  41)
 * reftex-arg-index:                      AUCTeX-RefTeX Interface.
@@ -5661,83 +5675,83 @@ Index
                                                               (line  41)
 * reftex-arg-ref:                        AUCTeX-RefTeX Interface.
                                                               (line  41)
-* reftex-auto-recenter-toc <1>:          Options (Table of Contents).
+* reftex-auto-recenter-toc <1>:          Options - Table of Contents.
                                                               (line  43)
 * reftex-auto-recenter-toc:              Table of Contents.   (line 199)
-* reftex-auto-update-selection-buffers <1>: Options (Optimizations).
+* reftex-auto-update-selection-buffers <1>: Options - Optimizations.
                                                               (line  87)
 * reftex-auto-update-selection-buffers:  Optimizations.       (line  99)
-* reftex-auto-view-crossref:             Options (Viewing Cross-References).
+* reftex-auto-view-crossref:             Options - Viewing Cross-References.
                                                               (line  21)
-* reftex-bib-author-face:                Options (Fontification).
+* reftex-bib-author-face:                Options - Fontification.
                                                               (line  68)
-* reftex-bib-extra-face:                 Options (Fontification).
+* reftex-bib-extra-face:                 Options - Fontification.
                                                               (line  77)
-* reftex-bib-title-face:                 Options (Fontification).
+* reftex-bib-title-face:                 Options - Fontification.
                                                               (line  74)
-* reftex-bib-year-face:                  Options (Fontification).
+* reftex-bib-year-face:                  Options - Fontification.
                                                               (line  71)
-* reftex-bibfile-ignore-regexps:         Options (Creating Citations).
+* reftex-bibfile-ignore-regexps:         Options - Creating Citations.
                                                               (line  11)
-* reftex-bibliography-commands:          Options (Creating Citations).
+* reftex-bibliography-commands:          Options - Creating Citations.
                                                               (line   7)
-* reftex-bibpath-environment-variables:  Options (Finding Files).
+* reftex-bibpath-environment-variables:  Options - Finding Files.
                                                               (line  22)
-* reftex-cache-cite-echo:                Options (Viewing Cross-References).
+* reftex-cache-cite-echo:                Options - Viewing Cross-References.
                                                               (line  47)
 * reftex-change-label:                   Commands.            (line 132)
 * reftex-citation <1>:                   Commands.            (line  25)
 * reftex-citation:                       Creating Citations.  (line   6)
-* reftex-cite-cleanup-optional-args:     Options (Creating Citations).
+* reftex-cite-cleanup-optional-args:     Options - Creating Citations.
                                                               (line 113)
-* reftex-cite-comment-format:            Options (Creating Citations).
+* reftex-cite-comment-format:            Options - Creating Citations.
                                                               (line 122)
-* reftex-cite-format <1>:                Options (Creating Citations).
+* reftex-cite-format <1>:                Options - Creating Citations.
                                                               (line  34)
 * reftex-cite-format:                    Citation Styles.     (line   6)
-* reftex-cite-key-separator:             Options (Creating Citations).
+* reftex-cite-key-separator:             Options - Creating Citations.
                                                               (line 146)
-* reftex-cite-prompt-optional-args <1>:  Options (Creating Citations).
+* reftex-cite-prompt-optional-args <1>:  Options - Creating Citations.
                                                               (line 101)
 * reftex-cite-prompt-optional-args:      Citation Styles.     (line  31)
-* reftex-cite-punctuation <1>:           Options (Creating Citations).
+* reftex-cite-punctuation <1>:           Options - Creating Citations.
                                                               (line 127)
 * reftex-cite-punctuation:               Language Support.    (line  28)
-* reftex-cite-view-format:               Options (Viewing Cross-References).
+* reftex-cite-view-format:               Options - Viewing Cross-References.
                                                               (line  36)
-* reftex-comment-citations:              Options (Creating Citations).
+* reftex-comment-citations:              Options - Creating Citations.
                                                               (line 117)
 * reftex-create-bibtex-file <1>:         Commands.            (line 152)
 * reftex-create-bibtex-file:             BibTeX Database Subsets.
                                                               (line   6)
-* reftex-create-bibtex-footer <1>:       Options (Creating Citations).
+* reftex-create-bibtex-footer <1>:       Options - Creating Citations.
                                                               (line 156)
 * reftex-create-bibtex-footer:           Commands.            (line 152)
-* reftex-create-bibtex-header <1>:       Options (Creating Citations).
+* reftex-create-bibtex-header <1>:       Options - Creating Citations.
                                                               (line 152)
 * reftex-create-bibtex-header:           Commands.            (line 152)
 * reftex-create-tags-file:               Commands.            (line 103)
-* reftex-cursor-selected-face:           Options (Fontification).
+* reftex-cursor-selected-face:           Options - Fontification.
                                                               (line  48)
 * reftex-customize:                      Commands.            (line 166)
-* reftex-default-bibliography <1>:       Options (Creating Citations).
+* reftex-default-bibliography <1>:       Options - Creating Citations.
                                                               (line  18)
 * reftex-default-bibliography:           Citations Outside LaTeX.
                                                               (line   6)
-* reftex-default-context-regexps:        Options (Defining Label Environments).
+* reftex-default-context-regexps:        Options - Defining Label Environments.
                                                               (line 175)
-* reftex-default-label-alist-entries:    Options (Defining Label Environments).
+* reftex-default-label-alist-entries:    Options - Defining Label Environments.
                                                               (line   7)
-* reftex-derive-label-parameters <1>:    Options (Creating Labels).
+* reftex-derive-label-parameters <1>:    Options - Creating Labels.
                                                               (line  65)
 * reftex-derive-label-parameters <2>:    Language Support.    (line  10)
 * reftex-derive-label-parameters:        Creating Labels.     (line  13)
-* reftex-display-copied-context-hook:    Options (Referencing Labels).
+* reftex-display-copied-context-hook:    Options - Referencing Labels.
                                                               (line  99)
 * reftex-display-index <1>:              Commands.            (line  77)
 * reftex-display-index:                  Displaying and Editing the Index.
                                                               (line   6)
-* reftex-enable-partial-scans <1>:       Options (Optimizations).
+* reftex-enable-partial-scans <1>:       Options - Optimizations.
                                                               (line  50)
 * reftex-enable-partial-scans <2>:       Problems and Work-Arounds.
                                                               (line  16)
@@ -5746,117 +5760,117 @@ Index
                                                               (line 168)
 * reftex-enable-partial-scans <5>:       Referencing Labels.  (line 193)
 * reftex-enable-partial-scans:           Table of Contents.   (line 167)
-* reftex-external-file-finders:          Options (Finding Files).
+* reftex-external-file-finders:          Options - Finding Files.
                                                               (line  68)
-* reftex-extra-bindings <1>:             Options (Misc).      (line   7)
+* reftex-extra-bindings <1>:             Options - Misc.      (line   7)
 * reftex-extra-bindings:                 Key Bindings.        (line  40)
-* reftex-file-boundary-face:             Options (Fontification).
+* reftex-file-boundary-face:             Options - Fontification.
                                                               (line  56)
-* reftex-file-extensions <1>:            Options (Finding Files).
+* reftex-file-extensions <1>:            Options - Finding Files.
                                                               (line  37)
 * reftex-file-extensions:                Finding Files.       (line  57)
 * reftex-find-duplicate-labels:          Commands.            (line 149)
-* reftex-format-cite-function:           Options (Creating Citations).
+* reftex-format-cite-function:           Options - Creating Citations.
                                                               (line  93)
-* reftex-format-label-function:          Options (Creating Labels).
+* reftex-format-label-function:          Options - Creating Labels.
                                                               (line  45)
-* reftex-format-ref-function:            Options (Referencing Labels).
+* reftex-format-ref-function:            Options - Referencing Labels.
                                                               (line  76)
 * reftex-fref-is-default (deprecated):   Reference Styles.    (line  65)
 * reftex-goto-label:                     Commands.            (line 127)
 * reftex-grep-document:                  Commands.            (line 107)
-* reftex-guess-label-type:               Options (Referencing Labels).
+* reftex-guess-label-type:               Options - Referencing Labels.
                                                               (line  90)
-* reftex-highlight-selection <1>:        Options (Fontification).
+* reftex-highlight-selection <1>:        Options - Fontification.
                                                               (line  31)
 * reftex-highlight-selection <2>:        Creating Citations.  (line  73)
 * reftex-highlight-selection <3>:        Referencing Labels.  (line 109)
 * reftex-highlight-selection:            Table of Contents.   (line  62)
-* reftex-idle-time <1>:                  Options (Viewing Cross-References).
+* reftex-idle-time <1>:                  Options - Viewing Cross-References.
                                                               (line  32)
 * reftex-idle-time:                      Table of Contents.   (line 199)
-* reftex-include-file-commands:          Options (Table of Contents).
+* reftex-include-file-commands:          Options - Table of Contents.
                                                               (line   7)
 * reftex-index <1>:                      Commands.            (line  43)
 * reftex-index:                          Creating Index Entries.
                                                               (line   6)
-* reftex-index-default-macro:            Options (Index Support).
+* reftex-index-default-macro:            Options - Index Support.
                                                               (line  65)
-* reftex-index-default-tag:              Options (Index Support).
+* reftex-index-default-tag:              Options - Index Support.
                                                               (line  77)
-* reftex-index-face:                     Options (Fontification).
+* reftex-index-face:                     Options - Fontification.
                                                               (line  92)
-* reftex-index-follow-mode <1>:          Options (Index Support).
+* reftex-index-follow-mode <1>:          Options - Index Support.
                                                               (line 185)
 * reftex-index-follow-mode:              Displaying and Editing the Index.
                                                               (line  71)
-* reftex-index-header-face:              Options (Fontification).
+* reftex-index-header-face:              Options - Fontification.
                                                               (line  83)
-* reftex-index-include-context <1>:      Options (Index Support).
+* reftex-index-include-context <1>:      Options - Index Support.
                                                               (line 180)
 * reftex-index-include-context:          Displaying and Editing the Index.
                                                               (line 139)
-* reftex-index-macros <1>:               Options (Index Support).
+* reftex-index-macros <1>:               Options - Index Support.
                                                               (line  20)
 * reftex-index-macros <2>:               Defining Index Macros.
                                                               (line   6)
 * reftex-index-macros:                   Builtin Index Macros.
                                                               (line   6)
-* reftex-index-map:                      Options (Index Support).
+* reftex-index-map:                      Options - Index Support.
                                                               (line 191)
-* reftex-index-math-format:              Options (Index Support).
+* reftex-index-math-format:              Options - Index Support.
                                                               (line  87)
-* reftex-index-phrase-file-extension:    Options (Index Support).
+* reftex-index-phrase-file-extension:    Options - Index Support.
                                                               (line  95)
 * reftex-index-phrase-selection-or-word: Commands.            (line  62)
 * reftex-index-phrases-apply-to-region:  Commands.            (line  72)
-* reftex-index-phrases-case-fold-search: Options (Index Support).
+* reftex-index-phrases-case-fold-search: Options - Index Support.
                                                               (line 126)
-* reftex-index-phrases-logical-and-regexp: Options (Index Support).
+* reftex-index-phrases-logical-and-regexp: Options - Index Support.
                                                               (line  99)
-* reftex-index-phrases-logical-or-regexp: Options (Index Support).
+* reftex-index-phrases-logical-or-regexp: Options - Index Support.
                                                               (line 108)
-* reftex-index-phrases-map:              Options (Index Support).
+* reftex-index-phrases-map:              Options - Index Support.
                                                               (line 164)
-* reftex-index-phrases-mode-hook:        Options (Index Support).
+* reftex-index-phrases-mode-hook:        Options - Index Support.
                                                               (line 167)
-* reftex-index-phrases-search-whole-words: Options (Index Support).
+* reftex-index-phrases-search-whole-words: Options - Index Support.
                                                               (line 119)
-* reftex-index-phrases-skip-indexed-matches: Options (Index Support).
+* reftex-index-phrases-skip-indexed-matches: Options - Index Support.
                                                               (line 133)
-* reftex-index-phrases-sort-in-blocks:   Options (Index Support).
+* reftex-index-phrases-sort-in-blocks:   Options - Index Support.
                                                               (line 159)
-* reftex-index-phrases-sort-prefers-entry: Options (Index Support).
+* reftex-index-phrases-sort-prefers-entry: Options - Index Support.
                                                               (line 152)
-* reftex-index-phrases-wrap-long-lines:  Options (Index Support).
+* reftex-index-phrases-wrap-long-lines:  Options - Index Support.
                                                               (line 143)
-* reftex-index-section-face:             Options (Fontification).
+* reftex-index-section-face:             Options - Fontification.
                                                               (line  86)
-* reftex-index-section-letters:          Options (Index Support).
+* reftex-index-section-letters:          Options - Index Support.
                                                               (line 171)
 * reftex-index-selection-or-word <1>:    Commands.            (line  51)
 * reftex-index-selection-or-word:        Creating Index Entries.
                                                               (line   6)
-* reftex-index-special-chars:            Options (Index Support).
+* reftex-index-special-chars:            Options - Index Support.
                                                               (line  15)
-* reftex-index-tag-face:                 Options (Fontification).
+* reftex-index-tag-face:                 Options - Fontification.
                                                               (line  89)
-* reftex-index-verify-function:          Options (Index Support).
+* reftex-index-verify-function:          Options - Index Support.
                                                               (line 129)
 * reftex-index-visit-phrases-buffer <1>: Commands.            (line  69)
 * reftex-index-visit-phrases-buffer:     The Index Phrases File.
                                                               (line   6)
 * reftex-info:                           Commands.            (line 172)
-* reftex-initialize-temporary-buffers <1>: Options (Optimizations).
+* reftex-initialize-temporary-buffers <1>: Options - Optimizations.
                                                               (line  36)
 * reftex-initialize-temporary-buffers:   Problems and Work-Arounds.
                                                               (line  46)
-* reftex-insert-label-flags <1>:         Options (Creating Labels).
+* reftex-insert-label-flags <1>:         Options - Creating Labels.
                                                               (line   7)
 * reftex-insert-label-flags <2>:         Theorem and Axiom.   (line 103)
 * reftex-insert-label-flags:             Creating Labels.     (line  40)
 * reftex-isearch-minor-mode:             Commands.            (line 122)
-* reftex-keep-temporary-buffers <1>:     Options (Optimizations).
+* reftex-keep-temporary-buffers <1>:     Options - Optimizations.
                                                               (line   7)
 * reftex-keep-temporary-buffers <2>:     Problems and Work-Arounds.
                                                               (line  41)
@@ -5865,7 +5879,7 @@ Index
 * reftex-label <2>:                      AUCTeX-RefTeX Interface.
                                                               (line  20)
 * reftex-label:                          Creating Labels.     (line   6)
-* reftex-label-alist <1>:                Options (Defining Label Environments).
+* reftex-label-alist <1>:                Options - Defining Label Environments.
                                                               (line  12)
 * reftex-label-alist <2>:                Viewing Cross-References.
                                                               (line  25)
@@ -5877,158 +5891,158 @@ Index
                                                               (line  14)
 * reftex-label-alist-builtin:            Builtin Label Environments.
                                                               (line   6)
-* reftex-label-face:                     Options (Fontification).
+* reftex-label-face:                     Options - Fontification.
                                                               (line  59)
-* reftex-label-illegal-re <1>:           Options (Creating Labels).
+* reftex-label-illegal-re <1>:           Options - Creating Labels.
                                                               (line  95)
 * reftex-label-illegal-re <2>:           Language Support.    (line  16)
 * reftex-label-illegal-re:               Creating Labels.     (line  13)
-* reftex-label-menu-flags <1>:           Options (Referencing Labels).
+* reftex-label-menu-flags <1>:           Options - Referencing Labels.
                                                               (line   7)
 * reftex-label-menu-flags <2>:           Theorem and Axiom.   (line 103)
 * reftex-label-menu-flags:               Referencing Labels.  (line 159)
-* reftex-level-indent:                   Options (Referencing Labels).
+* reftex-level-indent:                   Options - Referencing Labels.
                                                               (line  87)
 * reftex-load-hook <1>:                  Keymaps and Hooks.   (line  12)
 * reftex-load-hook:                      Key Bindings.        (line  42)
-* reftex-max-section-depth:              Options (Table of Contents).
+* reftex-max-section-depth:              Options - Table of Contents.
                                                               (line  12)
 * reftex-mode:                           Installation.        (line  76)
 * reftex-mode-hook:                      Keymaps and Hooks.   (line  15)
 * reftex-mode-map:                       Keymaps and Hooks.   (line   9)
-* reftex-mouse-selected-face:            Options (Fontification).
+* reftex-mouse-selected-face:            Options - Fontification.
                                                               (line  52)
 * reftex-mouse-view-crossref <1>:        Viewing Cross-References.
                                                               (line   6)
 * reftex-mouse-view-crossref <2>:        Citation Info.       (line   6)
 * reftex-mouse-view-crossref:            Reference Info.      (line   6)
-* reftex-multiref-punctuation <1>:       Options (Referencing Labels).
+* reftex-multiref-punctuation <1>:       Options - Referencing Labels.
                                                               (line  49)
 * reftex-multiref-punctuation <2>:       Language Support.    (line  28)
 * reftex-multiref-punctuation:           Referencing Labels.  (line 113)
-* reftex-no-include-regexps:             Options (Optimizations).
+* reftex-no-include-regexps:             Options - Optimizations.
                                                               (line  44)
 * reftex-parse-document:                 Commands.            (line 175)
-* reftex-parse-file-extension <1>:       Options (Optimizations).
+* reftex-parse-file-extension <1>:       Options - Optimizations.
                                                               (line  70)
 * reftex-parse-file-extension:           Optimizations.       (line  44)
-* reftex-part-resets-chapter:            Options (Table of Contents).
+* reftex-part-resets-chapter:            Options - Table of Contents.
                                                               (line  36)
-* reftex-plug-into-AUCTeX:               Options (Misc).      (line  12)
-* reftex-pre-refontification-functions:  Options (Referencing Labels).
+* reftex-plug-into-AUCTeX:               Options - Misc.      (line  12)
+* reftex-pre-refontification-functions:  Options - Referencing Labels.
                                                               (line 103)
 * reftex-query-replace-document:         Commands.            (line 117)
-* reftex-ref-macro-prompt <1>:           Options (Referencing Labels).
+* reftex-ref-macro-prompt <1>:           Options - Referencing Labels.
                                                               (line  73)
 * reftex-ref-macro-prompt <2>:           Reference Styles.    (line  42)
 * reftex-ref-macro-prompt:               Referencing Labels.  (line  19)
-* reftex-ref-style-alist <1>:            Options (Referencing Labels).
+* reftex-ref-style-alist <1>:            Options - Referencing Labels.
                                                               (line  57)
 * reftex-ref-style-alist:                Reference Styles.    (line  27)
-* reftex-ref-style-default-list <1>:     Options (Referencing Labels).
+* reftex-ref-style-default-list <1>:     Options - Referencing Labels.
                                                               (line  66)
 * reftex-ref-style-default-list:         Reference Styles.    (line  19)
 * reftex-reference <1>:                  Commands.            (line  20)
 * reftex-reference:                      Referencing Labels.  (line   6)
-* reftex-refontify-context <1>:          Options (Fontification).
+* reftex-refontify-context <1>:          Options - Fontification.
                                                               (line  13)
 * reftex-refontify-context:              Problems and Work-Arounds.
                                                               (line  53)
 * reftex-renumber-simple-labels:         Commands.            (line 137)
 * reftex-reset-mode:                     Commands.            (line 179)
-* reftex-revisit-to-echo:                Options (Viewing Cross-References).
+* reftex-revisit-to-echo:                Options - Viewing Cross-References.
                                                               (line  40)
-* reftex-revisit-to-follow <1>:          Options (Misc).      (line  30)
+* reftex-revisit-to-follow <1>:          Options - Misc.      (line  30)
 * reftex-revisit-to-follow <2>:          Displaying and Editing the Index.
                                                               (line  71)
 * reftex-revisit-to-follow <3>:          Referencing Labels.  (line  89)
 * reftex-revisit-to-follow:              Table of Contents.   (line  67)
-* reftex-save-parse-info <1>:            Options (Optimizations).
+* reftex-save-parse-info <1>:            Options - Optimizations.
                                                               (line  59)
 * reftex-save-parse-info:                Optimizations.       (line  53)
 * reftex-search-document:                Commands.            (line 112)
-* reftex-search-unrecursed-path-first:   Options (Finding Files).
+* reftex-search-unrecursed-path-first:   Options - Finding Files.
                                                               (line  48)
-* reftex-section-heading-face:           Options (Fontification).
+* reftex-section-heading-face:           Options - Fontification.
                                                               (line  62)
-* reftex-section-levels <1>:             Options (Table of Contents).
+* reftex-section-levels <1>:             Options - Table of Contents.
                                                               (line  16)
 * reftex-section-levels:                 Table of Contents.   (line 213)
-* reftex-section-prefixes:               Options (Defining Label Environments).
+* reftex-section-prefixes:               Options - Defining Label Environments.
                                                               (line 166)
-* reftex-select-bib-map <1>:             Options (Creating Citations).
+* reftex-select-bib-map <1>:             Options - Creating Citations.
                                                               (line 142)
 * reftex-select-bib-map:                 Creating Citations.  (line 131)
-* reftex-select-bib-mode-hook:           Options (Creating Citations).
+* reftex-select-bib-mode-hook:           Options - Creating Citations.
                                                               (line 138)
-* reftex-select-label-map <1>:           Options (Referencing Labels).
+* reftex-select-label-map <1>:           Options - Referencing Labels.
                                                               (line 112)
 * reftex-select-label-map:               Referencing Labels.  (line 214)
-* reftex-select-label-mode-hook:         Options (Referencing Labels).
+* reftex-select-label-mode-hook:         Options - Referencing Labels.
                                                               (line 108)
-* reftex-select-mark-face:               Options (Fontification).
+* reftex-select-mark-face:               Options - Fontification.
                                                               (line  80)
 * reftex-set-cite-format <1>:            Problems and Work-Arounds.
                                                               (line  21)
 * reftex-set-cite-format:                Style Files.         (line  44)
 * reftex-show-commentary:                Commands.            (line 169)
-* reftex-sort-bibtex-matches:            Options (Creating Citations).
+* reftex-sort-bibtex-matches:            Options - Creating Citations.
                                                               (line  26)
-* reftex-string-to-label-function:       Options (Creating Labels).
+* reftex-string-to-label-function:       Options - Creating Labels.
                                                               (line  52)
-* reftex-support-index:                  Options (Index Support).
+* reftex-support-index:                  Options - Index Support.
                                                               (line   7)
-* reftex-texpath-environment-variables:  Options (Finding Files).
+* reftex-texpath-environment-variables:  Options - Finding Files.
                                                               (line   7)
 * reftex-toc <1>:                        Commands.            (line  12)
 * reftex-toc:                            Table of Contents.   (line   6)
-* reftex-toc-follow-mode <1>:            Options (Table of Contents).
+* reftex-toc-follow-mode <1>:            Options - Table of Contents.
                                                               (line  97)
 * reftex-toc-follow-mode:                Table of Contents.   (line  67)
-* reftex-toc-header-face:                Options (Fontification).
+* reftex-toc-header-face:                Options - Fontification.
                                                               (line  65)
-* reftex-toc-include-context <1>:        Options (Table of Contents).
+* reftex-toc-include-context <1>:        Options - Table of Contents.
                                                               (line  91)
 * reftex-toc-include-context:            Table of Contents.   (line 156)
-* reftex-toc-include-file-boundaries <1>: Options (Table of Contents).
+* reftex-toc-include-file-boundaries <1>: Options - Table of Contents.
                                                               (line  77)
 * reftex-toc-include-file-boundaries:    Table of Contents.   (line 135)
-* reftex-toc-include-index-entries <1>:  Options (Table of Contents).
+* reftex-toc-include-index-entries <1>:  Options - Table of Contents.
                                                               (line  86)
 * reftex-toc-include-index-entries:      Table of Contents.   (line 148)
-* reftex-toc-include-labels <1>:         Options (Table of Contents).
+* reftex-toc-include-labels <1>:         Options - Table of Contents.
                                                               (line  82)
 * reftex-toc-include-labels:             Table of Contents.   (line 140)
-* reftex-toc-keep-other-windows:         Options (Table of Contents).
+* reftex-toc-keep-other-windows:         Options - Table of Contents.
                                                               (line  70)
-* reftex-toc-map <1>:                    Options (Table of Contents).
+* reftex-toc-map <1>:                    Options - Table of Contents.
                                                               (line 106)
 * reftex-toc-map:                        Table of Contents.   (line 196)
-* reftex-toc-max-level <1>:              Options (Table of Contents).
+* reftex-toc-max-level <1>:              Options - Table of Contents.
                                                               (line  30)
 * reftex-toc-max-level:                  Table of Contents.   (line 126)
-* reftex-toc-mode-hook:                  Options (Table of Contents).
+* reftex-toc-mode-hook:                  Options - Table of Contents.
                                                               (line 103)
 * reftex-toc-recenter:                   Table of Contents.   (line 199)
-* reftex-toc-split-windows-fraction:     Options (Table of Contents).
+* reftex-toc-split-windows-fraction:     Options - Table of Contents.
                                                               (line  66)
-* reftex-toc-split-windows-horizontally: Options (Table of Contents).
+* reftex-toc-split-windows-horizontally: Options - Table of Contents.
                                                               (line  62)
-* reftex-translate-to-ascii-function <1>: Options (Creating Labels).
+* reftex-translate-to-ascii-function <1>: Options - Creating Labels.
                                                               (line  57)
 * reftex-translate-to-ascii-function <2>: Language Support.   (line  16)
 * reftex-translate-to-ascii-function:    Creating Labels.     (line  13)
-* reftex-trust-label-prefix <1>:         Options (Defining Label Environments).
+* reftex-trust-label-prefix <1>:         Options - Defining Label Environments.
                                                               (line 181)
 * reftex-trust-label-prefix <2>:         Optimizations.       (line  56)
 * reftex-trust-label-prefix:             Referencing Labels.  (line   6)
-* reftex-use-external-file-finders:      Options (Finding Files).
+* reftex-use-external-file-finders:      Options - Finding Files.
                                                               (line  58)
-* reftex-use-fonts:                      Options (Fontification).
+* reftex-use-fonts:                      Options - Fontification.
                                                               (line   7)
 * reftex-use-itimer-in-xemacs:           Problems and Work-Arounds.
                                                               (line  77)
-* reftex-use-multiple-selection-buffers <1>: Options (Optimizations).
+* reftex-use-multiple-selection-buffers <1>: Options - Optimizations.
                                                               (line  79)
 * reftex-use-multiple-selection-buffers: Optimizations.       (line  91)
 * reftex-view-crossref <1>:              Commands.            (line  85)
@@ -6036,7 +6050,7 @@ Index
                                                               (line   6)
 * reftex-view-crossref <3>:              Citation Info.       (line   6)
 * reftex-view-crossref:                  Reference Info.      (line   6)
-* reftex-view-crossref-extra <1>:        Options (Viewing Cross-References).
+* reftex-view-crossref-extra <1>:        Options - Viewing Cross-References.
                                                               (line   7)
 * reftex-view-crossref-extra:            Viewing Cross-References.
                                                               (line  55)
@@ -6092,7 +6106,7 @@ Index
                                                               (line  35)
 * Table of contents buffer:              Table of Contents.   (line   6)
 * Table of contents buffer, recentering: Table of Contents.   (line 199)
-* Table of contents, options:            Options (Table of Contents).
+* Table of contents, options:            Options - Table of Contents.
                                                               (line   6)
 * table*, LaTeX environment:             Builtin Label Environments.
                                                               (line  12)
@@ -6129,7 +6143,7 @@ Index
 * Viewing cite locations from BibTeX buffer: Viewing Cross-References.
                                                               (line  42)
 * Viewing cross-references:              Reference Info.      (line   6)
-* Viewing cross-references, options:     Options (Viewing Cross-References).
+* Viewing cross-references, options:     Options - Viewing Cross-References.
                                                               (line   6)
 * Viper mode:                            Problems and Work-Arounds.
                                                               (line  84)
@@ -6143,91 +6157,96 @@ Index
                                                               (line  31)
 * xalignat, AMS-LaTeX environment:       Builtin Label Environments.
                                                               (line  15)
-* xr, LaTeX package:                     xr (LaTeX package).  (line   6)
+* xr, LaTeX package:                     LaTeX xr Package.    (line   6)
 * xxalignat, AMS-LaTeX environment:      Builtin Label Environments.
                                                               (line  15)
 
 
 
 Tag Table:
-Node: Top1116
-Node: Introduction5824
-Node: Installation6672
-Node: RefTeX in a Nutshell10440
-Node: Table of Contents16635
-Node: Labels and References24933
-Node: Creating Labels26345
-Ref: Creating Labels-Footnote-128777
-Node: Referencing Labels29257
-Node: Builtin Label Environments36790
-Node: Defining Label Environments38203
-Node: Theorem and Axiom39555
-Node: Quick Equation44320
-Node: Figure Wrapper45931
-Node: Adding Magic Words47880
-Node: Using \eqref48844
-Node: Non-Standard Environments49696
-Node: Putting it Together53662
-Node: Reference Info54434
-Node: Reference Styles55083
-Ref: Reference Styles-Footnote-159141
-Node: xr (LaTeX package)59244
-Node: Citations60382
-Node: Creating Citations61265
-Node: Citation Styles66000
-Node: Citation Info68015
-Node: Chapterbib and Bibunits68660
-Node: Citations Outside LaTeX69326
-Node: BibTeX Database Subsets70442
-Node: Index Support71830
-Node: Creating Index Entries74990
-Node: The Index Phrases File76329
-Node: Collecting Phrases78470
-Ref: Collecting Phrases-Footnote-181305
-Ref: Collecting Phrases-Footnote-281387
-Node: Consistency Checks81468
-Node: Global Indexing82953
-Ref: Global Indexing-Footnote-186156
-Node: Displaying and Editing the Index86303
-Node: Builtin Index Macros92136
-Node: Defining Index Macros92744
-Ref: Defining Index Macros-Footnote-196286
-Node: Viewing Cross-References96347
-Ref: Viewing Cross-References-Footnote-198966
-Ref: Viewing Cross-References-Footnote-299039
-Node: RefTeXs Menu99095
-Node: Key Bindings99494
-Node: Faces101031
-Node: Multifile Documents101570
-Node: Language Support103330
-Node: Finding Files104789
-Node: Optimizations107895
-Node: AUCTeX113160
-Ref: AUCTeX-Footnote-1113790
-Node: AUCTeX-RefTeX Interface113870
-Ref: AUCTeX-RefTeX Interface-Footnote-1116167
-Ref: AUCTeX-RefTeX Interface-Footnote-2116289
-Node: Style Files116448
-Ref: Style Files-Footnote-1120354
-Node: Bib-Cite120475
-Node: Problems and Work-Arounds121513
-Node: Imprint125568
-Node: Commands127631
-Node: Options136013
-Node: Options (Table of Contents)136808
-Node: Options (Defining Label Environments)141728
-Node: Options (Creating Labels)152465
-Node: Options (Referencing Labels)156866
-Node: Options (Creating Citations)161926
-Node: Options (Index Support)168544
-Node: Options (Viewing Cross-References)178201
-Node: Options (Finding Files)180813
-Node: Options (Optimizations)184686
-Node: Options (Fontification)189176
-Node: Options (Misc)192574
-Node: Keymaps and Hooks194355
-Node: Changes195132
-Node: GNU Free Documentation License200404
-Node: Index225571
+Node: Top1040
+Node: Introduction6469
+Node: Installation7329
+Node: RefTeX in a Nutshell11097
+Node: Table of Contents17292
+Node: Labels and References25588
+Node: Creating Labels27000
+Ref: Creating Labels-Footnote-129432
+Node: Referencing Labels29912
+Node: Builtin Label Environments37443
+Node: Defining Label Environments38856
+Node: Theorem and Axiom40208
+Node: Quick Equation44973
+Node: Figure Wrapper46584
+Node: Adding Magic Words48533
+Node: Using \eqref49497
+Node: Non-Standard Environments50349
+Node: Putting it Together54315
+Node: Reference Info55087
+Node: Reference Styles55736
+Ref: Reference Styles-Footnote-159792
+Node: LaTeX xr Package59895
+Node: Citations61031
+Node: Creating Citations61914
+Node: Citation Styles66649
+Node: Citation Info68664
+Node: Chapterbib and Bibunits69309
+Node: Citations Outside LaTeX69975
+Node: BibTeX Database Subsets71091
+Node: Index Support72479
+Node: Creating Index Entries75639
+Node: The Index Phrases File76978
+Node: Collecting Phrases79119
+Ref: Collecting Phrases-Footnote-181954
+Ref: Collecting Phrases-Footnote-282036
+Node: Consistency Checks82117
+Node: Global Indexing83602
+Ref: Global Indexing-Footnote-186805
+Node: Displaying and Editing the Index86952
+Node: Builtin Index Macros92785
+Node: Defining Index Macros93393
+Ref: Defining Index Macros-Footnote-196935
+Node: Viewing Cross-References96996
+Ref: Viewing Cross-References-Footnote-199613
+Ref: Viewing Cross-References-Footnote-299686
+Node: RefTeXs Menu99742
+Node: Key Bindings100137
+Node: Faces101670
+Node: Multifile Documents102218
+Node: Language Support103975
+Node: Finding Files105432
+Node: Optimizations108536
+Node: AUCTeX113780
+Ref: AUCTeX-Footnote-1114422
+Node: AUCTeX-RefTeX Interface114502
+Ref: AUCTeX-RefTeX Interface-Footnote-1116797
+Ref: AUCTeX-RefTeX Interface-Footnote-2116919
+Node: Style Files117078
+Ref: Style Files-Footnote-1120982
+Node: Bib-Cite121103
+Node: Problems and Work-Arounds122139
+Node: Imprint126185
+Node: Commands128219
+Node: Options136603
+Node: Options - Table of Contents137412
+Node: Options - Defining Label Environments142334
+Node: Options - Creating Labels153077
+Node: Options - Referencing Labels157480
+Node: Options - Creating Citations162542
+Node: Options - Index Support169162
+Node: Options - Viewing Cross-References178823
+Node: Options - Finding Files181439
+Node: Options - Optimizations185314
+Node: Options - Fontification189806
+Node: Options - Misc193206
+Node: Keymaps and Hooks195021
+Node: Changes195795
+Node: GNU Free Documentation License201061
+Node: Index226222
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

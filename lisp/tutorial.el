@@ -1,8 +1,8 @@
 ;;; tutorial.el --- tutorial for Emacs
 
-;; Copyright (C) 2006-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2006-2014 Free Software Foundation, Inc.
 
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: help, internal
 ;; Package: emacs
 
@@ -156,7 +156,7 @@ options:
                           " RET instead."))
               (insert "\n\nWith your current key bindings"
                       " you can use "
-                      (if (string-match "^the .*menus?$" where)
+                      (if (string-match-p "^the .*menus?$" where)
                           ""
                         "the key")
                       where
@@ -209,10 +209,10 @@ LEFT and RIGHT are the elements to compare."
                  (symbol-name cx)))))))
 
 (defconst tutorial--default-keys
-  ;; On window system, `suspend-emacs' is replaced in the default
-  ;; keymap
+  ;; On window system, `suspend-emacs' is replaced in the default keymap.
   (let* ((suspend-emacs 'suspend-frame)
          (default-keys
+           ;; The first few are not mentioned but are basic:
            `((ESC-prefix [27])
              (Control-X-prefix [?\C-x])
              (mode-specific-command-prefix [?\C-c])
@@ -346,10 +346,8 @@ from the Emacs default:\n\n" )
                    (def-fun-txt (nth 2 tk))
                    (where       (nth 3 tk))
                    (remark      (nth 4 tk))
-                   (rem-fun (command-remapping def-fun))
                    (key-txt (key-description key))
-                   (key-fun (with-current-buffer tutorial-buffer (key-binding key)))
-                   tot-len)
+                   (key-fun (with-current-buffer tutorial-buffer (key-binding key))))
               (unless (eq def-fun key-fun)
                 ;; Insert key binding description:
                 (when (string= key-txt explain-key-desc)
@@ -550,7 +548,11 @@ with some explanatory links."
 	 (start (point))
 	 (case-fold-search nil)
 	 (keybindings-regexp
-	  (concat "[[:space:]]\\("
+	  ;; Accept either [:space:] or [:punct:] before the key
+	  ;; binding because the Hebrew tutorial uses directional
+	  ;; controls and Hebrew character maqaf, the Hebrew hyphen,
+	  ;; immediately before the binding string.
+	  (concat "\\(?:[[:space:]]\\|[[:punct:]]\\)\\("
 		  (mapconcat (lambda (kdf) (regexp-quote
 					    (tutorial--key-description
 					     (nth 1 kdf))))
@@ -723,9 +725,7 @@ See `tutorial--save-tutorial' for more information."
                            saved-file
                            (error-message-string err))))
             ;; An error is raised here?? Is this a bug?
-            (condition-case nil
-                (undo-only)
-              (error nil))
+            (ignore-errors (undo-only))
             ;; Restore point
             (goto-char old-point)
             (if save-err
@@ -829,10 +829,9 @@ Run the Viper tutorial? "))
             (progn
               (insert-file-contents (tutorial--saved-file))
 	      (let ((enable-local-variables :safe)
-                    (enable-local-eval nil))
+                    (enable-local-eval nil)
+                    (enable-dir-local-variables nil)) ; bug#11127
 		(hack-local-variables))
-              ;; FIXME?  What we actually want is to ignore dir-locals (?).
-              (setq buffer-read-only nil) ; bug#11118
               (goto-char (point-min))
               (setq old-tut-point
                     (string-to-number
@@ -849,10 +848,9 @@ Run the Viper tutorial? "))
               (setq tutorial--point-before-chkeys (point-marker)))
           (insert-file-contents (expand-file-name filename tutorial-directory))
 	  (let ((enable-local-variables :safe)
-                (enable-local-eval nil))
+                (enable-local-eval nil)
+                (enable-dir-local-variables nil)) ; bug#11127
 	    (hack-local-variables))
-          ;; FIXME?  What we actually want is to ignore dir-locals (?).
-          (setq buffer-read-only nil) ; bug#11118
           (forward-line)
           (setq tutorial--point-before-chkeys (point-marker)))
 
@@ -883,7 +881,7 @@ Run the Viper tutorial? "))
           ;; or just delete the <<...>> line if a [...] line follows.
           (cond ((save-excursion
                    (forward-line 1)
-                   (looking-at "\\["))
+                   (looking-at-p "\\["))
                  (delete-region (point) (progn (forward-line 1) (point))))
                 ((looking-at "<<Blank lines inserted.*>>")
                  (replace-match "[Middle of page left blank for didactic purposes.   Text continues below]"))
@@ -898,7 +896,7 @@ Run the Viper tutorial? "))
           ;; inserted at the start of the buffer, the "type C-v to
           ;; move to the next screen" might not be visible on the
           ;; first screen (n < 0).  How will the novice know what to do?
-          (let ((n (- (window-height (selected-window))
+          (let ((n (- (window-height)
                       (count-lines (point-min) (point))
                       6)))
             (if (< n 8)

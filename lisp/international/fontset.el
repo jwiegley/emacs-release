@@ -1,6 +1,6 @@
 ;;; fontset.el --- commands for handling fontset
 
-;; Copyright (C) 1997-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1997-2014 Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
 ;;   2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
@@ -199,91 +199,158 @@
 	(carian #x102A0)
 	(olt-italic #x10300)
 	(ugaritic #x10380)
+	(old-permic #x10350)
 	(old-persian #x103A0)
 	(deseret #x10400)
 	(shavian #x10450)
 	(osmanya #x10480)
+	(elbasan #x10500)
+	(caucasian-albanian #x10530)
+	(linear-a #x10600)
 	(cypriot-syllabary #x10800)
+	(palmyrene #x10860)
+	(nabataean #x10880)
 	(phoenician #x10900)
 	(lydian #x10920)
 	(kharoshthi #x10A00)
+	(manichaean #x10AC0)
+	(mahajani #x11150)
+	(sinhala-archaic-number #x111E1)
+	(khojki #x11200)
+	(khudawadi #x112B0)
+	(grantha #x11305)
+	(tirhuta #x11481)
+	(siddham #x11580)
+	(modi #x11600)
+	(takri #x11680)
+	(warang-citi #x118A1)
+	(pau-cin-hau #x11AC0)
 	(cuneiform #x12000)
 	(cuneiform-numbers-and-punctuation #x12400)
+	(mro #x16A40)
+	(bassa-vah #x16AD0)
+	(pahawh-hmong #x16B11)
+	(duployan-shorthand #x1BC20)
 	(byzantine-musical-symbol #x1D000)
 	(musical-symbol #x1D100)
 	(ancient-greek-musical-notation #x1D200)
 	(tai-xuan-jing-symbol #x1D300)
 	(counting-rod-numeral #x1D360)
+	(mende-kikakui #x1E810)
 	(mahjong-tile #x1F000)
 	(domino-tile #x1F030)))
 
 (defvar otf-script-alist)
 
+;; The below was synchronized with the latest Jan 3, 2013 version of
+;; https://www.microsoft.com/typography/otspec/scripttags.htm.
 (setq otf-script-alist
       '((arab . arabic)
+	(armi . aramaic)
 	(armn . armenian)
+	(avst . avestan)
 	(bali . balinese)
+	(bamu . bamum)
+	(batk . batak)
+	(bng2 . bengali)
 	(beng . bengali)
 	(bopo . bopomofo)
 	(brai . braille)
+	(brah . brahmi)
 	(bugi . buginese)
 	(buhd . buhid)
 	(byzm . byzantine-musical-symbol)
 	(cans . canadian-aboriginal)
+	(cari . carian)
+	(cakm . chakma)
+	(cham . cham)
 	(cher . cherokee)
 	(copt . coptic)
 	(xsux . cuneiform)
-	(cyrl . cyrillic)
 	(cprt . cypriot)
+	(cyrl . cyrillic)
 	(dsrt . deseret)
 	(deva . devanagari)
+	(dev2 . devanagari)
+	(egyp . egyptian)
 	(ethi . ethiopic)
 	(geor . georgian)
 	(glag . glagolitic)
 	(goth . gothic)
 	(grek . greek)
 	(gujr . gujarati)
+	(gjr2 . gujarati)
 	(guru . gurmukhi)
+	(gur2 . gurmukhi)
 	(hani . han)
 	(hang . hangul)
+	(jamo . hangul)
 	(hano . hanunoo)
 	(hebr . hebrew)
-	(kana . kana)
+	(phli . inscriptional-pahlavi)
+	(prti . inscriptional-parthian)
+	(java . javanese)
+	(kthi . kaithi)
+	(kana . kana)	; Hiragana
 	(knda . kannada)
+	(knd2 . kannada)
+	(kali . kayah-li)
 	(khar . kharoshthi)
 	(khmr . khmer)
 	(lao\  . lao)
 	(latn . latin)
+	(lepc . lepcha)
 	(limb . limbu)
 	(linb . linear_b)
 	(mlym . malayalam)
+	(mlm2 . malayalam)
+	(mand . mandaic)
 	(math . mathematical)
+	(mtei . meetei-mayek)
+	(merc . meroitic)
+	(mero . meroitic)
 	(mong . mongolian)
 	(musc . musical-symbol)
 	(mymr . burmese)
 	(nko\  . nko)
 	(ogam . ogham)
+	(olck . ol-chiki)
 	(ital . old_italic)
 	(xpeo . old_persian)
+	(sarb . old-south-arabian)
+	(orkh . old-turkic)
 	(orya . oriya)
+	(ory2 . oriya)
 	(osma . osmanya)
 	(phag . phags-pa)
 	(phnx . phoenician)
+	(rjng . rejang)
 	(runr . runic)
+	(samr . samaritan)
+	(saur . saurashtra)
+	(shrd . sharada)
 	(shaw . shavian)
 	(sinh . sinhala)
+	(sora . sora-sompeng)
+	(sund . sundanese)
 	(sylo . syloti_nagri)
 	(syrc . syriac)
 	(tglg . tagalog)
 	(tagb . tagbanwa)
-	(taml . tamil)
 	(tale . tai_le)
+	(talu . tai-lue)
+	(lana . tai-tham)
+	(tavt . tai-viet)
+	(takr . takri)
+	(taml . tamil)
+	(tml2 . tamil)
 	(telu . telugu)
 	(thaa . thaana)
 	(thai . thai)
 	(tibt . tibetan)
 	(tfng . tifinagh)
 	(ugar . ugaritic)
+	(vai\  . vai)
 	(yi\ \   . yi)))
 
 ;; Set standard fontname specification of characters in the default
@@ -312,7 +379,7 @@
 
 (eval-when-compile
 
-;; Build a data to initialize the default fontset at compile time to
+;; Build data to initialize the default fontset at compile time to
 ;; avoid loading charsets that won't be necessary at runtime.
 
 ;; The value is (CJK-REGISTRY-VECTOR TARGET-SPEC ...), where
@@ -357,7 +424,7 @@
     (dolist (elt cjk)
       (let ((mask (lsh 1 i)))
 	(map-charset-chars
-	 #'(lambda (range arg)
+	 #'(lambda (range _arg)
 	     (let ((from (car range)) (to (cdr range)))
 	       (if (< to #x110000)
 		   (while (<= from to)
@@ -805,6 +872,8 @@ Internal use only.  Should be called at startup time."
 ;; These fonts require vertical centering.
 (setq vertical-centering-font-regexp
       (purecopy "gb2312\\|gbk\\|gb18030\\|jisx0208\\|jisx0212\\|ksc5601\\|cns11643\\|big5"))
+(put 'vertical-centering-font-regexp 'standard-value
+     (list vertical-centering-font-regexp))
 
 ;; CDAC fonts are actually smaller than their design sizes.
 (setq face-font-rescale-alist
@@ -874,7 +943,7 @@ Return nil if PATTERN doesn't conform to XLFD."
 	      (aset xlfd-fields i nil)))
 	xlfd-fields)))
 
-(defun x-compose-font-name (fields &optional reduce)
+(defun x-compose-font-name (fields &optional _reduce)
   "Compose X fontname from FIELDS.
 FIELDS is a vector of XLFD fields, of length 12.
 If a field is nil, wild-card letter `*' is embedded.
@@ -952,7 +1021,7 @@ Done when `mouse-set-font' is called."
 	(let ((family (aref xlfd-fields xlfd-regexp-family-subnum))
 	      (weight (aref xlfd-fields xlfd-regexp-weight-subnum))
 	      (slant  (aref xlfd-fields xlfd-regexp-slant-subnum))
-	      (swidth (aref xlfd-fields xlfd-regexp-swidth-subnum))
+	      ;(swidth (aref xlfd-fields xlfd-regexp-swidth-subnum))
 	      (size   (aref xlfd-fields xlfd-regexp-pixelsize-subnum))
 	      (nickname (aref xlfd-fields xlfd-regexp-registry-subnum))
 	      name)
@@ -1037,7 +1106,7 @@ This alist is used by the function `create-fontset-from-fontset-spec'
 to map charsets to scripts.")
 
 (defun create-fontset-from-fontset-spec (fontset-spec
-					 &optional style-variant noerror)
+					 &optional _style-variant _noerror)
   "Create a fontset from fontset specification string FONTSET-SPEC.
 FONTSET-SPEC is a string of the format:
 	FONTSET-NAME,SCRIPT-NAME0:FONT-NAME0,SCRIPT-NAME1:FONT-NAME1, ...

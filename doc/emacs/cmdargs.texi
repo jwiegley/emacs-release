@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985-1987, 1993-1995, 1997, 2001-2013 Free Software
+@c Copyright (C) 1985-1987, 1993-1995, 1997, 2001-2014 Free Software
 @c Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Emacs Invocation
@@ -10,6 +10,7 @@
 @cindex switches (command line)
 @cindex startup (command line arguments)
 @cindex invocation (command line arguments)
+@c FIXME: Document `--smid'?  --xfq
 
   Emacs supports command line arguments to request various actions
 when invoking Emacs.  These are for compatibility with other editors
@@ -135,7 +136,14 @@ visited.
 @opindex -L
 @itemx --directory=@var{dir}
 @opindex --directory
-Add directory @var{dir} to the variable @code{load-path}.
+Prepend directory @var{dir} to the variable @code{load-path}.
+If you specify multiple @samp{-L} options, Emacs preserves the
+relative order; i.e., using @samp{-L /foo -L /bar} results in
+a @code{load-path} of the form @code{("/foo" "/bar" @dots{})}.
+If @var{dir} begins with @samp{:}, Emacs removes the @samp{:} and
+appends (rather than prepends) the remainder to @code{load-path}.
+(On MS Windows, use @samp{;} instead of @samp{:}; i.e., use
+the value of @code{path-separator}.)
 
 @item -f @var{function}
 @opindex -f
@@ -251,7 +259,8 @@ terminal's standard input stream (@code{stdin}) instead.
 but @file{site-start.el} is loaded nonetheless.  It also causes Emacs
 to exit after processing all the command options.  In addition, it
 disables auto-saving except in buffers for which auto-saving is
-explicitly requested.
+explicitly requested, and when saving files it omits the @code{fsync}
+system call unless otherwise requested.
 
 @item --script @var{file}
 @opindex --script
@@ -430,15 +439,15 @@ special meanings in Emacs.  Most of these variables are also used by
 some other programs.  Emacs does not require any of these environment
 variables to be set, but it uses their values if they are set.
 
-@table @env
+@vtable @env
 @item CDPATH
 Used by the @code{cd} command to search for the directory you specify,
 when you specify a relative directory name.
 @item DBUS_SESSION_BUS_ADDRESS
 Used by D-Bus when Emacs is compiled with it.  Usually, there is no
 need to change it.  Setting it to a dummy address, like
-@samp{unix:path=/tmp/foo}, suppresses connections to the D-Bus session
-bus.
+@samp{unix:path=/dev/null}, suppresses connections to the D-Bus session
+bus as well as autolaunching the D-Bus session bus if not running yet.
 @item EMACSDATA
 Directory for the architecture-independent files that come with Emacs.
 This is used to initialize the variable @code{data-directory}.
@@ -446,13 +455,18 @@ This is used to initialize the variable @code{data-directory}.
 Directory for the documentation string file, which is used to
 initialize the Lisp variable @code{doc-directory}.
 @item EMACSLOADPATH
-A colon-separated list of directories@footnote{ Here and below,
+A colon-separated list of directories@footnote{Here and below,
 whenever we say ``colon-separated list of directories'', it pertains
 to Unix and GNU/Linux systems.  On MS-DOS and MS-Windows, the
 directories are separated by semi-colons instead, since DOS/Windows
-file names might include a colon after a drive letter.}  to search for
-Emacs Lisp files.  If set, it overrides the usual initial value of the
-@code{load-path} variable (@pxref{Lisp Libraries}).
+file names might include a colon after a drive letter.} to search for
+Emacs Lisp files.  If set, it modifies the usual initial value of the
+@code{load-path} variable (@pxref{Lisp Libraries}).  An empty element
+stands for the default value of @code{load-path}; e.g., using
+@samp{EMACSLOADPATH="/tmp:"} adds @file{/tmp} to the front of
+the default @code{load-path}.  To specify an empty element in the
+middle of the list, use 2 colons in a row, as in
+@samp{EMACSLOADPATH="/tmp::/foo"}.
 @item EMACSPATH
 A colon-separated list of directories to search for executable files.
 If set, Emacs uses this in addition to @env{PATH} (see below) when
@@ -483,9 +497,12 @@ compatibility @file{C:/} will be used instead if a @file{.emacs} file
 is found there.
 @item HOSTNAME
 The name of the machine that Emacs is running on.
+@c complete.el is obsolete since 24.1.
+@ignore
 @item INCPATH
 A colon-separated list of directories.  Used by the @code{complete} package
 to search for files.
+@end ignore
 @item INFOPATH
 A colon-separated list of directories in which to search for Info files.
 @item LC_ALL
@@ -567,10 +584,9 @@ terminal specified by @env{TERM}.  This defaults to
 These environment variables are used to initialize the variable
 @code{temporary-file-directory}, which specifies a directory in which
 to put temporary files (@pxref{Backup}).  Emacs tries to use
-@env{TMPDIR} first; if that is unset, it tries @env{TMP}, then
-@env{TEMP}, and finally @file{/tmp}.  But on MS-Windows and MS-DOS,
-Emacs tries @env{TEMP}, then @env{TMPDIR}, then @env{TMP}, and finally
-@file{c:/temp}.
+@env{TMPDIR} first.  If that is unset, Emacs normally falls back on
+@file{/tmp}, but on MS-Windows and MS-DOS it instead falls back on
+@env{TMP}, then @env{TEMP}, and finally @file{c:/temp}.
 
 @item TZ
 This specifies the current time zone and possibly also daylight
@@ -584,14 +600,14 @@ defaults to @samp{root}.
 @item VERSION_CONTROL
 Used to initialize the @code{version-control} variable (@pxref{Backup
 Names}).
-@end table
+@end vtable
 
 @node Misc Variables
 @appendixsubsec Miscellaneous Variables
 
 These variables are used only on particular configurations:
 
-@table @env
+@vtable @env
 @item COMSPEC
 On MS-DOS and MS-Windows, the name of the command interpreter to use
 when invoking batch files and commands internal to the shell.  On MS-DOS
@@ -643,7 +659,7 @@ rather than hard-coding an absolute path.  This allows multiple
 versions of Emacs to share the same environment variable settings, and
 it allows you to move the Emacs installation directory, without
 changing any environment or registry settings.
-@end table
+@end vtable
 
 @node MS-Windows Registry
 @appendixsubsec The MS-Windows System Registry
@@ -885,30 +901,33 @@ the initial frame.
 @itemx --fullscreen
 @opindex --fullscreen
 @cindex fullscreen, command-line argument
-Specify that width and height shall be the size of the screen. Normally
-no window manager decorations are shown.
+Specify that width and height should be that of the screen.  Normally
+no window manager decorations are shown.  (After starting Emacs,
+you can toggle this state using @key{F11}, @code{toggle-frame-fullscreen}.)
 
 @item -mm
 @opindex -mm
 @itemx --maximized
 @opindex --maximized
 @cindex maximized, command-line argument
-Specify that the Emacs frame shall be maximized.  This normally
+Specify that the Emacs frame should be maximized.  This normally
 means that the frame has window manager decorations.
+(After starting Emacs, you can toggle this state using @kbd{M-F10},
+@code{toggle-frame-maximized}.)
 
 @item -fh
 @opindex -fh
 @itemx --fullheight
 @opindex --fullheight
 @cindex fullheight, command-line argument
-Specify that the height shall be the height of the screen.
+Specify that the height should be the height of the screen.
 
 @item -fw
 @opindex -fw
 @itemx --fullwidth
 @opindex --fullwidth
 @cindex fullwidth, command-line argument
-Specify that the width shall be the width of the screen.
+Specify that the width should be the width of the screen.
 @end table
 
 @noindent
@@ -968,10 +987,10 @@ size with no tool bar, use an X resource to specify ``no tool bar''
 (@pxref{Table of Resources}); then Emacs will already know there's no
 tool bar when it processes the specified geometry.
 
-  When using one of @samp{--fullscreen}, @samp{--maximized}, @samp{--fullwidth}
-or @samp{--fullheight} there may be some space around the frame
-anyway.  That is because Emacs rounds the sizes so they are an
-even number of character heights and widths.
+  When using one of @samp{--fullscreen}, @samp{--maximized},
+@samp{--fullwidth} or @samp{--fullheight}, some window managers require
+you to set the variable @code{frame-resize-pixelwise} to a non-@code{nil}
+value to make a frame appear truly ``maximized'' or ``fullscreen''.
 
  Some window managers have options that can make them ignore both
 program-specified and user-specified positions.  If these are set,
@@ -1087,8 +1106,8 @@ rectangle containing the frame's title.
 @c Enable horizontal scroll bars.  Since horizontal scroll bars
 @c are not yet implemented, this actually does nothing.
 
-@item --parent-id @var{ID}
-Open Emacs as a client X window via the XEmbed protocol, with @var{ID}
+@item --parent-id @var{id}
+Open Emacs as a client X window via the XEmbed protocol, with @var{id}
 as the parent X window id.  Currently, this option is mainly useful
 for developers.
 

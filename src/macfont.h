@@ -1,20 +1,23 @@
-/* Interface definition for Mac font backend.
-   Copyright (C) 2009-2014  YAMAMOTO Mitsuharu
+/* Interface definition for Mac OSX Core text font backend.
+   Copyright (C) 2009-2014 Free Software Foundation, Inc.
 
-This file is part of GNU Emacs Mac port.
+This file is part of GNU Emacs.
 
-GNU Emacs Mac port is free software: you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-GNU Emacs Mac port is distributed in the hope that it will be useful,
+GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
+Original author: YAMAMOTO Mitsuharu
+*/
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
 #define USE_CORE_TEXT 1
@@ -24,6 +27,7 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #define USE_NS_FONT_DESCRIPTOR 1
 #endif
 
+#ifndef HAVE_NS
 /* Symbolic types of this font-driver.  */
 extern Lisp_Object macfont_driver_type;
 
@@ -35,6 +39,7 @@ extern Lisp_Object Qmac_ct;
 /* Core Text emulation by NSFontDescriptor, for Mac OS X 10.4. */
 extern Lisp_Object Qmac_fd;
 #endif
+#endif	/* !HAVE_NS */
 
 /* Structure used by Mac `shape' functions for storing layout
    information for each glyph.  */
@@ -149,7 +154,7 @@ enum {
 #define mac_font_shape mac_ctfont_shape
 #if USE_CT_GLYPH_INFO
 #define mac_font_get_glyph_for_cid mac_ctfont_get_glyph_for_cid
-#else
+#elif !defined (HAVE_NS)
 extern CGGlyph mac_font_get_glyph_for_cid (FontRef, CharacterCollection,
 					   CGFontIndex);
 #endif
@@ -240,6 +245,7 @@ extern FontDescriptorRef mac_nsctfont_copy_font_descriptor (void *);
 
 typedef const struct _EmacsScreenFont *ScreenFontRef; /* opaque */
 
+#ifndef HAVE_NS
 extern CFComparisonResult mac_font_family_compare (const void *,
 						   const void *, void *);
 extern CFStringRef mac_font_copy_default_name_for_charset_and_languages (CFCharacterSetRef, CFArrayRef);
@@ -263,3 +269,8 @@ extern CGGlyph mac_ctfont_get_glyph_for_cid (CTFontRef,
 					     CGFontIndex);
 #endif
 #endif
+#else  /* HAVE_NS */
+extern void mac_register_font_driver (struct frame *f);
+extern void *macfont_get_nsctfont (struct font *font);
+extern void macfont_update_antialias_threshold (void);
+#endif  /* HAVE_NS */

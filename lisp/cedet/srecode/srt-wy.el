@@ -1,6 +1,6 @@
 ;;; srecode/srt-wy.el --- Generated parser support file
 
-;; Copyright (C) 2005, 2007-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2005-2014 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -131,6 +131,10 @@
 	((SET symbol insertable-string-list newline)
 	 (wisent-raw-tag
 	  (semantic-tag-new-variable $2 nil $3)))
+	((SET symbol number newline)
+	 (wisent-raw-tag
+	  (semantic-tag-new-variable $2 nil
+				     (list $3))))
 	((SHOW symbol newline)
 	 (wisent-raw-tag
 	  (semantic-tag-new-variable $2 nil t))))
@@ -226,11 +230,11 @@
 
 ;;; Analyzers
 ;;
-(define-lex-regex-type-analyzer srecode-template-wy--<property>-regexp-analyzer
-  "regexp analyzer for <property> tokens."
-  ":\\(\\w\\|\\s_\\)*"
+(define-lex-string-type-analyzer srecode-template-wy--<punctuation>-string-analyzer
+  "string analyzer for <punctuation> tokens."
+  "\\s.+"
   nil
-  'property)
+  'punctuation)
 
 (define-lex-regex-type-analyzer srecode-template-wy--<symbol>-regexp-analyzer
   "regexp analyzer for <symbol> tokens."
@@ -244,12 +248,6 @@
   nil
   'number)
 
-(define-lex-string-type-analyzer srecode-template-wy--<punctuation>-string-analyzer
-  "string analyzer for <punctuation> tokens."
-  "\\s.+"
-  nil
-  'punctuation)
-
 (define-lex-sexp-type-analyzer srecode-template-wy--<string>-sexp-analyzer
   "sexp analyzer for <string> tokens."
   "\\s\""
@@ -258,6 +256,12 @@
 (define-lex-keyword-type-analyzer srecode-template-wy--<keyword>-keyword-analyzer
   "keyword analyzer for <keyword> tokens."
   "\\(\\sw\\|\\s_\\)+")
+
+(define-lex-regex-type-analyzer srecode-template-wy--<property>-regexp-analyzer
+  "regexp analyzer for <property> tokens."
+  ":\\(\\w\\|\\s_\\)*"
+  nil
+  'property)
 
 
 ;;; Epilogue
@@ -290,13 +294,18 @@ It ignores whitespace, newlines and comments."
   srecode-template-separator-block
   srecode-template-wy--<keyword>-keyword-analyzer
   srecode-template-property-analyzer
-  srecode-template-wy--<symbol>-regexp-analyzer
   srecode-template-wy--<number>-regexp-analyzer
+  srecode-template-wy--<symbol>-regexp-analyzer
   srecode-template-wy--<string>-sexp-analyzer
   srecode-template-wy--<punctuation>-string-analyzer
   semantic-lex-default-action
   )
 
 (provide 'srecode/srt-wy)
+
+;; Local Variables:
+;; version-control: never
+;; no-update-autoloads: t
+;; End:
 
 ;;; srecode/srt-wy.el ends here

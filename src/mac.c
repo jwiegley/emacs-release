@@ -190,7 +190,7 @@ mac_aelist_to_lisp (const AEDescList *desc_list)
   Size size;
   AEKeyword keyword;
   AEDesc desc;
-  int attribute_p = 0;
+  bool attribute_p = false;
 
   err = AECountItems (desc_list, &count);
   if (err != noErr)
@@ -266,7 +266,7 @@ mac_aelist_to_lisp (const AEDescList *desc_list)
 
   if (desc_list->descriptorType == typeAppleEvent && !attribute_p)
     {
-      attribute_p = 1;
+      attribute_p = true;
       count = sizeof (ae_attr_table) / sizeof (ae_attr_table[0]);
       goto again;
     }
@@ -1119,11 +1119,11 @@ cfobject_to_lisp (CFTypeRef obj, int flags, int hash_bound)
 	}
       else
 	{
-	  result = make_hash_table (Qequal,
+	  result = make_hash_table (hashtest_equal,
 				    make_number (count),
 				    make_float (DEFAULT_REHASH_SIZE),
 				    make_float (DEFAULT_REHASH_THRESHOLD),
-				    Qnil, Qnil, Qnil);
+				    Qnil);
 	  CFDictionaryApplyFunction (obj, cfdictionary_puthash,
 				     &context);
 	}
@@ -1501,6 +1501,47 @@ cfproperty_list_create_with_string (Lisp_Object string)
   return result;
 }
 
+/* Create CFPropertyList from the contents of the file specified by
+   URL.  Return NULL if the creation failed.  */
+
+static CFPropertyListRef
+cfproperty_list_create_with_url (CFURLRef url)
+{
+  CFPropertyListRef result = NULL;
+  CFReadStreamRef stream = CFReadStreamCreateWithFile (NULL, url);
+
+  if (stream)
+    {
+      if (CFReadStreamOpen (stream))
+	{
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	  if (CFPropertyListCreateWithStream != NULL)
+#endif
+	    {
+	      result = CFPropertyListCreateWithStream (NULL, stream, 0,
+						       kCFPropertyListImmutable,
+						       NULL, NULL);
+	    }
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	  else		  /* CFPropertyListCreateWithStream == NULL */
+#endif
+#endif	/* MAC_OS_X_VERSION_MAX_ALLOWED >= 1060 */
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	    {
+	      result = CFPropertyListCreateFromStream (NULL, stream, 0,
+						       kCFPropertyListImmutable,
+						       NULL, NULL);
+	    }
+#endif
+	  CFReadStreamClose (stream);
+	}
+      CFRelease (stream);
+    }
+
+  return result;
+}
+
 
 /***********************************************************************
 		 Emulation of the X Resource Manager
@@ -1531,7 +1572,7 @@ skip_white_space (const char **p)
     P++;
 }
 
-static int
+static bool
 parse_comment (const char **p)
 {
   /* Comment = "!" {<any character except null or newline>} */
@@ -1541,14 +1582,14 @@ parse_comment (const char **p)
       while (*P)
 	if (*P++ == '\n')
 	  break;
-      return 1;
+      return true;
     }
   else
-    return 0;
+    return false;
 }
 
 /* Don't interpret filename.  Just skip until the newline.  */
-static int
+static bool
 parse_include_file (const char **p)
 {
   /* IncludeFile = "#" WhiteSpace "include" WhiteSpace FileName WhiteSpace */
@@ -1558,10 +1599,10 @@ parse_include_file (const char **p)
       while (*P)
 	if (*P++ == '\n')
 	  break;
-      return 1;
+      return true;
     }
   else
-    return 0;
+    return false;
 }
 
 static char
@@ -1643,7 +1684,7 @@ parse_value (const char **p)
 {
   char *q, *buf;
   Lisp_Object seq = Qnil, result;
-  int buf_len, total_len = 0, len, continue_p;
+  int buf_len, total_len = 0, len;
 
   q = strchr (P, '\n');
   buf_len = q ? q - P : strlen (P);
@@ -1651,8 +1692,9 @@ parse_value (const char **p)
 
   while (1)
     {
+      bool continue_p = false;
+
       q = buf;
-      continue_p = 0;
       while (*P)
 	{
 	  if (*P == '\n')
@@ -1668,7 +1710,7 @@ parse_value (const char **p)
 	      else if (*P == '\n')
 		{
 		  P++;
-		  continue_p = 1;
+		  continue_p = true;
 		  break;
 		}
 	      else if (*P == 'n')
@@ -1781,10 +1823,9 @@ xrm_create_database (void)
 {
   XrmDatabase database;
 
-  database = make_hash_table (Qequal, make_number (DEFAULT_HASH_SIZE),
+  database = make_hash_table (hashtest_equal, make_number (DEFAULT_HASH_SIZE),
 			      make_float (DEFAULT_REHASH_SIZE),
-			      make_float (DEFAULT_REHASH_THRESHOLD),
-			      Qnil, Qnil, Qnil);
+			      make_float (DEFAULT_REHASH_THRESHOLD), Qnil);
   Fputhash (HASHKEY_MAX_NID, make_number (0), database);
   Fputhash (HASHKEY_QUERY_CACHE, Qnil, database);
 
@@ -1916,10 +1957,11 @@ xrm_get_resource (XrmDatabase database, const char *name, const char *class)
   query_cache = Fgethash (HASHKEY_QUERY_CACHE, database, Qnil);
   if (NILP (query_cache))
     {
-      query_cache = make_hash_table (Qequal, make_number (DEFAULT_HASH_SIZE),
+      query_cache = make_hash_table (hashtest_equal,
+				     make_number (DEFAULT_HASH_SIZE),
 				     make_float (DEFAULT_REHASH_SIZE),
 				     make_float (DEFAULT_REHASH_THRESHOLD),
-				     Qnil, Qnil, Qnil);
+				     Qnil);
       Fputhash (HASHKEY_QUERY_CACHE, query_cache, database);
     }
   h = XHASH_TABLE (query_cache);
@@ -2252,11 +2294,15 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
        doc: /* Move file or directory named FILENAME to the recycle bin.  */)
   (Lisp_Object filename)
 {
-  OSStatus err;
+  enum {NO_ERROR, POSIX_ERROR, OSSTATUS_ERROR, COCOA_ERROR, OTHER_ERROR} domain;
+  CFIndex code;
   Lisp_Object errstring = Qnil;
   Lisp_Object handler;
   Lisp_Object encoded_file;
   Lisp_Object operation;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+  bool use_finder_p;
+#endif
 
   operation = Qdelete_file;
   if (!NILP (Ffile_directory_p (filename))
@@ -2274,29 +2320,46 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
   encoded_file = ENCODE_FILE (filename);
 
   block_input ();
+  domain = NO_ERROR;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
-  if (!mac_system_move_file_to_trash_use_finder
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
-      && FSMoveObjectToTrashSync != NULL
-#endif
-      )
+  use_finder_p = mac_system_move_file_to_trash_use_finder;
+  if (!use_finder_p)
     {
-      FSRef fref;
+      CFErrorRef error;
 
-      err = FSPathMakeRefWithOptions (SDATA (encoded_file),
-				      kFSPathMakeRefDoNotFollowLeafSymlink,
-				      &fref, NULL);
-      if (err == noErr)
-	/* FSPathMoveObjectToTrashSync tries to delete the destination
-	   of the specified symbolic link.  So we use
-	   FSMoveObjectToTrashSync for an FSRef created with
-	   kFSPathMakeRefDoNotFollowLeafSymlink.  */
-	err = FSMoveObjectToTrashSync (&fref, NULL,
-				       kFSFileOperationDefaultOptions);
+      if (!mac_trash_file (SSDATA (encoded_file), &error))
+	{
+	  if (error == NULL)
+	    use_finder_p = true;
+	  else
+	    {
+	      CFStringRef error_domain = CFErrorGetDomain (error);
+	      CFStringRef reason = CFErrorCopyFailureReason (error);
+
+	      if (reason)
+		{
+		  errstring = cfstring_to_lisp (reason);
+		  CFRelease (reason);
+		}
+
+	      code = CFErrorGetCode (error);
+	      if (CFEqual (error_domain, kCFErrorDomainCocoa))
+		domain = COCOA_ERROR;
+	      else if (CFEqual (error_domain, kCFErrorDomainOSStatus))
+		domain = OSSTATUS_ERROR;
+	      else if (CFEqual (error_domain, kCFErrorDomainPOSIX))
+		domain = POSIX_ERROR;
+	      else
+		domain = OTHER_ERROR;
+
+	      CFRelease (error);
+	    }
+	}
     }
-  else
+  if (use_finder_p)
 #endif
     {
+      OSStatus err;
       const OSType finderSignature = 'MACS';
       AEDesc desc;
       AppleEvent event, reply;
@@ -2328,8 +2391,7 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
 				    &handler_err, sizeof (OSStatus), NULL);
 	      if (err1 != errAEDescNotFound)
 		err = handler_err;
-	      err1 = AEGetParamDesc (&reply, keyErrorString,
-				     typeUTF8Text, /* Needs 10.2 */
+	      err1 = AEGetParamDesc (&reply, keyErrorString, typeUTF8Text,
 				     &desc);
 	      if (err1 == noErr)
 		{
@@ -2346,35 +2408,48 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
 	    }
 	  AEDisposeDesc (&reply);
 	}
+      if (err != noErr)
+	{
+	  domain = OSSTATUS_ERROR;
+	  code = err;
+	}
     }
   unblock_input ();
 
-  if (err != noErr)
+  if (domain != NO_ERROR)
     {
-      errno = 0;
-      if (NILP (errstring))
+      if ((domain == OSSTATUS_ERROR && code == fnfErr)
+	  || (domain == COCOA_ERROR && code == 4)) /* NSFileNoSuchFileError */
 	{
-	  switch (err)
-	    {
-	    case fnfErr:
-	      errno = ENOENT;
-	      break;
-
-	    case afpAccessDenied:
-	      errno = EACCES;
-	      break;
-
-	    default:
-	      errstring = concat2 (build_string ("Mac error "),
-				   Fnumber_to_string (make_number (err)));
-	      break;
-	    }
+	  domain = POSIX_ERROR;
+	  code = ENOENT;
 	}
-      if (errno)
-	report_file_error ("Removing old name", list1 (filename));
+      else if ((domain == OSSTATUS_ERROR && code == afpAccessDenied)
+	       || (domain == COCOA_ERROR
+		   && code == 513)) /* NSFileWriteNoPermissionError */
+	{
+	  domain = POSIX_ERROR;
+	  code = EACCES;
+	}
+
+      if (domain == POSIX_ERROR)
+	report_file_errno ("Removing old name", list1 (filename), code);
       else
-	xsignal (Qfile_error, list3 (build_string ("Removing old name"),
-				     errstring, filename));
+	{
+	  if (NILP (errstring))
+	    {
+	      char *prefix =
+		(domain == OSSTATUS_ERROR ? "Mac error "
+		 : (domain == COCOA_ERROR ? "Cocoa error "
+		    : "other error "));
+
+	      errstring = concat2 (build_string (prefix),
+				   Fnumber_to_string (make_number (code)));
+	    }
+
+	  xsignal (Qfile_error, list3 (build_string ("Removing old name"),
+				       errstring, filename));
+	}
     }
 
   return Qnil;
@@ -2480,14 +2555,10 @@ ASCII-only string literal.  */)
   CHECK_STRING (script);
 
   block_input ();
-  {
-    extern long mac_appkit_do_applescript (Lisp_Object, Lisp_Object *);
-
-    if (!inhibit_window_system)
-      status = mac_appkit_do_applescript (script, &result);
-    else
-      status = do_applescript (script, &result);
-  }
+  if (!inhibit_window_system)
+    status = mac_appkit_do_applescript (script, &result);
+  else
+    status = do_applescript (script, &result);
   unblock_input ();
   if (status == 0)
     return result;
@@ -2568,7 +2639,7 @@ return value (see `mac-convert-property-list').  FORMAT also accepts
 	  CHECK_STRING_CAR (tmp);
 	  QUIT;
 	}
-      CHECK_LIST_END (tmp, key);
+      CHECK_TYPE (NILP (tmp), Qlistp, key);
     }
   if (!NILP (application))
     CHECK_STRING (application);
@@ -2629,7 +2700,8 @@ return value (see `mac-convert-property-list').  FORMAT also accepts
  out:
   if (app_plist)
     CFRelease (app_plist);
-  CFRelease (app_id);
+  if (app_id)
+    CFRelease (app_id);
 
   unblock_input ();
 
@@ -2967,7 +3039,7 @@ mac_get_system_script_code (void)
 static int wakeup_fds[2];
 /* Whether we have read some input from wakeup_fds[0] after resetting
    this variable.  Don't access it outside the main thread.  */
-static int wokeup_from_run_loop_run_once_p;
+static bool wokeup_from_run_loop_run_once_p;
 
 static int
 read_all_from_nonblocking_fd (int fd)
@@ -3006,7 +3078,7 @@ wakeup_callback (CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
 		 const void *data, void *info)
 {
   read_all_from_nonblocking_fd (CFSocketGetNative (s));
-  wokeup_from_run_loop_run_once_p = 1;
+  wokeup_from_run_loop_run_once_p = true;
 }
 #endif
 
@@ -3038,7 +3110,7 @@ init_wakeup_fds (void)
       return -1;
     dispatch_source_set_event_handler (source, ^{
 	read_all_from_nonblocking_fd (dispatch_source_get_handle (source));
-	wokeup_from_run_loop_run_once_p = 1;
+	wokeup_from_run_loop_run_once_p = true;
       });
     dispatch_resume (source);
 
@@ -3127,16 +3199,16 @@ static CFRunLoopRef select_run_loop = NULL;
 static struct
 {
   int nfds;
-  SELECT_TYPE *rfds, *wfds, *efds;
-  EMACS_TIME *timeout;
+  fd_set *rfds, *wfds, *efds;
+  struct timespec *timeout;
 } select_args;
 
 static void
 select_perform (void *info)
 {
   int qnfds = select_args.nfds;
-  SELECT_TYPE qrfds, qwfds, qefds;
-  EMACS_TIME qtimeout;
+  fd_set qrfds, qwfds, qefds;
+  struct timespec qtimeout;
   int r;
 
   if (select_args.rfds)
@@ -3163,8 +3235,8 @@ select_perform (void *info)
 }
 
 static void
-select_fire (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
-	     EMACS_TIME *timeout)
+select_fire (int nfds, fd_set *rfds, fd_set *wfds, fd_set *efds,
+	     struct timespec *timeout)
 {
   select_args.nfds = nfds;
   select_args.rfds = rfds;
@@ -3203,15 +3275,15 @@ select_thread_launch (void)
 #endif	/* !SELECT_USE_GCD */
 
 static int
-select_and_poll_event (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds,
-		       SELECT_TYPE *efds, EMACS_TIME *timeout)
+select_and_poll_event (int nfds, fd_set *rfds, fd_set *wfds,
+		       fd_set *efds, struct timespec const *timeout)
 {
-  int timedout_p = 0;
+  bool timedout_p = false;
   int r = 0;
-  EMACS_TIME select_timeout;
-  EventTimeout timeoutval = (timeout ? EMACS_TIME_TO_DOUBLE (*timeout)
+  struct timespec select_timeout;
+  EventTimeout timeoutval = (timeout ? timespectod (*timeout)
 			     : kEventDurationForever);
-  SELECT_TYPE orfds, owfds, oefds;
+  fd_set orfds, owfds, oefds;
 
   if (timeout == NULL)
     {
@@ -3229,13 +3301,13 @@ select_and_poll_event (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds,
       if (detect_input_pending ())
 	break;
 
-      select_timeout = make_emacs_time (0, 0);
+      select_timeout = make_timespec (0, 0);
       r = pselect (nfds, rfds, wfds, efds, &select_timeout, NULL);
       if (r != 0)
 	break;
 
       if (timeoutval == 0.0)
-	timedout_p = 1;
+	timedout_p = true;
       else
 	{
 	  /* On Mac OS X 10.7, delayed visible toolbar item validation
@@ -3257,7 +3329,7 @@ select_and_poll_event (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds,
 	  while (timeoutval && !mac_peek_next_event ()
 		 && !detect_input_pending ());
 	  if (timeoutval == 0)
-	    timedout_p = 1;
+	    timedout_p = true;
 	}
 
       if (timeout == NULL && timedout_p)
@@ -3285,13 +3357,13 @@ select_and_poll_event (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds,
 }
 
 int
-sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
-	    EMACS_TIME *timeout, void *sigmask)
+mac_select (int nfds, fd_set *rfds, fd_set *wfds, fd_set *efds,
+	    struct timespec const *timeout, sigset_t const *sigmask)
 {
-  int timedout_p = 0;
+  bool timedout_p = false;
   int r;
-  EMACS_TIME select_timeout;
-  SELECT_TYPE orfds, owfds, oefds;
+  struct timespec select_timeout;
+  fd_set orfds, owfds, oefds;
   EventTimeout timeoutval;
 
   if (inhibit_window_system || noninteractive
@@ -3313,8 +3385,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
   else
     FD_ZERO (&oefds);
 
-  timeoutval = (timeout ? EMACS_TIME_TO_DOUBLE (*timeout)
-		: kEventDurationForever);
+  timeoutval = (timeout ? timespectod (*timeout) : kEventDurationForever);
 
   FD_SET (0, rfds);		/* sentinel */
   do
@@ -3331,7 +3402,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 
   /* Avoid initial overhead of RunLoop setup for the case that some
      input is already available.  */
-  select_timeout = make_emacs_time (0, 0);
+  select_timeout = make_timespec (0, 0);
   r = select_and_poll_event (nfds, rfds, wfds, efds, &select_timeout);
   if (r != 0 || timeoutval == 0.0)
     return r;
@@ -3350,9 +3421,9 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
     {
 #if SELECT_USE_GCD
       dispatch_sync (select_dispatch_queue, ^{});
-      wokeup_from_run_loop_run_once_p = 0;
+      wokeup_from_run_loop_run_once_p = false;
       dispatch_async (select_dispatch_queue, ^{
-	  SELECT_TYPE qrfds = orfds, qwfds = owfds, qefds = oefds;
+	  fd_set qrfds = orfds, qwfds = owfds, qefds = oefds;
 	  int qnfds = nfds;
 	  int r;
 
@@ -3373,7 +3444,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
       while (timeoutval && !wokeup_from_run_loop_run_once_p
 	     && !mac_peek_next_event () && !detect_input_pending ());
       if (timeoutval == 0)
-	timedout_p = 1;
+	timedout_p = true;
 
       write_one_byte_to_fd (wakeup_fds[0]);
       dispatch_async (select_dispatch_queue, ^{
@@ -3385,7 +3456,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 
       select_sem_wait ();
       read_all_from_nonblocking_fd (wakeup_fds[1]);
-      wokeup_from_run_loop_run_once_p = 0;
+      wokeup_from_run_loop_run_once_p = false;
       select_fire (nfds, rfds, wfds, efds, NULL);
 
       do
@@ -3395,7 +3466,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
       while (timeoutval && !wokeup_from_run_loop_run_once_p
 	     && !mac_peek_next_event () && !detect_input_pending ());
       if (timeoutval == 0)
-	timedout_p = 1;
+	timedout_p = true;
 
       write_one_byte_to_fd (wakeup_fds[0]);
 #endif
@@ -3404,7 +3475,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 
   if (!timedout_p)
     {
-      select_timeout = make_emacs_time (0, 0);
+      select_timeout = make_timespec (0, 0);
       r = select_and_poll_event (nfds, rfds, wfds, efds, &select_timeout);
       if (r != 0)
 	return r;
@@ -3425,7 +3496,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 /* Return whether the service provider for the current application is
    already registered.  */
 
-int
+bool
 mac_service_provider_registered_p (void)
 {
   name_t name = "org.gnu.Emacs";
@@ -3450,6 +3521,107 @@ mac_service_provider_registered_p (void)
   return kr == KERN_SUCCESS;
 }
 
+Lisp_Object
+mac_carbon_version_string ()
+{
+  Lisp_Object result = Qnil;
+  CFBundleRef bundle;
+  CFTypeRef value;
+
+  bundle = CFBundleGetBundleWithIdentifier (CFSTR ("com.apple.Carbon"));
+  if (bundle == NULL)
+    return result;
+
+  value = CFBundleGetValueForInfoDictionaryKey (bundle, kCFBundleVersionKey);
+  if (value && CFGetTypeID (value) == CFStringGetTypeID ())
+    result = cfstring_to_lisp_nodecode (value);
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+  if (NILP (result))
+    {
+      CFPropertyListRef plist = NULL;
+      CFURLRef resource_url = CFBundleCopyResourceURL (bundle,
+						       CFSTR ("version"),
+						       CFSTR ("plist"), NULL);
+
+      if (resource_url)
+	{
+	  plist = cfproperty_list_create_with_url (resource_url);
+	  CFRelease (resource_url);
+	}
+      if (plist)
+	{
+	  if (CFGetTypeID (plist) == CFDictionaryGetTypeID ())
+	    {
+	      value = CFDictionaryGetValue (plist, CFSTR ("SourceVersion"));
+	      if (value && CFGetTypeID (value) == CFStringGetTypeID ())
+		{
+		  result = cfstring_to_lisp_nodecode (value);
+		  if (STRINGP (result)
+		      && CFStringHasSuffix (value, CFSTR ("0000")))
+		    result = Fsubstring (result, make_number (0),
+					 make_number (-4));
+		}
+	    }
+	  CFRelease (plist);
+	}
+    }
+#endif
+
+  return result;
+}
+
+struct mac_operating_system_version mac_operating_system_version;
+
+static void
+mac_initialize_operating_system_version ()
+{
+  const char *filename = "/System/Library/CoreServices/SystemVersion.plist";
+  CFURLRef url;
+  CFPropertyListRef plist = NULL;
+  CFDataRef data = NULL;
+
+  url = CFURLCreateFromFileSystemRepresentation (NULL, (const UInt8 *) filename,
+						 strlen (filename), false);
+  if (url)
+    {
+      plist = cfproperty_list_create_with_url (url);
+      CFRelease (url);
+    }
+  if (plist)
+    {
+      if (CFGetTypeID (plist) == CFDictionaryGetTypeID ())
+	{
+	  CFStringRef value =
+	    CFDictionaryGetValue (plist, CFSTR ("ProductVersion"));
+
+	  if (value && CFGetTypeID (value) == CFStringGetTypeID ())
+	    data = CFStringCreateExternalRepresentation (NULL, value,
+							 kCFStringEncodingUTF8,
+							 '\0');
+	}
+      CFRelease (plist);
+    }
+  if (data)
+    {
+      long major, minor, patch;
+      int nmatches;
+
+      nmatches = sscanf ((const char *) CFDataGetBytePtr (data),
+			 "%ld.%ld.%ld", &major, &minor, &patch);
+      if (nmatches == 3 || nmatches == 2)
+	{
+	  if (nmatches == 2)
+	    patch = 0;
+	  mac_operating_system_version.major = major;
+	  mac_operating_system_version.minor = minor;
+	  mac_operating_system_version.patch = patch;
+	}
+
+      CFRelease (data);
+    }
+}
+
 const char *mac_exec_path, *mac_load_path, *mac_etc_directory;
 
 /* Set up environment variables so that Emacs can correctly find its
@@ -3472,6 +3644,9 @@ init_mac_osx_environment (void)
   char *app_bundle_pathname;
   char *p, *q;
   struct stat st;
+
+  /* Initialize the operating system version.  */
+  mac_initialize_operating_system_version ();
 
   /* Initialize locale related variables.  */
   mac_system_script_code = mac_get_system_script_code ();

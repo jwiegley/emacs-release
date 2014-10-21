@@ -1,6 +1,6 @@
 ;;; eieio-speedbar.el -- Classes for managing speedbar displays.
 
-;; Copyright (C) 1999-2002, 2005, 2007-2013 Free Software Foundation,
+;; Copyright (C) 1999-2002, 2005, 2007-2014 Free Software Foundation,
 ;; Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
@@ -198,7 +198,7 @@ that path."
 
 (defmethod eieio-speedbar-description (object)
   "Return a string describing OBJECT."
-  (object-name-string object))
+  (eieio-object-name-string object))
 
 (defmethod eieio-speedbar-derive-line-path (object)
   "Return the path which OBJECT has something to do with."
@@ -206,7 +206,7 @@ that path."
 
 (defmethod eieio-speedbar-object-buttonname (object)
   "Return a string to use as a speedbar button for OBJECT."
-  (object-name-string object))
+  (eieio-object-name-string object))
 
 (defmethod eieio-speedbar-make-tag-line (object depth)
   "Insert a tag line into speedbar at point for OBJECT.
@@ -230,9 +230,9 @@ object edit buffer doing an in-place edit.
 If your object represents some other item, override this method
 and take the appropriate action."
   (require 'eieio-custom)
-  (speedbar-with-attached-buffer
+  (dframe-with-attached-buffer
    (eieio-customize-object object))
-  (speedbar-maybee-jump-to-attached-frame))
+  (dframe-maybee-jump-to-attached-frame))
 
 
 ;;; Class definitions
@@ -324,7 +324,7 @@ Argument DEPTH is the depth at which the tag line is inserted."
 (defmethod eieio-speedbar-child-make-tag-lines ((object eieio-speedbar) depth)
   "Base method for creating tag lines for non-object children."
   (error "You must implement `eieio-speedbar-child-make-tag-lines' for %s"
-	 (object-name object)))
+	 (eieio-object-name object)))
 
 (defmethod eieio-speedbar-expand ((object eieio-speedbar) depth)
   "Expand OBJECT at indentation DEPTH.
@@ -365,7 +365,7 @@ TOKEN is the object.  INDENT is the current indentation level."
 (defmethod eieio-speedbar-child-description ((obj eieio-speedbar))
   "Return a description for a child of OBJ which is not an object."
   (error "You must implement `eieio-speedbar-child-description' for %s"
-	 (object-name obj)))
+	 (eieio-object-name obj)))
 
 (defun eieio-speedbar-item-info ()
   "Display info for the current line when in EDE display mode."

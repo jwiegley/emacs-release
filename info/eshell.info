@@ -1,15 +1,14 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/eshell.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/eshell.texi.
+This is ../../info/eshell.info, produced by makeinfo version 4.13 from
+./eshell.texi.
 
 This manual is for Eshell, the Emacs shell.
 
-   Copyright (C) 1999-2013 Free Software Foundation, Inc.
+   Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -23,25 +22,26 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: eshell.info,  Node: Top,  Next: What is Eshell?,  Prev: (dir),  Up: (dir)
+File: eshell.info,  Node: Top,  Next: Introduction,  Up: (dir)
 
 Eshell
 ******
 
 Eshell is a shell-like command interpreter implemented in Emacs Lisp.
 It invokes no external processes except for those requested by the
-user.  It is intended to be a functional replacement for command shells
-such as `bash', `zsh', `rc', or `4dos'; since Emacs itself is capable of
-handling the sort of tasks accomplished by those tools.
+user.  It is intended to be an alternative to the IELM (*note Emacs
+Lisp Interaction: (emacs)Lisp Interaction.)  REPL for Emacs _and_ with
+an interface similar to command shells such as `bash', `zsh', `rc', or
+`4dos'.
 
    This manual is for Eshell, the Emacs shell.
 
-   Copyright (C) 1999-2013 Free Software Foundation, Inc.
+   Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -51,8 +51,7 @@ handling the sort of tasks accomplished by those tools.
 
 * Menu:
 
-* What is Eshell?::             A brief introduction to the Emacs Shell.
-* Command basics::              The basics of command usage.
+* Introduction::             A brief introduction to the Emacs Shell.
 * Commands::
 * Expansion::
 * Input/Output::
@@ -65,10 +64,13 @@ handling the sort of tasks accomplished by those tools.
 * Key Index::
 
 
-File: eshell.info,  Node: What is Eshell?,  Next: Command basics,  Prev: Top,  Up: Top
+File: eshell.info,  Node: Introduction,  Next: Commands,  Prev: Top,  Up: Top
 
-1 What is Eshell?
-*****************
+1 Introduction
+**************
+
+1.1 What is Eshell?
+===================
 
 Eshell is a "command shell" written in Emacs Lisp.  Everything it does,
 it uses Emacs's facilities to do.  This means that Eshell is as
@@ -114,6 +116,21 @@ computer frequently enough, it is more than worthwhile in the long run.
 Any tool you use often deserves the time spent learning to master it.
 (2)
 
+1.2 What Eshell is not
+======================
+
+Eshell is _not_ a replacement for system shells such as `bash' or
+`zsh'.  Use Eshell when you want to move text between Emacs and
+external processes; if you only want to pipe output from one external
+process to another (and then another, and so on), use a system shell,
+because Emacs's IO system is buffer oriented, not stream oriented, and
+is very inefficient at such tasks.  If you want to write shell scripts
+in Eshell, don't; either write an elisp library or use a system shell.
+
+   Some things Eshell just doesn't do well.  It fills the niche between
+IELM and your system shell, where the peculiar use-cases lie, and it is
+less than ideal outside that niche.
+
 * Menu:
 
 * Contributors to Eshell::      People who have helped out!
@@ -128,9 +145,9 @@ like: But don't let it fool you; once you know what's going on, it's
 easier than it looks: `ls -lt **/*.doc(Lk+50aM+5)'.
 
 
-File: eshell.info,  Node: Contributors to Eshell,  Up: What is Eshell?
+File: eshell.info,  Node: Contributors to Eshell,  Up: Introduction
 
-1.1 Contributors to Eshell
+1.3 Contributors to Eshell
 ==========================
 
 Contributions to Eshell are welcome.  I have limited time to work on
@@ -161,106 +178,9 @@ requests, bug reports and encouragement.  Thanks a lot!  Without you
 there would be no new releases of Eshell.
 
 
-File: eshell.info,  Node: Command basics,  Next: Commands,  Prev: What is Eshell?,  Up: Top
+File: eshell.info,  Node: Commands,  Next: Expansion,  Prev: Introduction,  Up: Top
 
-2 Basic overview
-****************
-
-A command shell is a means of entering verbally-formed commands.  This
-is really all that it does, and every feature described in this manual
-is a means to that end.  Therefore, it's important to take firm hold on
-exactly what a command is, and how it fits in the overall picture of
-things.
-
-* Menu:
-
-* Commands verbs::              Commands always begin with a verb.
-* Command arguments::           Some verbs require arguments.
-
-
-File: eshell.info,  Node: Commands verbs,  Next: Command arguments,  Up: Command basics
-
-2.1 Commands verbs
-==================
-
-Commands are expressed using "script", a special shorthand language
-computers can understand with no trouble.  Script is an extremely simple
-language; oddly enough, this is what makes it look so complicated!
-Whereas normal languages use a variety of embellishments, the form of a
-script command is always:
-
-     VERB [ARGUMENTS]
-
-   The verb expresses what you want your computer to do.  There are a
-fixed number of verbs, although this number is usually quite large.  On
-the author's computer, it reaches almost 1400 in number.  But of course,
-only a handful of these are really necessary.
-
-   Sometimes, the verb is all that's written.  A verb is always a single
-word, usually related to the task it performs.  `reboot' is a good
-example.  Entering that on GNU/Linux will reboot the computer--assuming
-you have sufficient privileges.
-
-   Other verbs require more information.  These are usually very capable
-verbs, and must be told specifically what to do.  The extra information
-is given in the form of "arguments".  For example, the `echo' verb
-prints back whatever arguments you type.  It requires these arguments
-to know what to echo.  A proper use of `echo' looks like this:
-
-     echo This is an example of using echo!
-
-   This script command causes the computer to echo back: "This is an
-example of using echo!"
-
-   Although command verbs are always simple words, like `reboot' or
-`echo', arguments may have a wide variety of forms.  There are textual
-arguments, numerical arguments--even Lisp arguments.  Distinguishing
-these different types of arguments requires special typing, for the
-computer to know exactly what you mean.
-
-
-File: eshell.info,  Node: Command arguments,  Prev: Commands verbs,  Up: Command basics
-
-2.2 Command arguments
-=====================
-
-Eshell recognizes several different kinds of command arguments:
-
-  1. Strings (also called textual arguments)
-
-  2. Numbers (floating point or integer)
-
-  3. Lisp lists
-
-  4. Lisp symbols
-
-  5. Emacs buffers
-
-  6. Emacs process handles
-
-   Most users need to worry only about the first two.  The third, Lisp
-lists, occur very frequently, but almost always behind the scenes.
-
-   Strings are the most common type of argument, and consist of nearly
-any character.  Special characters--those used by Eshell
-specifically--must be preceded by a backslash (`\').  When in doubt, it
-is safe to add backslashes anywhere and everywhere.
-
-   Here is a more complicated `echo' example:
-
-     echo A\ Multi-word\ Argument\ With\ A\ \$\ dollar
-
-   Beyond this, things get a bit more complicated.  While not beyond the
-reach of someone wishing to learn, it is definitely beyond the scope of
-this manual to present it all in a simplistic manner.  Get comfortable
-with Eshell as a basic command invocation tool, and learn more about the
-commands on your system; then come back when it all sits more familiarly
-on your mind.  Have fun!
-
-
-File: eshell.info,  Node: Commands,  Next: Expansion,  Prev: Command basics,  Up: Top
-
-3 Commands
+2 Commands
 **********
 
 In a command shell, everything is done by invoking commands.  This
@@ -282,7 +202,7 @@ history and invoking commands in a script file.
 
 File: eshell.info,  Node: Invocation,  Next: Arguments,  Up: Commands
 
-3.1 Invocation
+2.1 Invocation
 ==============
 
 Unlike regular system shells, Eshell never invokes kernel functions
@@ -312,7 +232,7 @@ other background process in Emacs.
 
 File: eshell.info,  Node: Arguments,  Next: Built-ins,  Prev: Invocation,  Up: Commands
 
-3.2 Arguments
+2.2 Arguments
 =============
 
 Command arguments are passed to the functions as either strings or
@@ -326,7 +246,7 @@ and double (`""') quotes.
 
 File: eshell.info,  Node: Built-ins,  Next: Variables,  Prev: Arguments,  Up: Commands
 
-3.3 Built-in commands
+2.3 Built-in commands
 =====================
 
 Several commands are built-in in Eshell.  In order to call the external
@@ -349,9 +269,9 @@ alias, *note Aliases::.  Example:
      sudo is an alias, defined as "*sudo $*"
 
    If you would prefer to use the built-in commands instead of the
-external commands, set ESHELL-PREFER-LISP-FUNCTIONS to `t'.
+external commands, set `eshell-prefer-lisp-functions' to `t'.
 
-   Some of the built-in commands have different behaviour from their
+   Some of the built-in commands have different behavior from their
 external counterparts, and some have no external counterpart.  Most of
 these will print a usage message when given the `--help' option.
 
@@ -374,7 +294,7 @@ these will print a usage message when given the `--help' option.
 
 `diff'
      Use Emacs's internal `diff' (not to be confused with `ediff').
-     *Note Comparing Files: (elisp)Comparing Files.
+     *Note Comparing Files: (emacs)Comparing Files.
 
 `grep'
 `agrep'
@@ -403,16 +323,16 @@ these will print a usage message when given the `--help' option.
 
 `locate'
      Alias to Emacs's `locate' function, which simply runs the external
-     `locate' command and parses the results.  *Note Dired and `find':
-     (elisp)Dired and `find'.
+     `locate' command and parses the results.  *Note Dired and Find:
+     (emacs)Dired and Find.
 
 `make'
-     Run `make' through `compile'.  *Note Running Compilations under
-     Emacs: (elisp)Running Compilations under Emacs.
+     Run `make' through `compile'.  *Note Compilation:
+     (emacs)Compilation.
 
 `occur'
-     Alias to Emacs's `occur'.  *Note Other Search-and-Loop Commands:
-     (elisp)Other Search-and-Loop Commands.
+     Alias to Emacs's `occur'.  *Note Other Repeating Search:
+     (emacs)Other Repeating Search.
 
 `printnl'
      Print the arguments separated by newlines.
@@ -439,11 +359,13 @@ these will print a usage message when given the `--help' option.
 
 `su'
 `sudo'
-     Uses TRAMP's `su' or `sudo' method to run a command via `su' or
-     `sudo'.
+     Uses TRAMP's `su' or `sudo' method *note Inline methods:
+     (tramp)Inline methods.  to run a command via `su' or `sudo'.
+     These commands are in the eshell-tramp module, which is disabled
+     by default.
 
 
-3.3.1 Built-in variables
+2.3.1 Built-in variables
 ------------------------
 
 Eshell knows a few built-in variables:
@@ -470,7 +392,7 @@ Eshell knows a few built-in variables:
 
 File: eshell.info,  Node: Variables,  Next: Aliases,  Prev: Built-ins,  Up: Commands
 
-3.4 Variables
+2.4 Variables
 =============
 
 Since Eshell is just an Emacs REPL(1), it does not have its own scope,
@@ -484,7 +406,7 @@ Eshell provides a command version of `setq' for convenience.
 
 File: eshell.info,  Node: Aliases,  Next: History,  Prev: Variables,  Up: Commands
 
-3.5 Aliases
+2.5 Aliases
 ===========
 
 Aliases are commands that expand to a longer input line.  For example,
@@ -492,13 +414,13 @@ Aliases are commands that expand to a longer input line.  For example,
 command invocation `alias ll ls -l'; with this defined, running `ll
 foo' in Eshell will actually run `ls -l foo'.  Aliases defined (or
 deleted) by the `alias' command are automatically written to the file
-named by ESHELL-ALIASES-FILE, which you can also edit directly
+named by `eshell-aliases-file', which you can also edit directly
 (although you will have to manually reload it).
 
 
 File: eshell.info,  Node: History,  Next: Completion,  Prev: Aliases,  Up: Commands
 
-3.6 History
+2.6 History
 ===========
 
 The `history' command shows all commands kept in the history ring as
@@ -517,8 +439,8 @@ command beginning with `foo' is accessible by `!foo:n'.
 
    The history ring is loaded from a file at the start of every session,
 and written back to the file at the end of every session.  The file path
-is specified in ESHELL-HISTORY-FILE-NAME.  Unlike other shells, such as
-Bash, Eshell can not be configured to keep a history ring of a
+is specified in `eshell-history-file-name'.  Unlike other shells, such
+as Bash, Eshell can not be configured to keep a history ring of a
 different size than that of the history file.
 
    Since the default buffer navigation and searching key-bindings are
@@ -538,7 +460,7 @@ and searching are bound to different keys:
 
 File: eshell.info,  Node: Completion,  Next: for loop,  Prev: History,  Up: Commands
 
-3.7 Completion
+2.7 Completion
 ==============
 
 Eshell uses the pcomplete package for programmable completion, similar
@@ -559,7 +481,7 @@ input line and the possible completions will be listed.
    If you want to see the entire list of possible completions when it's
 below the cycling threshold, press `M-?'.
 
-3.7.1 pcomplete
+2.7.1 pcomplete
 ---------------
 
 Pcomplete, short for programmable completion, is the completion library
@@ -580,7 +502,7 @@ beyond the scope of pcomplete.
 
 File: eshell.info,  Node: for loop,  Next: Scripts,  Prev: Completion,  Up: Commands
 
-3.8 `for' loop
+2.8 `for' loop
 ==============
 
 Because Eshell commands can not (easily) be combined with lisp forms,
@@ -596,7 +518,7 @@ is replaced with `{ command invocation }'.
 
 File: eshell.info,  Node: Scripts,  Prev: for loop,  Up: Commands
 
-3.9 Scripts
+2.9 Scripts
 ===========
 
 You can run Eshell scripts much like scripts for other shells; the main
@@ -612,7 +534,7 @@ than in a subshell, use the `.' command.
 
 File: eshell.info,  Node: Expansion,  Next: Input/Output,  Prev: Commands,  Up: Top
 
-4 Expansion
+3 Expansion
 ***********
 
 Expansion in a command shell is somewhat like macro expansion in macro
@@ -638,7 +560,7 @@ entering the value of `var' at the prompt.
 
 File: eshell.info,  Node: Dollars Expansion,  Next: Globbing,  Up: Expansion
 
-4.1 Dollars Expansion
+3.1 Dollars Expansion
 =====================
 
 Eshell has different `$' expansion syntax from other shells.  There are
@@ -652,7 +574,7 @@ familiarity.
 `$#var'
      Expands to the length of the value bound to `var'.  Raises an error
      if the value is not a sequence (*note Sequences: (elisp)Sequences
-     Arrays and Vectors.).
+     Arrays Vectors.).
 
 `$(lisp)'
      Expands to the result of evaluating the S-expression `(lisp)'.  On
@@ -695,7 +617,7 @@ familiarity.
 
 File: eshell.info,  Node: Globbing,  Prev: Dollars Expansion,  Up: Expansion
 
-4.2 Globbing
+3.2 Globbing
 ============
 
 Eshell's globbing syntax is very similar to that of Zsh.  Users coming
@@ -703,46 +625,66 @@ from Bash can still use Bash-style globbing, as there are no
 incompatibilities.  Most globbing is pattern-based expansion, but there
 is also predicate-based expansion.  See *note Filename Generation:
 (zsh)Filename Generation.  for full syntax.  To customize the syntax
-and behaviour of globbing in Eshell see the Customize(1) groups
+and behavior of globbing in Eshell see the Customize(1) groups
 "eshell-glob" and "eshell-pred".
 
    ---------- Footnotes ----------
 
-   (1) *Note Customize: (elisp)Customization Settings.
+   (1) *Note Easy Customization: (emacs)Easy Customization.
 
 
 File: eshell.info,  Node: Input/Output,  Next: Extension modules,  Prev: Expansion,  Up: Top
 
-5 Input/Output
+4 Input/Output
 **************
 
 Since Eshell does not communicate with a terminal like most command
-shells, IO is a little different.  If you try to run programs from
-within Eshell that are not line-oriented, such as programs that use
-ncurses, you will just get garbage output, since the Eshell buffer is
-not a terminal emulator.  Eshell solves this problem by running
-specified commands in Emacs's terminal emulator; to let Eshell know
-which commands need to be run in a terminal, add them to the list
-ESHELL-VISUAL-COMMANDS.
+shells, IO is a little different.
 
-   Redirection is mostly the same in Eshell as it is in other command
+4.1 Visual Commands
+===================
+
+If you try to run programs from within Eshell that are not
+line-oriented, such as programs that use ncurses, you will just get
+garbage output, since the Eshell buffer is not a terminal emulator.
+Eshell solves this problem by running such programs in Emacs's terminal
+emulator.
+
+   Programs that need a terminal to display output properly are referred
+to in this manual as "visual commands," because they are not simply
+line-oriented.  You must tell Eshell which commands are visual, by
+adding them to `eshell-visual-commands'; for commands that are visual
+for only certain _sub_-commands - e.g. `git log' but not `git status' -
+use `eshell-visual-subcommands'; and for commands that are visual only
+when passed certain options, use `eshell-visual-options'.
+
+4.2 Redirection
+===============
+
+Redirection is mostly the same in Eshell as it is in other command
 shells.  The output redirection operators `>' and `>>' as well as pipes
 are supported, but there is not yet any support for input redirection.
-Output can also be redirected to Elisp functions, using virtual devices.
+Output can also be redirected to buffers, using the `>>>' redirection
+operator, and Elisp functions, using virtual devices.
 
-   ESHELL-VIRTUAL-TARGETS is a list of mappings of virtual device names
-to functions.  Eshell comes with two virtual devices: `/dev/kill',
-which sends the text to the kill ring, and `/dev/clip', which sends
-text to the clipboard.
+   The buffer redirection operator, `>>>', expects a buffer object on
+the right-hand side, into which it inserts the output of the left-hand
+side.  e.g., `echo hello >>> #<buffer *scratch*>' inserts the string
+`"hello"' into the `*scratch*' buffer.
+
+   `eshell-virtual-targets' is a list of mappings of virtual device
+names to functions.  Eshell comes with two virtual devices:
+`/dev/kill', which sends the text to the kill ring, and `/dev/clip',
+which sends text to the clipboard.
 
    You can, of course, define your own virtual targets.  They are
-defined by adding a list of the form `("/dev/name" function mode)' to
-ESHELL-VIRTUAL-TARGETS.  The first element is the device name;
-`function' may be either a lambda or a function name.  If `mode' is
-nil, then the function is the output function; if it is non-nil, then
-the function is passed the redirection mode as a symbol-`overwrite',
-`append', or `insert'-and the function is expected to return the output
-function.
+defined by adding a list of the form `("/dev/name" FUNCTION MODE)' to
+`eshell-virtual-targets'.  The first element is the device name;
+FUNCTION may be either a lambda or a function name.  If MODE is `nil',
+then the function is the output function; if it is non-`nil', then the
+function is passed the redirection mode as a symbol-`overwrite' for
+`>', `append' for `>>', or `insert' for `>>>'-and the function is
+expected to return the output function.
 
    The output function is called once on each line of output until
 `nil' is passed, indicating end of output.
@@ -750,7 +692,7 @@ function.
 
 File: eshell.info,  Node: Extension modules,  Next: Bugs and ideas,  Prev: Input/Output,  Up: Top
 
-6 Extension modules
+5 Extension modules
 *******************
 
 Eshell provides a facility for defining extension modules so that they
@@ -762,7 +704,7 @@ requirement: the module must define a Customize(2) group using
 parent group.(3)  You also need to load the following as shown:
 
      (eval-when-compile
-       (require 'cl)
+       (require 'cl-lib)
        (require 'esh-mode)
        (require 'eshell))
 
@@ -781,7 +723,7 @@ parent group.(3)  You also need to load the following as shown:
 
    (1) ERC provides a similar module facility.
 
-   (2) *Note Customize: (elisp)Customization Settings.
+   (2) *Note Customization: (elisp)Customization.
 
    (3) If the module has no user-customizable options, then there is no
 need to define it as an Eshell module.
@@ -789,55 +731,51 @@ need to define it as an Eshell module.
 
 File: eshell.info,  Node: Writing a module,  Next: Module testing,  Up: Extension modules
 
-6.1 Writing a module
+5.1 Writing a module
 ====================
 
 
 File: eshell.info,  Node: Module testing,  Next: Directory handling,  Prev: Writing a module,  Up: Extension modules
 
-6.2 Module testing
+5.2 Module testing
 ==================
 
 
 File: eshell.info,  Node: Directory handling,  Next: Key rebinding,  Prev: Module testing,  Up: Extension modules
 
-6.3 Directory handling
+5.3 Directory handling
 ======================
 
 
 File: eshell.info,  Node: Key rebinding,  Next: Smart scrolling,  Prev: Directory handling,  Up: Extension modules
 
-6.4 Key rebinding
+5.4 Key rebinding
 =================
 
 
 File: eshell.info,  Node: Smart scrolling,  Next: Terminal emulation,  Prev: Key rebinding,  Up: Extension modules
 
-6.5 Smart scrolling
+5.5 Smart scrolling
 ===================
 
 
 File: eshell.info,  Node: Terminal emulation,  Prev: Smart scrolling,  Up: Extension modules
 
-6.6 Terminal emulation
+5.6 Terminal emulation
 ======================
 
 
 File: eshell.info,  Node: Bugs and ideas,  Next: GNU Free Documentation License,  Prev: Extension modules,  Up: Top
 
-7 Bugs and ideas
+6 Bugs and ideas
 ****************
 
-If you find a bug or misfeature, don't hesitate to let me know!  Send
-email to <johnw@gnu.org>.  Feature requests should also be sent there.
-I prefer discussing one thing at a time.  If you find several unrelated
+If you find a bug or misfeature, don't hesitate to report it, by using
+`M-x report-emacs-bug'.  The same applies to feature requests.  It is
+best to discuss one thing at a time.  If you find several unrelated
 bugs, please report them separately.
 
-   If you have ideas for improvements, or if you have written some
-extensions to this package, I would like to hear from you.  I hope you
-find this package useful!
-
-   Below is a complete list of known problems with Eshell version 2.4.2,
+   Below is a list of some known problems with Eshell version 2.4.2,
 which is the version included with Emacs 22.
 
 Documentation incomplete
@@ -1226,7 +1164,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1713,20 +1651,23 @@ Concept Index
  [index ]
 * Menu:
 
-* author, how to reach:                  Bugs and ideas.        (line 6)
+* author, how to reach:                  Bugs and ideas.       (line  6)
 * authors:                               Contributors to Eshell.
-                                                                (line 6)
-* bugs, how to report them:              Bugs and ideas.        (line 6)
-* bugs, known:                           Bugs and ideas.        (line 6)
+                                                               (line  6)
+* bugs, how to report them:              Bugs and ideas.       (line  6)
+* bugs, known:                           Bugs and ideas.       (line  6)
 * contributors:                          Contributors to Eshell.
-                                                                (line 6)
-* email to the author:                   Bugs and ideas.        (line 6)
-* Eshell, what it is:                    What is Eshell?.       (line 6)
-* FAQ:                                   Bugs and ideas.        (line 6)
-* known bugs:                            Bugs and ideas.        (line 6)
-* problems, list of common:              Bugs and ideas.        (line 6)
-* reporting bugs and ideas:              Bugs and ideas.        (line 6)
-* what is Eshell?:                       What is Eshell?.       (line 6)
+                                                               (line  6)
+* email to the author:                   Bugs and ideas.       (line  6)
+* Eshell, what it is:                    Introduction.         (line  9)
+* Eshell, what it is not:                Introduction.         (line 56)
+* FAQ:                                   Bugs and ideas.       (line  6)
+* known bugs:                            Bugs and ideas.       (line  6)
+* problems, list of common:              Bugs and ideas.       (line  6)
+* reporting bugs and ideas:              Bugs and ideas.       (line  6)
+* what Eshell is not:                    Introduction.         (line 56)
+* what is Eshell?:                       Introduction.         (line  9)
+* what isn't Eshell?:                    Introduction.         (line 56)
 
 
 File: eshell.info,  Node: Function and Variable Index,  Next: Command Index,  Prev: Concept Index,  Up: Top
@@ -1737,11 +1678,11 @@ Function and Variable Index
  [index ]
 * Menu:
 
-* $$:                                    Built-ins.           (line 136)
-* $+:                                    Built-ins.           (line 126)
-* $-:                                    Built-ins.           (line 129)
-* $?:                                    Built-ins.           (line 140)
-* $_:                                    Built-ins.           (line 133)
+* $$:                                    Built-ins.           (line 138)
+* $+:                                    Built-ins.           (line 128)
+* $-:                                    Built-ins.           (line 131)
+* $?:                                    Built-ins.           (line 142)
+* $_:                                    Built-ins.           (line 135)
 * eshell-prefer-lisp-functions:          Built-ins.           (line  25)
 * eshell-source-file:                    Scripts.             (line   6)
 
@@ -1790,49 +1731,51 @@ Key Index
 
 
 Tag Table:
-Node: Top978
-Node: What is Eshell?2509
-Ref: What is Eshell?-Footnote-15164
-Ref: What is Eshell?-Footnote-25254
-Node: Contributors to Eshell5447
-Node: Command basics6606
-Node: Commands verbs7167
-Node: Command arguments8936
-Node: Commands10192
-Node: Invocation10619
-Ref: Invocation-Footnote-111753
-Node: Arguments11846
-Node: Built-ins12408
-Node: Variables16629
-Ref: Variables-Footnote-116983
-Node: Aliases17012
-Node: History17577
-Node: Completion19109
-Ref: Completion-Footnote-120703
-Node: for loop20803
-Node: Scripts21318
-Node: Expansion21904
-Ref: Expansion-Footnote-122510
-Ref: Expansion-Footnote-222631
-Node: Dollars Expansion22740
-Node: Globbing24760
-Ref: Globbing-Footnote-125341
-Node: Input/Output25397
-Node: Extension modules27138
-Ref: Extension modules-Footnote-128049
-Ref: Extension modules-Footnote-228097
-Ref: Extension modules-Footnote-328153
-Node: Writing a module28265
-Node: Module testing28401
-Node: Directory handling28560
-Node: Key rebinding28724
-Node: Smart scrolling28879
-Node: Terminal emulation29038
-Node: Bugs and ideas29181
-Node: GNU Free Documentation License44806
-Node: Concept Index69988
-Node: Function and Variable Index71173
-Node: Command Index71874
-Node: Key Index73784
+Node: Top902
+Node: Introduction2369
+Ref: Introduction-Footnote-15762
+Ref: Introduction-Footnote-25852
+Node: Contributors to Eshell6045
+Node: Commands7201
+Node: Invocation7626
+Ref: Invocation-Footnote-18760
+Node: Arguments8853
+Node: Built-ins9415
+Node: Variables13708
+Ref: Variables-Footnote-114062
+Node: Aliases14091
+Node: History14658
+Node: Completion16192
+Ref: Completion-Footnote-117786
+Node: for loop17886
+Node: Scripts18401
+Node: Expansion18987
+Ref: Expansion-Footnote-119593
+Ref: Expansion-Footnote-219714
+Node: Dollars Expansion19823
+Node: Globbing21839
+Ref: Globbing-Footnote-122419
+Node: Input/Output22480
+Node: Extension modules24989
+Ref: Extension modules-Footnote-125904
+Ref: Extension modules-Footnote-225952
+Ref: Extension modules-Footnote-326003
+Node: Writing a module26115
+Node: Module testing26251
+Node: Directory handling26410
+Node: Key rebinding26574
+Node: Smart scrolling26729
+Node: Terminal emulation26888
+Node: Bugs and ideas27031
+Node: GNU Free Documentation License42483
+Node: Concept Index67659
+Node: Function and Variable Index69063
+Node: Command Index69764
+Node: Key Index71674
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

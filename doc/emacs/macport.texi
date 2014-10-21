@@ -8,7 +8,7 @@
 
   This section briefly describes the peculiarities of using Emacs
 under Mac OS X with the Mac port.  This port provides a native GUI
-support for Mac OS X 10.4 -- 10.9.  Note that Emacs 23 and later
+support for Mac OS X 10.4 -- 10.10.  Note that Emacs 23 and later
 already contain the official GUI support via the NS (Cocoa) port for
 Mac OS X 10.4 and later (@pxref{Mac OS / GNUstep}).  So if it is good
 enough for you, then you don't need to try this.
@@ -49,6 +49,7 @@ Dock without separating a GUI process (not thread) from the main Emacs
 * Mac Input::             Keyboard and mouse input on the Mac port.
 * Mac Fonts::             Specifying fonts on the Mac port.
 * Mac Images and Colors:: Images and colors on the Mac port.
+* Mac Fullscreen::        Fullscreen support on the Mac port.
 * Mac Functions::         Lisp functions specific to the Mac port.
 @end menu
 
@@ -56,21 +57,20 @@ Dock without separating a GUI process (not thread) from the main Emacs
 @section Invocation of Emacs Mac Port
 @cindex Emacs invocation (Mac port)
 
-  When Emacs Mac port is run from a terminal, it inherits the values
-of environment variables from the shell from which it is invoked.
-This also applies to an invocation via the @command{open} command.
-
-  When it is run from the Finder as a GUI application on Mac OS X 10.7
-and earlier, how the environment variables are inherited depends on
-whether the file @file{~/.MacOSX/environment.plist} exists or not.  If
-it exists, then the Mac port inherits environment variable values
-defined in the file, and it affects all the applications invoked from
-the Finder as well as Emacs.  If it doesn't exist, then the Mac port
-inherits those defined in user's login shell, so settings in
+  Emacs Mac port takes the values of environment variables just as you
+would expect.  When it is run from the Finder as a GUI application,
+then it inherits those defined in user's login shell, so settings in
 @file{/etc/profile}, @file{~/.bash_profile}, etc. are in effect if you
-use bash as your login shell.  On OS X 10.8 and later,
-@file{~/.MacOSX/environment.plist} is ignored and the Mac port always
-inherits the login shell settings.
+use bash as your login shell.  When it is run from a terminal, it
+inherits the values of environment variables from the shell from which
+it is invoked.  This also applies to an invocation via the
+@command{open} command.
+
+  On Mac OS X 10.7 and earlier, if there exists the file
+@file{~/.MacOSX/environment.plist}, which affects all the applications
+invoked from the Finder, then its settings take precedence over those
+from your login shell for consistency with other applications.  This
+does not apply to OS X 10.8 and later.
 
   Command line arguments are specified like
 
@@ -90,15 +90,6 @@ command line options on Mac OS X 10.6 and later is to use the
 
   Holding shift key on startup is recognized as the @samp{-Q} option,
 which means to start Emacs with minimum customizations.
-
-  On Mac OS X 10.7 and later, @samp{fullscreen} and @samp{fullboth}
-values for the @samp{fullscreen} frame parameter have different
-meanings: the former means a new system-wide full screen mode with a
-dedicated desktop (or Space), while the latter means making the frame
-fullscreen in a desktop (or Space) shared with the other applications.
-Because the command line option @samp{-fs} or @samp{--fullscreen}
-corresponds to @samp{fullboth}, it means the latter on all versions of
-Mac OS X.
 
 @cindex Preferences (Mac port)
   Although the Mac port does not support X resources (@pxref{X
@@ -162,23 +153,44 @@ have to customize these variables manually.
 @vindex mac-command-modifier
 @vindex mac-option-modifier
 @vindex mac-function-modifier
-  On the Mac port, Emacs can use @key{control}, @key{command},
-@key{option}, and laptop @key{function} keys as any of Emacs modifier
-keys except @key{SHIFT} (i.e., @key{ALT}, @key{CTRL}, @key{HYPER},
-@key{META}, and @key{SUPER}).  The assignment is controlled by the
-variables @code{mac-control-modifier}, @code{mac-command-modifier},
-@code{mac-option-modifier}, and @code{mac-function-modifier}.  The
-value for each of these variables can be one of the following symbols:
-@code{alt}, @code{control}, @code{hyper}, @code{meta}, @code{super},
-and @code{nil} (no particular assignment).  By default, the
-@key{control} key works as @key{CTRL}, and the @key{command} key as
-@key{META}.
+@vindex mac-right-control-modifier
+@vindex mac-right-command-modifier
+@vindex mac-right-option-modifier
+  On the Mac port, Emacs can use the @key{control}, @key{command},
+@key{option}, and @key{function} (labeled @samp{fn}) keys as any of
+Emacs modifier keys except @key{SHIFT} (i.e., @key{ALT}, @key{CTRL},
+@key{HYPER}, @key{META}, and @key{SUPER}).  The assignment is
+controlled by the variables @code{mac-control-modifier},
+@code{mac-command-modifier}, @code{mac-option-modifier}, and
+@code{mac-function-modifier}.  One may assign different modifiers to
+the @key{control}, @key{command}, and @key{option} keys placed on the
+right part of the keyboard using the variables
+@code{mac-right-control-modifier}, @code{mac-right-command-modifier},
+and @code{mac-right-option-modifier}, respectively.@footnote{The left
+and right versions cannot be distinguished on some environments such
+as Screen Sharing.  Also, certain combinations of a key with both
+versions of the same modifier do not emit events at the system level.}
 
-  For the @key{option} key, if @code{mac-option-modifier} is set to
-@code{nil}, which is the default, the key works as the normal
-@key{option} key, i.e., dead-key processing will work.  This is useful
-for entering non-@acronym{ASCII} Latin characters directly from the
-Mac keyboard, for example.
+  The value for each of these variables can be one of the following
+symbols: @code{alt}, @code{control}, @code{hyper}, @code{meta},
+@code{super}, and @code{nil} (no particular assignment).  By default,
+the @key{control} key works as @key{CTRL}, and the @key{command} key
+as @key{META}.  For the right versions of the variables, the symbol
+@code{left}, which is the default, means the same assignment as the
+left counterpart.  The property list format @code{(:ordinary
+@var{symbol} :function @var{symbol} :mouse @var{symbol})} allows us to
+specify different assignments depending on the input types: ordinary
+keys, function keys, and mouse operations.
+
+  For the left and right @key{option} keys, if the value of the
+corresponding variable (or the value of the @code{:ordinary} property
+if the value of the variable is a property list) is set to @code{nil},
+then the key works as the normal @key{option} key.  This enables
+dead-key processing and is useful for entering non-@acronym{ASCII}
+Latin characters directly from the Mac keyboard, for example.  By
+default, the @key{option} key works as the normal @key{option} key for
+the ordinary keys, and as @key{ALT} for the function keys and the
+mouse operations.
 
   The Mac port recognizes the setting in the International system
 preference pane and supports international and alternative keyboard
@@ -337,7 +349,7 @@ displayed with the rounded width 3, for example.
 @cindex Images and Colors (Mac port)
 
 @cindex image formats (Mac port)
-The Mac port supports almost all the image formats that GNU Emacs
+  The Mac port supports almost all the image formats that GNU Emacs
 supports (@pxref{Image Formats,,, elisp, The Emacs Lisp Reference
 Manual}), except PostScript.  None of them but ImageMagick requires
 external libraries.  SVG is supported via the WebKit framework, which
@@ -347,16 +359,16 @@ is bundled to the system, but the Mac port can also be built with
 rendering SVG, then give the @code{--without-rsvg} option to the
 @code{configure} command.
 
-In addition to the standard image types, the Mac port provides an
+  In addition to the standard image types, the Mac port provides an
 image type symbol @code{image-io}, which is parallel to the image type
 symbol @code{imagemagick} but uses the Image I/O framework.  It also
 works as a fallback of @code{imagemagick} if the Mac port is not
 compiled with the ImageMagick support, so you can scale and rotate
 images even without ImageMagick.
 
-The @code{image-io} image type also provides rasterization of several
-document formats such as PDF, RTF, HTML, WEBARCHIVE, DOC, etc.  The
-list of supported formats can be obtained by evaluating
+  The @code{image-io} image type also provides rasterization of
+several document formats such as PDF, RTF, HTML, WEBARCHIVE, DOC, etc.
+The list of supported formats can be obtained by evaluating
 @code{(image-io-types)}.  Because the @code{image-io} image type
 accepts the same image descriptor properties as the @code{imagemagick}
 image type does (@pxref{ImageMagick Images,,, elisp, The Emacs Lisp
@@ -364,18 +376,41 @@ Reference Manual}), you can specify the page number (0 for the first
 page) of the document by the @code{:index} property and get the number
 of pages by the @code{image-metadata} function.
 
+  Since Image mode supports multi-frame image navigation (@pxref{File
+Conveniences}) primarily for animated images, you can browse
+multi-page documents in several formats that @code{image-io} supports
+with the setting like this:
+
+@example
+(when (and (image-type-available-p 'image-io)
+           (not (boundp 'imagemagick-render-type)))
+   ;; Image I/O is used as a fallback of ImageMagick.
+   (setq imagemagick-enabled-types t)
+   (setq imagemagick-types-inhibit
+         (cons 'XML (delq 'PDF imagemagick-types-inhibit)))
+   (imagemagick-register-types))
+@end example
+
+@noindent
+Note: if you have ImageMagick installed, you need to build the Mac
+port executable without the genuine ImageMagick support (i.e.,
+@code{--without-imagemagick}) so @code{image-io} can be used as a
+fallback of @code{imagemagick}.
+
+
 @cindex high-resolution image support (Mac port)
-When loading an image from a file, the Mac port respects the
+  When loading an image from a file, the Mac port respects the
 @code{@@2x} naming convention for high-resolution and automatically
 selects an image file according to the backing scale factor.  For
 example, if a file named @file{foo.png} is to be loaded on a
 high-resolution environment, and there is another file named
 @file{foo@@2x.png} in the same directory, then the latter is used
-automatically.
+automatically.  DocView mode (@pxref{Document View}) is modified so it
+can automatically take advantage of this feature.
 
-An alternative way to support high-resolution is to use the TIFF image
-format.  A single TIFF file or data can contain multiple images for
-multiple resolutions, typically the one with standard width and
+  An alternative way to support high-resolution is to use the TIFF
+image format.  A single TIFF file or data can contain multiple images
+for multiple resolutions, typically the one with standard width and
 height, and the one with width and height doubled.  If an image
 descriptor (@pxref{Image Descriptors,,, elisp, The Emacs Lisp
 Reference Manual}) for a TIFF file or data does not contain an
@@ -384,7 +419,7 @@ appropriate image is automatically selected from the images in the
 file or data.  If tool bar icons are provided by TIFF files, they are
 preferred on the Mac port.
 
-As SVG images are inherently resolution-independent, the images are
+  As SVG images are inherently resolution-independent, the images are
 automatically rendered with appropriate scaling for high-resolution
 environment.  Rasterization of documents by the @code{image-io} image
 type mentioned above also takes account of resolution.  Note that
@@ -394,9 +429,49 @@ example.  The Mac port detects such a resolution change and re-render
 images or reload files automatically.
 
 @cindex color specifications (Mac port)
-When specifying colors, RGB triplets (@pxref{Colors}) are interpreted
-as those in the sRGB color space.  This may give a different look from
-other ports of GNU Emacs.
+  When specifying colors, RGB triplets (@pxref{Colors}) are
+interpreted as those in the sRGB color space.  This may give a
+different look from other ports of GNU Emacs.
+
+@node Mac Fullscreen
+@section Fullscreen support on the Mac Port
+@cindex fullscreen support (Mac port)
+
+  Although @samp{fullscreen} and @samp{fullboth} are synonymous as a
+value of the @code{fullscreen} frame parameter in the original Emacs,
+they are distinguished in the Mac port running on Mac OS X 10.7 and
+later.  The former means a system-wide full screen mode with a
+dedicated desktop (or Space), while the latter means making the frame
+fullscreen in a desktop (or Space) shared with the other applications.
+Note that the command @code{toggle-frame-fullscreen} uses the former,
+and the command line option @samp{-fs} or @samp{--fullscreen} uses the
+latter.  As Mac OS X 10.6 and earlier do not have the system-wide full
+screen mode, both values are necessarily synonymous.
+
+  Besides setting the @code{fullscreen} frame parameter directly,
+pressing the button on the title bar turns on the system-wide full
+screen mode on Mac OS X 10.7 and later.  The other @samp{fullboth}
+full screen can be turned on by pinching out on a newer trackpad with
+the shift key on Mac OS X 10.5.2 and later.
+
+  Unlike the original Emacs, enabling or disabling Menu Bar mode
+(@pxref{Menu Bars}) does not affect the appearance of the menu bar on
+the Mac port because it does not make sense on OS X having the global
+menu bar.  Instead, the value of the @code{menu-bar-lines} frame
+parameter affects the system-wide full screen behavior of the frame.
+In most cases, disabling the menu bar of a particular frame by default
+means that it is a utility frame used for a subsidiary purpose
+together with other frames, rather than an ordinary frame on its own.
+Examples include the speedbar (@pxref{Speedbar}) and Ediff Control
+Panel (@pxref{Top, Ediff, Ediff, ediff, The Ediff Manual}).  Using
+this heuristics, the Mac port regards a frame having a menu bar as an
+ordinary frame that is eligible for full screen.  Conversely, a frame
+without a menu bar is considered as a utility frame and it can coexist
+with a full screen ordinary frame and other utility frames in a same
+desktop (or Space) for full screen.  Note that a utility frame doesn't
+have the full screen button on the title bar.  If you don't see the
+full screen button while it is supposed to be there, then check the
+menu bar setting.
 
 @node Mac Functions
 @section Lisp Functions Specific to the Mac Port

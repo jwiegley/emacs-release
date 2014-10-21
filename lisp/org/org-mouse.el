@@ -1,6 +1,6 @@
 ;;; org-mouse.el --- Better mouse support for org-mode
 
-;; Copyright (C) 2006-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2006-2014 Free Software Foundation, Inc.
 
 ;; Author: Piotr Zielinski <piotr dot zielinski at gmail dot com>
 ;; Maintainer: Carsten Dominik <carsten at orgmode dot org>
@@ -656,11 +656,11 @@ This means, between the beginning of line and the point."
 	 ["All Clear" (org-mouse-for-each-item
 		       (lambda ()
 			 (when (save-excursion (org-at-item-checkbox-p))
-			   (replace-match "[ ]"))))]
+			   (replace-match "[ ] "))))]
 	 ["All Set" (org-mouse-for-each-item
 		     (lambda ()
 		       (when (save-excursion (org-at-item-checkbox-p))
-			 (replace-match "[X]"))))]
+			 (replace-match "[X] "))))]
 	 ["All Toggle" (org-mouse-for-each-item 'org-toggle-checkbox) t]
 	 ["All Remove" (org-mouse-for-each-item
 			(lambda ()
@@ -953,20 +953,23 @@ This means, between the beginning of line and the point."
 		       (point)
 		       (save-excursion (goto-char start)
 				       (org-back-to-heading) (point))))
-	    (outline-end-of-subtree)
+	    (progn (org-end-of-subtree nil t)
+		   (unless (eobp) (backward-char)))
 	    (end-of-line)
 	    (if (eobp) (newline) (forward-char)))
 
 	  (when (looking-at org-outline-regexp)
 	    (let ((level (- (match-end 0) (match-beginning 0))))
 	      (when (> end (match-end 0))
-		(outline-end-of-subtree)
+		(progn (org-end-of-subtree nil t)
+		       (unless (eobp) (backward-char)))
 		(end-of-line)
 		(if (eobp) (newline) (forward-char))
 		(setq level (1+ level)))
 	      (org-paste-subtree level)
 	      (save-excursion
-		(outline-end-of-subtree)
+		(progn (org-end-of-subtree nil t)
+		       (unless (eobp) (backward-char)))
 		(when (bolp) (delete-char -1))))))))))
 
 
@@ -1003,8 +1006,8 @@ This means, between the beginning of line and the point."
 	   (org-mouse-main-buffer (current-buffer)))
       (when (eq (with-current-buffer buffer major-mode) 'org-mode)
 	(let ((endmarker (with-current-buffer buffer
-			   (outline-end-of-subtree)
-			   (forward-char 1)
+			   (org-end-of-subtree nil t)
+			   (unless (eobp) (forward-char 1))
 			   (copy-marker (point)))))
 	  (org-with-remote-undo buffer
 	    (with-current-buffer buffer
@@ -1056,7 +1059,7 @@ This means, between the beginning of line and the point."
 	  ["Convert" org-agenda-convert-date
 	   (org-agenda-check-type nil 'agenda 'timeline)]
 	  "--"
-	  ["Create iCalendar file" org-export-icalendar-combine-agenda-files t])
+	  ["Create iCalendar file" org-icalendar-combine-agenda-files t])
 	 "--"
 	 ["Day View" org-agenda-day-view
 	  :active (org-agenda-check-type nil 'agenda)

@@ -1,6 +1,6 @@
 ;;; pcvs-util.el --- utility functions for PCL-CVS  -*- byte-compile-dynamic: t -*-
 
-;; Copyright (C) 1991-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1991-2014 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: pcl-cvs
@@ -97,7 +97,7 @@ try to split a new window instead."
 BUF is assumed to be a temporary buffer used from the buffer MAINBUF."
   (interactive (list (current-buffer)))
   (save-current-buffer
-    (let ((win (if (eq buf (window-buffer (selected-window))) (selected-window)
+    (let ((win (if (eq buf (window-buffer)) (selected-window)
 		 (get-buffer-window buf t))))
       (when win
 	(if (window-dedicated-p win)
@@ -111,8 +111,8 @@ BUF is assumed to be a temporary buffer used from the buffer MAINBUF."
 ;;; 	      )
 	  )))
     (with-current-buffer buf
-      (bury-buffer (unless (and (eq buf (window-buffer (selected-window)))
-				(not (window-dedicated-p (selected-window))))
+      (bury-buffer (unless (and (eq buf (window-buffer))
+				(not (window-dedicated-p)))
 		     buf)))
     (when mainbuf
       (let ((mainwin (or (get-buffer-window mainbuf)
@@ -253,7 +253,7 @@ arguments.  If ARGS is not a list, no argument will be passed."
 Optional argument DESC will be used for the prompt.
 If ARG (or a prefix argument) is nil, just use the 0th default.
 If it is a non-negative integer, use the corresponding default.
-If it is a negative integer query for a new value of the corresponding
+If it is a negative integer, query for a new value of the corresponding
   default and return that new value.
 If it is \\[universal-argument], just query and return a value without
   altering the defaults.
@@ -286,7 +286,7 @@ If it is \\[universal-argument] \\[universal-argument], behave just
       (nth numarg defaults))))
 
 (defsubst cvs-flags-set (sym index value)
-  "Set SYM's INDEX'th setting to VALUE."
+  "Set SYM's INDEXth setting to VALUE."
   (setf (nth index (cvs-flags-defaults (symbol-value sym))) value))
 
 ;;;;
@@ -323,7 +323,7 @@ See `cvs-prefix-set' for further description of the behavior."))
   "Set the cvs-prefix contained in SYM.
 If ARG is between 0 and 9, it selects the corresponding default.
 If ARG is negative (or \\[universal-argument] which corresponds to negative 0),
-  it queries the user and sets the -ARG'th default.
+  it queries the user and sets the -ARGth default.
 If ARG is greater than 9 (or \\[universal-argument] \\[universal-argument]),
   the (ARG mod 10)'th prefix is made persistent.
 If ARG is nil toggle the PREFIX's value between its 0th default and nil

@@ -12,6 +12,7 @@
 @set DATE April, 2007
 @set AUTHOR J.D. Smith & Carsten Dominik
 @set MAINTAINER J.D. Smith
+@documentencoding UTF-8
 @c %**end of header
 @finalout
 
@@ -22,13 +23,13 @@ Emacs, and interacting with an IDL shell run as a subprocess.
 This is edition @value{EDITION} of the IDLWAVE User Manual for IDLWAVE
 @value{VERSION}.
 
-Copyright @copyright{} 1999--2013 Free Software Foundation, Inc.
+Copyright @copyright{} 1999--2014 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3 or
 any later version published by the Free Software Foundation; with no
-Invariant Sections, with the Front-Cover texts being ``A GNU Manual'',
+Invariant Sections, with the Front-Cover Texts being ``A GNU Manual'',
 and with the Back-Cover Texts as in (a) below.  A copy of the license
 is included in the section entitled ``GNU Free Documentation License''.
 
@@ -55,7 +56,7 @@ modify this GNU manual.''
 @contents
 
 @ifnottex
-@node Top, Introduction, (dir), (dir)
+@node Top
 @top IDLWAVE
 
 IDLWAVE is a package which supports editing source code written in the
@@ -165,7 +166,7 @@ Catalogs
 @end detailmenu
 @end menu
 
-@node Introduction, IDLWAVE in a Nutshell, Top, Top
+@node Introduction
 @chapter Introduction
 @cindex Introduction
 @cindex CORBA (Common Object Request Broker Architecture)
@@ -238,24 +239,27 @@ Examining variables and expressions with a mouse click.
 And much, much more...
 @end itemize
 
+@c Dead links, 2014/06.
+@ignore
 @ifnottex
 @cindex Screenshots
 Here are a number of screenshots showing IDLWAVE in action:
 
 @itemize @bullet
 @item
-@uref{http://idlwave.org/screenshots/emacs_21_nav.gif,An IDLWAVE buffer}
+@uref{http://github.com/jdtsmith/idlwave/screenshots/emacs_21_nav.gif,An IDLWAVE buffer}
 @item
-@uref{http://idlwave.org/screenshots/emacs_21_keys.gif,A keyword being completed}
+@uref{http://github.com/jdtsmith/idlwave/screenshots/emacs_21_keys.gif,A keyword being completed}
 @item
-@uref{http://idlwave.org/screenshots/emacs_21_help.gif,Online help text.}
+@uref{http://github.com/jdtsmith/idlwave/screenshots/emacs_21_help.gif,Online help text.}
 @item
-@uref{http://idlwave.org/screenshots/emacs_21_ri.gif,Routine information displayed}
+@uref{http://github.com/jdtsmith/idlwave/screenshots/emacs_21_ri.gif,Routine information displayed}
 @item
-@uref{http://idlwave.org/screenshots/emacs_21_bp.gif,Debugging code
+@uref{http://github.com/jdtsmith/idlwave/screenshots/emacs_21_bp.gif,Debugging code
 stopped at a breakpoint}
 @end itemize
 @end ifnottex
+@end ignore
 
 IDLWAVE is the distant successor to the @file{idl.el} and
 @file{idl-shell.el} files written by Chris Chase.  The modes and files
@@ -271,7 +275,7 @@ configure it, see the documentation string of that variable (available
 with @kbd{C-h v}).  Some configuration examples are also given in the
 appendix.
 
-@node IDLWAVE in a Nutshell, Getting Started, Introduction, Top
+@node IDLWAVE in a Nutshell
 @chapter IDLWAVE in a Nutshell
 @cindex Summary of important commands
 @cindex IDLWAVE in a Nutshell
@@ -365,7 +369,7 @@ at point.
 <A NAME="TUTORIAL"></A>
 @end html
 
-@node Getting Started, The IDLWAVE Major Mode, IDLWAVE in a Nutshell, Top
+@node Getting Started
 @chapter Getting Started (Tutorial)
 @cindex Quick-Start
 @cindex Tutorial
@@ -377,7 +381,7 @@ at point.
 * Lesson III---User Catalog::
 @end menu
 
-@node  Lesson I---Development Cycle, Lesson II---Customization, Getting Started, Getting Started
+@node  Lesson I---Development Cycle
 @section Lesson I: Development Cycle
 
 The purpose of this tutorial is to guide you through a very basic
@@ -551,7 +555,7 @@ command.  Everything should now work fine.  How about those leap years?
 Change the code to plot 100 years and see that every 28 years, the
 sequence of weekdays repeats.
 
-@node  Lesson II---Customization, Lesson III---User Catalog, Lesson I---Development Cycle, Getting Started
+@node  Lesson II---Customization
 @section Lesson II: Customization
 
 Emacs is probably the most customizable piece of software ever written,
@@ -590,7 +594,7 @@ slightly from the margin and use only 3 spaces as indentation between
 
 Restart Emacs, and re-indent the program we developed in the first part
 of this tutorial with @kbd{C-c h} and @kbd{C-M-\}.  You may want to keep
-these lines in @file{.emacs}, with values adjusted to your likings.  If
+these lines in @file{.emacs}, with values adjusted to your liking.  If
 you want to get more information about any of these variables, type,
 e.g., @kbd{C-h v idlwave-main-block-indent @key{RET}}.  To find which
 variables can be customized, look for items marked @samp{User Option:}
@@ -661,7 +665,7 @@ endless.  Here we set function keys f4-f8 to common debugging commands.
     (local-set-key [f8] 'idlwave-shell-clear-all-bp)))
 @end lisp
 
-@node  Lesson III---User Catalog,  , Lesson II---Customization, Getting Started
+@node  Lesson III---User Catalog
 @section Lesson III: User and Library Catalogs
 
 We have already used the routine info display in the first part of this
@@ -688,8 +692,8 @@ you want; directories with existing library catalogs will not be
 selected by default) and click on the @samp{Scan&Save} button.  Then
 go for a cup of coffee while IDLWAVE collects information for each and
 every IDL routine on your search path.  All this information is
-written to the file @file{.idlwave/idlusercat.el} in your home
-directory and will from now on automatically load whenever you use
+written to the file @file{~/.emacs.d/idlwave/idlusercat.el}
+and will from now on automatically load whenever you use
 IDLWAVE@.  You may find it necessary to rebuild the catalog on occasion
 as your local libraries change, or build a library catalog for those
 directories instead.  Invoke routine info (@kbd{C-c ?}) or completion
@@ -721,7 +725,7 @@ the manual, look at the documentation strings of interesting variables
 (with @kbd{C-h v idlwave<-variable-name> @key{RET}}) and ask the
 remaining questions on the newsgroup @code{comp.lang.idl-pvwave}.
 
-@node The IDLWAVE Major Mode, The IDLWAVE Shell, Getting Started, Top
+@node The IDLWAVE Major Mode
 @chapter The IDLWAVE Major Mode
 @cindex IDLWAVE major mode
 @cindex Major mode, @code{idlwave-mode}
@@ -745,7 +749,7 @@ them.
 * Misc Options::                Things that fit nowhere else
 @end menu
 
-@node Code Formatting, Routine Info, The IDLWAVE Major Mode, The IDLWAVE Major Mode
+@node Code Formatting
 @section Code Formatting
 @cindex Code formatting
 @cindex Formatting, of code
@@ -773,7 +777,7 @@ you.  After configuring it to match your coding standards, you can
 rely on it to help keep your code neat and organized.
 
 
-@node Code Indentation, Continued Statement Indentation, Code Formatting, Code Formatting
+@node Code Indentation
 @subsection Code Indentation
 @cindex Code indentation
 @cindex Indentation
@@ -813,7 +817,7 @@ Extra indentation applied to block END lines.  A value equal to negative
 BEGIN lines.
 @end defopt
 
-@node Continued Statement Indentation, Comment Indentation, Code Indentation, Code Formatting
+@node Continued Statement Indentation
 @subsection Continued Statement Indentation
 @cindex Indentation, continued statement
 @cindex Continued statement indentation
@@ -887,7 +891,7 @@ parenthesis, regardless of whether the
 @code{idlwave-max-extra-continuation-indent} limit is satisfied.
 @end defopt
 
-@node Comment Indentation, Continuation Lines, Continued Statement Indentation, Code Formatting
+@node Comment Indentation
 @subsection Comment Indentation
 @cindex Comment indentation
 @cindex Hanging paragraphs
@@ -924,7 +928,7 @@ A comment that starts with this regexp is indented as if it is a part of
 IDL code.
 @end defopt
 
-@node Continuation Lines, Syntax Highlighting, Comment Indentation, Code Formatting
+@node Continuation Lines
 @subsection Continuation Lines and Filling
 @cindex Continuation lines
 @cindex Line splitting
@@ -1000,7 +1004,7 @@ Non-@code{nil} means use last match on line for
 @code{idlwave-indent-regexp}.
 @end defopt
 
-@node Syntax Highlighting, Octals and Highlighting, Continuation Lines, Code Formatting
+@node Syntax Highlighting
 @subsection Syntax Highlighting
 @cindex Syntax highlighting
 @cindex Highlighting of syntax
@@ -1028,7 +1032,7 @@ Items which should be fontified on the default fontification level
 2.
 @end defopt
 
-@node Octals and Highlighting,  , Syntax Highlighting, Code Formatting
+@node Octals and Highlighting
 @subsection Octals and Highlighting
 @cindex Syntax highlighting, Octals
 @cindex Highlighting of syntax, Octals
@@ -1058,7 +1062,7 @@ altogether, and use the more sensible alternative IDL provides:
 @noindent This simultaneously solves the font-lock problem and is more
 consistent with the notation for hexadecimal numbers, e.g., @code{'C5'XB}.
 
-@node Routine Info, Online Help, Code Formatting, The IDLWAVE Major Mode
+@node Routine Info
 @section Routine Info
 @cindex Routine info
 @cindex Updating routine info
@@ -1236,7 +1240,7 @@ Maximum number of source files displayed in the Routine Info window.
 @html
 <A NAME="ONLINE_HELP"></A>
 @end html
-@node Online Help, Completion, Routine Info, The IDLWAVE Major Mode
+@node Online Help
 @section Online Help
 
 @cindex Online Help
@@ -1261,7 +1265,7 @@ directly with IDL, along with an XML-based catalog of routine
 information.  By default, IDLWAVE automatically attempts to convert this
 XML catalog into a format Emacs can more easily understand, and caches
 this information in your @code{idlwave_config_directory}
-(@file{~/.idlwave/}, by default).  It also re-scans the XML catalog if
+(@file{~/.emacs.d/idlwave/}, by default).  It also re-scans the XML catalog if
 it is newer than the current cached version.  You can force rescan with
 the menu entry @code{IDLWAVE->Routine Info->Rescan XML Help Catalog}.
 
@@ -1343,7 +1347,7 @@ directly in the originating source file.
 * Help with Source::
 @end menu
 
-@node Help with HTML Documentation, Help with Source, Online Help, Online Help
+@node Help with HTML Documentation
 @subsection Help with HTML Documentation
 @cindex HTML Help
 @cindex Help using HTML manuals
@@ -1422,7 +1426,7 @@ contains "-w3".
 The face for links to IDLWAVE online help.
 @end defopt
 
-@node Help with Source,  , Help with HTML Documentation, Online Help
+@node Help with Source
 @subsection Help with Source
 @cindex Help using routine source
 
@@ -1509,7 +1513,7 @@ The case-insensitive heading word in doclib headers to locate the
 @end defopt
 
 
-@node Completion, Routine Source, Online Help, The IDLWAVE Major Mode
+@node Completion
 @section Completion
 @cindex Completion
 @cindex Keyword completion
@@ -1617,7 +1621,7 @@ available.
 * Structure Tag Completion::    Completing state.Tag
 @end menu
 
-@node  Case of Completed Words, Object Method Completion and Class Ambiguity, Completion, Completion
+@node  Case of Completed Words
 @subsection Case of Completed Words
 @cindex Case of completed words
 @cindex Mixed case completion
@@ -1644,7 +1648,7 @@ of completed words.
 
 @defopt idlwave-completion-force-default-case (@code{nil})
 Non-@code{nil} means completion will always honor the settings in
-@code{idlwave-completion-case}.  When nil (the default), entirely lower
+@code{idlwave-completion-case}.  When @code{nil} (the default), entirely lower
 case strings will always be completed to lower case, no matter what the
 settings in @code{idlwave-completion-case}.
 @end defopt
@@ -1654,7 +1658,7 @@ Non-@code{nil} means the empty string is considered lower case for
 completion.
 @end defopt
 
-@node  Object Method Completion and Class Ambiguity, Object Method Completion in the Shell, Case of Completed Words, Completion
+@node  Object Method Completion and Class Ambiguity
 @subsection Object Method Completion and Class Ambiguity
 @cindex Object methods
 @cindex Class ambiguity
@@ -1717,7 +1721,7 @@ Face to highlight object operator arrows @samp{->} which carry a saved
 class text property.
 @end defopt
 
-@node Object Method Completion in the Shell, Class and Keyword Inheritance, Object Method Completion and Class Ambiguity, Completion
+@node Object Method Completion in the Shell
 @subsection Object Method Completion in the Shell
 @cindex Method Completion in Shell
 In the IDLWAVE Shell (@pxref{The IDLWAVE Shell}), objects on which
@@ -1730,7 +1734,7 @@ class found will be used to select appropriate completions, routine
 info, or help.  If unsuccessful, information from all known classes will
 be used (as in the buffer).
 
-@node   Class and Keyword Inheritance, Structure Tag Completion, Object Method Completion in the Shell, Completion
+@node   Class and Keyword Inheritance
 @subsection Class and Keyword Inheritance
 @cindex Inheritance, class
 @cindex Keyword inheritance
@@ -1776,7 +1780,7 @@ A list of regular expressions to match methods for which simple
 class-driven keyword inheritance will be used for Completion.
 @end defopt
 
-@node    Structure Tag Completion,  , Class and Keyword Inheritance, Completion
+@node    Structure Tag Completion
 @subsection Structure Tag Completion
 @cindex Completion, structure tag
 @cindex Structure tag completion
@@ -1818,7 +1822,7 @@ IDL> st.[Tab]
 @noindent will complete with all structure fields of the structure
 @code{st}.
 
-@node Routine Source, Resolving Routines, Completion, The IDLWAVE Major Mode
+@node Routine Source
 @section Routine Source
 @cindex Routine source file
 @cindex Module source file
@@ -1844,7 +1848,7 @@ sometimes created.  The special command @kbd{C-c C-k}
 (@code{idlwave-kill-autoloaded-buffers}) can be used to easily remove
 these buffers.
 
-@node Resolving Routines, Code Templates, Routine Source, The IDLWAVE Major Mode
+@node Resolving Routines
 @section Resolving Routines
 @cindex @code{RESOLVE_ROUTINE}
 @cindex Compiling library modules
@@ -1865,7 +1869,7 @@ compile the modules first, and even without a running shell.
 @xref{Sources of Routine Info}, for more information on the ways IDLWAVE
 collects data about routines, and how to update this information.
 
-@node Code Templates, Abbreviations, Resolving Routines, The IDLWAVE Major Mode
+@node Code Templates
 @section Code Templates
 @cindex Code templates
 @cindex Templates
@@ -1887,7 +1891,7 @@ templates, this is done with direct key bindings:
 All code templates are also available as abbreviations
 (@pxref{Abbreviations}).
 
-@node Abbreviations, Actions, Code Templates, The IDLWAVE Major Mode
+@node Abbreviations
 @section Abbreviations
 @cindex Abbreviations
 
@@ -2073,7 +2077,7 @@ Non-@code{nil} means the abbrev hook can move point, e.g., to end up
 between the parentheses of a function call.
 @end defopt
 
-@node Actions, Doc Header, Abbreviations, The IDLWAVE Major Mode
+@node Actions
 @section Actions
 @cindex Actions
 @cindex Coding standards, enforcing
@@ -2121,7 +2125,7 @@ settings are described below and set separately.
 * Case Changes::                Enforcing upper case keywords
 @end menu
 
-@node Block Boundary Check, Padding Operators, Actions, Actions
+@node Block Boundary Check
 @subsection Block Boundary Check
 @cindex Block boundary check
 @cindex @code{END} type checking
@@ -2154,7 +2158,7 @@ Non-@code{nil} means expand generic END to ENDIF/ENDELSE/ENDWHILE etc.
 Non-@code{nil} means re-indent line after END was typed.
 @end defopt
 
-@node Padding Operators, Case Changes, Block Boundary Check, Actions
+@node Padding Operators
 @subsection Padding Operators
 @cindex Padding operators with spaces
 @cindex Operators, padding with spaces
@@ -2203,7 +2207,7 @@ surrounded with spaces by @code{idlwave-surround}.
 Non-@code{nil} means space-pad the @samp{=} in keyword assignments.
 @end defopt
 
-@node Case Changes,  , Padding Operators, Actions
+@node Case Changes
 @subsection Case Changes
 @cindex Case changes
 @cindex Upcase, enforcing for reserved words
@@ -2245,7 +2249,7 @@ expansion.
 @end defopt
 
 
-@node Doc Header, Motion Commands, Actions, The IDLWAVE Major Mode
+@node Doc Header
 @section Documentation Header
 @cindex Documentation header
 @cindex DocLib header
@@ -2289,7 +2293,7 @@ Regexp matching the start of a document library header.
 Regexp matching the start of a document library header.
 @end defopt
 
-@node Motion Commands, Misc Options, Doc Header, The IDLWAVE Major Mode
+@node Motion Commands
 @section Motion Commands
 @cindex Motion commands
 @cindex Program structure, moving through
@@ -2339,7 +2343,7 @@ IDL program:
 @end multitable
 
 
-@node Misc Options,  , Motion Commands, The IDLWAVE Major Mode
+@node Misc Options
 @section Miscellaneous Options
 @cindex Hooks
 
@@ -2360,7 +2364,7 @@ Normal hook.  Executed when a buffer is put into @code{idlwave-mode}.
 Normal hook.  Executed when @file{idlwave.el} is loaded.
 @end defopt
 
-@node The IDLWAVE Shell, Acknowledgments, The IDLWAVE Major Mode, Top
+@node The IDLWAVE Shell
 @chapter The IDLWAVE Shell
 @cindex IDLWAVE shell
 @cindex Major mode, @code{idlwave-shell-mode}
@@ -2389,7 +2393,7 @@ currently only works under Unix and MacOSX.
 * Custom Expression Examination::
 @end menu
 
-@node Starting the Shell, Using the Shell, The IDLWAVE Shell, The IDLWAVE Shell
+@node Starting the Shell
 @section Starting the Shell
 @cindex Starting the shell
 @cindex Shell, starting
@@ -2465,7 +2469,7 @@ Initial commands, separated by newlines, to send to IDL.
 Non-@code{nil} means preserve command history between sessions.
 @end defopt
 
-@defopt idlwave-shell-command-history-file (@file{~/.idlwave/.idlwhist})
+@defopt idlwave-shell-command-history-file (@file{~/.emacs.d/idlwave/.idlwhist})
 The file in which the command history of the idlwave shell is saved.
 Unless it's an absolute path, it goes in
 @code{idlwave-config-directory}.
@@ -2499,7 +2503,7 @@ The prefix for temporary IDL files used when compiling regions.
 Hook for customizing @code{idlwave-shell-mode}.
 @end defopt
 
-@node Using the Shell, Commands Sent to the Shell, Starting the Shell, The IDLWAVE Shell
+@node Using the Shell
 @section Using the Shell
 @cindex Comint
 @cindex Shell, basic commands
@@ -2626,7 +2630,7 @@ The three regular expressions which match the magic spells for input
 modes.
 @end defopt
 
-@node Commands Sent to the Shell, Debugging IDL Programs, Using the Shell, The IDLWAVE Shell
+@node Commands Sent to the Shell
 @section Commands Sent to the Shell
 @cindex Commands in shell, showing
 @cindex Showing commands in shell
@@ -2667,7 +2671,7 @@ As a special case, any error message in the output will be displayed
 (e.g., stepping to an error).
 @end defopt
 
-@node Debugging IDL Programs, Examining Variables, Commands Sent to the Shell, The IDLWAVE Shell
+@node Debugging IDL Programs
 @section Debugging IDL Programs
 @cindex Debugging
 @cindex Keybindings for debugging
@@ -2705,7 +2709,7 @@ buffers.
 @end menu
 
 
-@node A Tale of Two Modes, Debug Key Bindings, Debugging IDL Programs, Debugging IDL Programs
+@node A Tale of Two Modes
 @subsection A Tale of Two Modes
 @cindex Electric Debug Mode
 @cindex Debugging Interface
@@ -2725,7 +2729,7 @@ Mode}, for more on that mode.  Note that electric debug mode can be
 prevented from activating automatically by customizing the variable
 @code{idlwave-shell-automatic-electric-debug}.
 
-@node Debug Key Bindings, Breakpoints and Stepping, A Tale of Two Modes, Debugging IDL Programs
+@node Debug Key Bindings
 @subsection Debug Key Bindings
 @kindex C-c C-d
 @cindex Key bindings
@@ -2771,7 +2775,7 @@ more of @code{control}, @code{meta}, @code{super}, @code{hyper},
 @code{alt}, and @code{shift}.
 @end defopt
 
-@node Breakpoints and Stepping, Compiling Programs, Debug Key Bindings, Debugging IDL Programs
+@node Breakpoints and Stepping
 @subsection Breakpoints and Stepping
 @cindex Breakpoints
 @cindex Stepping
@@ -2903,7 +2907,7 @@ configured in @code{idlwave-shell-mark-stop-line}.
 @end defopt
 
 
-@node Compiling Programs, Walking the Calling Stack, Breakpoints and Stepping, Debugging IDL Programs
+@node Compiling Programs
 @subsection Compiling Programs
 @cindex Compiling programs
 @cindex Programs, compiling
@@ -2936,7 +2940,7 @@ level program @kbd{C-c C-d C-e} (@code{idlwave-shell-run-region}) is
 very useful.  A temporary file is created holding the contents of the
 current region (with @code{END} appended), and run from the shell.
 
-@node Walking the Calling Stack, Electric Debug Mode, Compiling Programs, Debugging IDL Programs
+@node Walking the Calling Stack
 @subsection Walking the Calling Stack
 @cindex Calling stack, walking
 
@@ -2958,7 +2962,7 @@ higher calling stack levels.
 @html
 <A NAME="EDEBUG"></A>
 @end html
-@node Electric Debug Mode,  , Walking the Calling Stack, Debugging IDL Programs
+@node Electric Debug Mode
 @subsection Electric Debug Mode
 @cindex Electric Debug Mode
 @cindex @samp{*Debugging*}
@@ -3095,7 +3099,7 @@ window, but is useful for immediate stepping, etc.
 @html
 <A NAME="EXAMINE"></A>
 @end html
-@node Examining Variables, Custom Expression Examination, Debugging IDL Programs, The IDLWAVE Shell
+@node Examining Variables
 @section Examining Variables
 @cindex @code{PRINT} expressions
 @cindex @code{HELP}, on expressions
@@ -3202,7 +3206,7 @@ The maximum number of leading array entries to print, when examining
 array expressions.
 @end defopt
 
-@node Custom Expression Examination,  , Examining Variables, The IDLWAVE Shell
+@node Custom Expression Examination
 @section Custom Expression Examination
 @cindex Expressions, custom examination
 @cindex Custom expression examination
@@ -3272,7 +3276,7 @@ examine command strings to send, after all instances of @code{___}
 (three underscores) are replaced by the indicated expression.
 @end defopt
 
-@node Acknowledgments, Sources of Routine Info, The IDLWAVE Shell, Top
+@node Acknowledgments
 @chapter Acknowledgments
 @cindex Acknowledgments
 @cindex Maintainer, of IDLWAVE
@@ -3351,7 +3355,7 @@ scripts and documentation to interface with the IDL Assistant.
 @noindent
 Thanks to everyone!
 
-@node Sources of Routine Info, HTML Help Browser Tips, Acknowledgments, Top
+@node Sources of Routine Info
 @appendix Sources of Routine Info
 
 @cindex Sources of routine information
@@ -3368,7 +3372,7 @@ know about the accessible routines.
 * Documentation Scan::          Scanning the IDL Manuals
 @end menu
 
-@node Routine Definitions, Routine Information Sources, Sources of Routine Info, Sources of Routine Info
+@node Routine Definitions
 @appendixsec Routine Definitions
 @cindex Routine definitions
 @cindex IDL variable @code{!PATH}
@@ -3404,7 +3408,7 @@ cannot provide routine info and completion for such external routines,
 except by querying the Shell for calling information (DLMs only).
 @end enumerate
 
-@node Routine Information Sources, Catalogs, Routine Definitions, Sources of Routine Info
+@node Routine Information Sources
 @appendixsec Routine Information Sources
 @cindex Routine info sources
 @cindex Builtin list of routines
@@ -3491,7 +3495,7 @@ Controls under what circumstances routine info is updated automatically.
 @html
 <A NAME="CATALOGS"></A>
 @end html
-@node Catalogs, Load-Path Shadows, Routine Information Sources, Sources of Routine Info
+@node Catalogs
 @appendixsec Catalogs
 @cindex Catalogs
 
@@ -3517,7 +3521,7 @@ information (e.g., Windows), a library path must be specified in
 to setup directories for user catalog scan (@pxref{User Catalog} for
 more on this variable).  Note that, before the shell is running, IDLWAVE
 can only know about the IDL search path by consulting the file pointed
-to by @code{idlwave-path-file} (@file{~/.idlwave/idlpath.el}, by
+to by @code{idlwave-path-file} (@file{~/.emacs.d/idlwave/idlpath.el}, by
 default).  If @code{idlwave-auto-write-path} is enabled (which is the
 default), the paths are written out whenever the IDLWAVE shell is
 started.
@@ -3539,7 +3543,7 @@ locating HTML help and the IDL Assistant for IDL v6.2 and later.  Under
 Unix/MacOSX, will be obtained from the Shell and recorded, if run.
 @end defopt
 
-@defopt idlwave-config-directory (@file{~/.idlwave})
+@defopt idlwave-config-directory (@file{~/.emacs.d/idlwave})
 Default path where IDLWAVE saves configuration information, a user
 catalog (if any), and a cached scan of the XML catalog (IDL v6.2 and
 later).
@@ -3553,7 +3557,7 @@ later).
 @html
 <A NAME="LIBRARY_CATALOGS"></A>
 @end html
-@node Library Catalogs, User Catalog, Catalogs, Catalogs
+@node Library Catalogs
 @appendixsubsec Library Catalogs
 @cindex @file{.idlwave_catalog}
 @cindex Library catalogs
@@ -3617,7 +3621,7 @@ Whether to search for and load library catalogs.  Disable if load
 performance is a problem and/or the catalogs are not needed.
 @end defopt
 
-@node User Catalog,  , Library Catalogs, Catalogs
+@node User Catalog
 @appendixsubsec User Catalog
 @cindex User catalog
 @cindex IDL library routine info
@@ -3628,7 +3632,7 @@ performance is a problem and/or the catalogs are not needed.
 
 The user catalog is the old routine catalog system.  It is produced
 within Emacs, and stored in a single file in the user's home directory
-(@file{.idlwave/idlusercat.el} by default).  Although library catalogs
+(@file{.emacs.d/idlwave/idlusercat.el} by default).  Although library catalogs
 are more flexible, there may be reasons to prefer a user catalog
 instead, including:
 
@@ -3690,7 +3694,7 @@ Alist of regular expressions matching special library directories for
 labeling in routine-info display.
 @end defopt
 
-@node Load-Path Shadows, Documentation Scan, Catalogs, Sources of Routine Info
+@node Load-Path Shadows
 @appendixsec Load-Path Shadows
 @cindex Load-path shadows
 @cindex Shadows, load-path
@@ -3750,7 +3754,7 @@ routines.
 Another way to find out if a specific routine has multiple definitions
 on the load path is routine info display (@pxref{Routine Info}).
 
-@node Documentation Scan,  , Load-Path Shadows, Sources of Routine Info
+@node Documentation Scan
 @appendixsec Documentation Scan
 @cindex @file{get_html_rinfo}
 @cindex @file{idlw-rinfo.el}
@@ -3783,7 +3787,7 @@ scanning the HTML documents produced from the IDL documentation.
 Instructions on how to use @file{get_html_rinfo} are in the program
 itself.
 
-@node HTML Help Browser Tips, Configuration Examples, Sources of Routine Info, Top
+@node HTML Help Browser Tips
 @appendix HTML Help Browser Tips
 @cindex Browser Tips
 
@@ -3858,7 +3862,7 @@ Note that you can open the file in an external browser from within
 @code{w3m} using @kbd{M}.
 @end itemize
 
-@node Configuration Examples, Windows and MacOS, HTML Help Browser Tips, Top
+@node Configuration Examples
 @appendix Configuration Examples
 @cindex Configuration examples
 @cindex Example configuration
@@ -4021,7 +4025,7 @@ user is King!
 @html
 <A NAME="WINDOWS_MAC"></A>
 @end html
-@node Windows and MacOS, Troubleshooting, Configuration Examples, Top
+@node Windows and MacOS
 @appendix Windows and MacOS
 @cindex Windows
 @cindex MacOS
@@ -4079,7 +4083,7 @@ help can skip the browser and use the HTMLHelp functionality directly.
 @html
 <A NAME="TROUBLE"></A>
 @end html
-@node Troubleshooting, GNU Free Documentation License, Windows and MacOS, Top
+@node Troubleshooting
 @appendix Troubleshooting
 @cindex Troubleshooting
 
@@ -4285,11 +4289,11 @@ IDLWAVE is @samp{fsf-compat, xemacs-base, mail-lib}.
 
 @end enumerate
 
-@node GNU Free Documentation License, Index, Troubleshooting, Top
+@node GNU Free Documentation License
 @appendix GNU Free Documentation License
 @include doclicense.texi
 
-@node Index,  , GNU Free Documentation License, Top
+@node Index
 @unnumbered Index
 @printindex cp
 

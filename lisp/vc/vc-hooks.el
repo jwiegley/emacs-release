@@ -1,6 +1,6 @@
 ;;; vc-hooks.el --- resident support for version-control
 
-;; Copyright (C) 1992-1996, 1998-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1992-1996, 1998-2014 Free Software Foundation, Inc.
 
 ;; Author:     FSF (see vc.el for full credits)
 ;; Maintainer: Andre Spiegel <spiegel@gnu.org>
@@ -128,7 +128,7 @@ See also variable `vc-consult-headers'."
 This avoids slow queries over the network and instead uses heuristics
 and past information to determine the current status of a file.
 
-If value is the symbol `only-file' `vc-dir' will connect to the
+If value is the symbol `only-file', `vc-dir' will connect to the
 server, but heuristics will be used to determine the status for
 all other VC operations.
 
@@ -190,7 +190,7 @@ individually should stay local."
 (make-variable-buffer-local 'vc-mode)
 (put 'vc-mode 'permanent-local t)
 
-(defun vc-mode (&optional arg)
+(defun vc-mode (&optional _arg)
   ;; Dummy function for C-h m
   "Version Control minor mode.
 This minor mode is automatically activated whenever you visit a file under
@@ -628,10 +628,17 @@ this function."
 	       (throw 'found trial))))
        templates))))
 
-(define-obsolete-function-alias
-  'vc-toggle-read-only 'toggle-read-only "24.1")
 
-(defun vc-default-make-version-backups-p (backend file)
+;; toggle-read-only is obsolete since 24.3, but since vc-t-r-o was made
+;; obsolete earlier, it is ok for the latter to be an alias to the former,
+;; since the latter will be removed first.  We can't just make it
+;; an alias for read-only-mode, since that is not 100% the same.
+(defalias 'vc-toggle-read-only 'toggle-read-only)
+(make-obsolete 'vc-toggle-read-only
+               "use `read-only-mode' instead (or `toggle-read-only' in older versions of Emacs)."
+               "24.1")
+
+(defun vc-default-make-version-backups-p (_backend _file)
   "Return non-nil if unmodified versions should be backed up locally.
 The default is to switch off this feature."
   nil)
@@ -703,19 +710,21 @@ Before doing that, check if there are any old backups and get rid of them."
   ;; the state to 'edited and redisplay the mode line.
   (let* ((file buffer-file-name)
          (backend (vc-backend file)))
-    (and backend
-	 (or (and (equal (vc-file-getprop file 'vc-checkout-time)
-			 (nth 5 (file-attributes file)))
-		  ;; File has been saved in the same second in which
-		  ;; it was checked out.  Clear the checkout-time
-		  ;; to avoid confusion.
-		  (vc-file-setprop file 'vc-checkout-time nil))
-	     t)
-         (eq (vc-checkout-model backend (list file)) 'implicit)
-         (vc-state-refresh file backend)
-	 (vc-mode-line file backend))
-    ;; Try to avoid unnecessary work, a *vc-dir* buffer is
-    ;; present if this is true.
+    (cond
+     ((null backend))
+     ((eq (vc-checkout-model backend (list file)) 'implicit)
+      ;; If the file was saved in the same second in which it was
+      ;; checked out, clear the checkout-time to avoid confusion.
+      (if (equal (vc-file-getprop file 'vc-checkout-time)
+		 (nth 5 (file-attributes file)))
+	  (vc-file-setprop file 'vc-checkout-time nil))
+      (if (vc-state-refresh file backend)
+	  (vc-mode-line file backend)))
+     ;; If we saved an unlocked file on a locking based VCS, that
+     ;; file is not longer up-to-date.
+     ((eq (vc-file-getprop file 'vc-state) 'up-to-date)
+      (vc-file-setprop file 'vc-state nil)))
+    ;; Resynch *vc-dir* buffers, if any are present.
     (when vc-dir-buffers
       (vc-dir-resynch-file file))))
 
@@ -832,7 +841,7 @@ current, and kill the buffer that visits the link."
       (set-buffer true-buffer)
       (kill-buffer this-buffer))))
 
-(defun vc-default-find-file-hook (backend)
+(defun vc-default-find-file-hook (_backend)
   nil)
 
 (defun vc-find-file-hook ()
@@ -856,13 +865,23 @@ current, and kill the buffer that visits the link."
 	  (set (make-local-variable 'backup-inhibited) t))
 	;; Let the backend setup any buffer-local things he needs.
 	(vc-call-backend backend 'find-file-hook))
-       ((let ((link-type (and (not (equal buffer-file-name buffer-file-truename))
-			      (vc-backend buffer-file-truename))))
+       ((let* ((truename (and buffer-file-truename
+			      (expand-file-name buffer-file-truename)))
+	       (link-type (and truename
+			       (not (equal buffer-file-name truename))
+			       (vc-backend truename))))
 	  (cond ((not link-type) nil)	;Nothing to do.
 		((eq vc-follow-symlinks nil)
 		 (message
 		  "Warning: symbolic link to %s-controlled source file" link-type))
 		((or (not (eq vc-follow-symlinks 'ask))
+		     ;; Assume we cannot ask, default to yes.
+		     noninteractive
+		     ;; Copied from server-start.  Seems like there should
+		     ;; be a better way to ask "can we get user input?"...
+		     (and (daemonp)
+			  (null (cdr (frame-list)))
+			  (eq (selected-frame) terminal-frame))
 		     ;; If we already visited this file by following
 		     ;; the link, don't ask again if we try to visit
 		     ;; it again.  GUD does that, and repeated questions
@@ -906,6 +925,7 @@ current, and kill the buffer that visits the link."
     (define-key map "c" 'vc-rollback)
     (define-key map "d" 'vc-dir)
     (define-key map "g" 'vc-annotate)
+    (define-key map "G" 'vc-ignore)
     (define-key map "h" 'vc-insert-headers)
     (define-key map "i" 'vc-register)
     (define-key map "l" 'vc-print-log)
@@ -973,6 +993,10 @@ current, and kill the buffer that visits the link."
 "))
     (bindings--define-key map [undo]
       '(menu-item "Undo Last Check-In" vc-rollback
+                  :enable (let ((backend (if buffer-file-name
+                                             (vc-backend buffer-file-name))))
+                            (or (not backend)
+                                (vc-find-backend-function backend 'rollback)))
 		  :help "Remove the most recent changeset committed to the repository"))
     (bindings--define-key map [vc-revert]
       '(menu-item "Revert to Base Version" vc-revert
@@ -986,6 +1010,9 @@ current, and kill the buffer that visits the link."
     (bindings--define-key map [vc-register]
       '(menu-item "Register" vc-register
 		  :help "Register file set into a version control system"))
+    (bindings--define-key map [vc-ignore]
+      '(menu-item "Ignore File..." vc-ignore
+		  :help "Ignore a file under current version control system"))
     (bindings--define-key map [vc-dir]
       '(menu-item "VC Dir"  vc-dir
 		  :help "Show the VC status of files in a directory"))
@@ -1013,7 +1040,7 @@ current, and kill the buffer that visits the link."
 	      '((ext-menu-separator "--"))
               ext-binding))))
 
-(defun vc-default-extra-menu (backend)
+(defun vc-default-extra-menu (_backend)
   nil)
 
 (provide 'vc-hooks)

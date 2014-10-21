@@ -1,6 +1,6 @@
 ;;; gnus-score.el --- scoring code for Gnus
 
-;; Copyright (C) 1995-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1995-2014 Free Software Foundation, Inc.
 
 ;; Author: Per Abrahamsen <amanda@iesd.auc.dk>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -33,6 +33,7 @@
 (require 'gnus-win)
 (require 'message)
 (require 'score-mode)
+(require 'gmm-utils)
 
 (defcustom gnus-global-score-files nil
   "List of global score files and directories.
@@ -1070,10 +1071,15 @@ EXTRA is the possible non-standard header."
 	(push (cons article n) gnus-newsgroup-scored)))
     (gnus-summary-update-line)))
 
-(defun gnus-summary-current-score ()
-  "Return the score of the current article."
-  (interactive)
-  (gnus-message 1 "%s" (gnus-summary-article-score)))
+(defun gnus-summary-current-score (arg)
+  "Return the score of the current article.
+  With prefix ARG, return the total score of the current (sub)thread."
+  (interactive "P")
+  (gnus-message 1 "%s" (if arg
+			   (gnus-thread-total-score
+			    (gnus-id-to-thread
+			     (mail-header-id (gnus-summary-article-header))))
+			   (gnus-summary-article-score))))
 
 (defun gnus-score-change-score-file (file)
   "Change current score alist."
@@ -1718,33 +1724,37 @@ score in `gnus-newsgroup-scored' by SCORE."
   nil)
 
 (defun gnus-score-decode-text-parts ()
-  (labels ((mm-text-parts (handle)
-                        (cond ((stringp (car handle))
-                               (let ((parts (mapcan #'mm-text-parts (cdr handle))))
-                                 (if (equal "multipart/alternative" (car handle))
-                                     ;; pick the first supported alternative
-                                     (list (car parts))
-                                   parts)))
+  (gmm-labels
+      ((mm-text-parts
+	(handle)
+	(cond ((stringp (car handle))
+	       (let ((parts (apply #'append
+				   (mapcar #'mm-text-parts (cdr handle)))))
+		 (if (equal "multipart/alternative" (car handle))
+		     ;; pick the first supported alternative
+		     (list (car parts))
+		   parts)))
 
-                              ((bufferp (car handle))
-                               (when (string-match "^text/" (mm-handle-media-type handle))
-                                 (list handle)))
+	      ((bufferp (car handle))
+	       (when (string-match "^text/" (mm-handle-media-type handle))
+		 (list handle)))
 
-                              (t (mapcan #'mm-text-parts handle))))
-           (my-mm-display-part (handle)
-                               (when handle
-                                 (save-restriction
-                                   (narrow-to-region (point) (point))
-                                   (mm-display-inline handle)
-                                   (goto-char (point-max))))))
+	      (t (apply #'append (mapcar #'mm-text-parts handle)))))
+       (my-mm-display-part
+	(handle)
+	(when handle
+	  (save-restriction
+	    (narrow-to-region (point) (point))
+	    (mm-display-inline handle)
+	    (goto-char (point-max))))))
 
     (let (;(mm-text-html-renderer 'w3m-standalone)
-          (handles (mm-dissect-buffer t)))
+	  (handles (mm-dissect-buffer t)))
       (save-excursion
-        (article-goto-body)
-        (delete-region (point) (point-max))
-        (mapc #'my-mm-display-part (mm-text-parts handles))
-        handles))))
+	(article-goto-body)
+	(delete-region (point) (point-max))
+	(mapc #'my-mm-display-part (mm-text-parts handles))
+	handles))))
 
 (defun gnus-score-body (scores header now expire &optional trace)
     (if gnus-agent-fetching

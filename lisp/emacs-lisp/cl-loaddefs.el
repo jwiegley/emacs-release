@@ -3,15 +3,7 @@
 ;;; Code:
 
 
-;;;### (autoloads (cl-prettyexpand cl-remprop cl--do-remf cl--set-getf
-;;;;;;  cl-getf cl-get cl-tailp cl-list-length cl-nreconc cl-revappend
-;;;;;;  cl-concatenate cl-subseq cl-float-limits cl-random-state-p
-;;;;;;  cl-make-random-state cl-random cl-signum cl-rem cl-mod cl-round
-;;;;;;  cl-truncate cl-ceiling cl-floor cl-isqrt cl-lcm cl-gcd cl--set-frame-visible-p
-;;;;;;  cl--map-overlays cl--map-intervals cl--map-keymap-recursively
-;;;;;;  cl-notevery cl-notany cl-every cl-some cl-mapcon cl-mapcan
-;;;;;;  cl-mapl cl-mapc cl-maplist cl-map cl--mapcar-many cl-equalp
-;;;;;;  cl-coerce) "cl-extra" "cl-extra.el" "6c7926a10c377679687a2ab6a4d1c186")
+;;;### (autoloads nil "cl-extra" "cl-extra.el" "2c37fbacf9ba6947d5d6eb2d36ba5638")
 ;;; Generated autoloads from cl-extra.el
 
 (autoload 'cl-coerce "cl-extra" "\
@@ -224,7 +216,7 @@ Return the value of SYMBOL's PROPNAME property, or DEFAULT if none.
 
 \(fn SYMBOL PROPNAME &optional DEFAULT)" nil nil)
 
-(put 'cl-get 'compiler-macro #'cl--compiler-macro-get)
+(eval-and-compile (put 'cl-get 'compiler-macro #'cl--compiler-macro-get))
 
 (autoload 'cl-getf "cl-extra" "\
 Search PROPLIST for property PROPNAME; return its value or DEFAULT.
@@ -256,18 +248,7 @@ including `cl-block' and `cl-eval-when'.
 
 ;;;***
 
-;;;### (autoloads (cl--compiler-macro-adjoin cl-defsubst cl-compiler-macroexpand
-;;;;;;  cl-define-compiler-macro cl-assert cl-check-type cl-typep
-;;;;;;  cl-deftype cl-defstruct cl-callf2 cl-callf cl-letf* cl-letf
-;;;;;;  cl-rotatef cl-shiftf cl-remf cl-psetf cl-declare cl-the cl-locally
-;;;;;;  cl-multiple-value-setq cl-multiple-value-bind cl-symbol-macrolet
-;;;;;;  cl-macrolet cl-labels cl-flet* cl-flet cl-progv cl-psetq
-;;;;;;  cl-do-all-symbols cl-do-symbols cl-dotimes cl-dolist cl-do*
-;;;;;;  cl-do cl-loop cl-return-from cl-return cl-block cl-etypecase
-;;;;;;  cl-typecase cl-ecase cl-case cl-load-time-value cl-eval-when
-;;;;;;  cl-destructuring-bind cl-function cl-defmacro cl-defun cl-gentemp
-;;;;;;  cl-gensym cl--compiler-macro-cXXr cl--compiler-macro-list*)
-;;;;;;  "cl-macs" "cl-macs.el" "ad8afd35d8d75f5f22e7547b02bac556")
+;;;### (autoloads nil "cl-macs" "cl-macs.el" "fe8a91b987c0ab7cad9fb8c12efd34a8")
 ;;; Generated autoloads from cl-macs.el
 
 (autoload 'cl--compiler-macro-list* "cl-macs" "\
@@ -417,17 +398,35 @@ This is compatible with Common Lisp, but note that `defun' and
 
 (autoload 'cl-loop "cl-macs" "\
 The Common Lisp `loop' macro.
-Valid clauses are:
-  for VAR from/upfrom/downfrom NUM to/upto/downto/above/below NUM by NUM,
-  for VAR in LIST by FUNC, for VAR on LIST by FUNC, for VAR = INIT then EXPR,
-  for VAR across ARRAY, repeat NUM, with VAR = INIT, while COND, until COND,
-  always COND, never COND, thereis COND, collect EXPR into VAR,
-  append EXPR into VAR, nconc EXPR into VAR, sum EXPR into VAR,
-  count EXPR into VAR, maximize EXPR into VAR, minimize EXPR into VAR,
-  if COND CLAUSE [and CLAUSE]... else CLAUSE [and CLAUSE...],
-  unless COND CLAUSE [and CLAUSE]... else CLAUSE [and CLAUSE...],
-  do EXPRS..., initially EXPRS..., finally EXPRS..., return EXPR,
-  finally return EXPR, named NAME.
+Valid clauses include:
+  For clauses:
+    for VAR from/upfrom/downfrom EXPR1 to/upto/downto/above/below EXPR2 by EXPR3
+    for VAR = EXPR1 then EXPR2
+    for VAR in/on/in-ref LIST by FUNC
+    for VAR across/across-ref ARRAY
+    for VAR being:
+      the elements of/of-ref SEQUENCE [using (index VAR2)]
+      the symbols [of OBARRAY]
+      the hash-keys/hash-values of HASH-TABLE [using (hash-values/hash-keys V2)]
+      the key-codes/key-bindings/key-seqs of KEYMAP [using (key-bindings VAR2)]
+      the overlays/intervals [of BUFFER] [from POS1] [to POS2]
+      the frames/buffers
+      the windows [of FRAME]
+  Iteration clauses:
+    repeat INTEGER
+    while/until/always/never/thereis CONDITION
+  Accumulation clauses:
+    collect/append/nconc/concat/vconcat/count/sum/maximize/minimize FORM
+      [into VAR]
+  Miscellaneous clauses:
+    with VAR = INIT
+    if/when/unless COND CLAUSE [and CLAUSE]... else CLAUSE [and CLAUSE...]
+    named NAME
+    initially/finally [do] EXPRS...
+    do EXPRS...
+    [finally] return EXPR
+
+For more details, see Info node `(cl)Loop Facility'.
 
 \(fn CLAUSE...)" nil t)
 
@@ -464,6 +463,19 @@ nil.
 \(fn (VAR COUNT [RESULT]) BODY...)" nil t)
 
 (put 'cl-dotimes 'lisp-indent-function '1)
+
+(autoload 'cl-tagbody "cl-macs" "\
+Execute statements while providing for control transfers to labels.
+Each element of LABELS-OR-STMTS can be either a label (integer or symbol)
+or a `cons' cell, in which case it's taken to be a statement.
+This distinction is made before performing macroexpansion.
+Statements are executed in sequence left to right, discarding any return value,
+stopping only when reaching the end of LABELS-OR-STMTS.
+Any statement can transfer control at any time to the statements that follow
+one of the labels with the special form (go LABEL).
+Labels have lexical scope and dynamic extent.
+
+\(fn &rest LABELS-OR-STMTS)" nil t)
 
 (autoload 'cl-do-symbols "cl-macs" "\
 Loop over all symbols.
@@ -546,7 +558,7 @@ by EXPANSION, and (setq NAME ...) will act like (setf EXPANSION ...).
 Collect multiple return values.
 FORM must return a list; the BODY is then executed with the first N elements
 of this list bound (`let'-style) to each of the symbols SYM in turn.  This
-is analogous to the Common Lisp `cl-multiple-value-bind' macro, using lists to
+is analogous to the Common Lisp `multiple-value-bind' macro, using lists to
 simulate true multiple return values.  For compatibility, (cl-values A B C) is
 a synonym for (list A B C).
 
@@ -558,7 +570,7 @@ a synonym for (list A B C).
 Collect multiple return values.
 FORM must return a list; the first N elements of this list are stored in
 each of the symbols SYM in turn.  This is analogous to the Common Lisp
-`cl-multiple-value-setq' macro, using lists to simulate true multiple return
+`multiple-value-setq' macro, using lists to simulate true multiple return
 values.  For compatibility, (cl-values A B C) is a synonym for (list A B C).
 
 \(fn (SYM...) FORM)" nil t)
@@ -571,7 +583,7 @@ Equivalent to `progn'.
 \(fn &rest BODY)" nil t)
 
 (autoload 'cl-the "cl-macs" "\
-At present this ignores _TYPE and is simply equivalent to FORM.
+At present this ignores TYPE and is simply equivalent to FORM.
 
 \(fn TYPE FORM)" nil t)
 
@@ -668,10 +680,11 @@ OPTION is either a single keyword or (KEYWORD VALUE) where
 KEYWORD can be one of :conc-name, :constructor, :copier, :predicate,
 :type, :named, :initial-offset, :print-function, or :include.
 
-Each SLOT may instead take the form (SLOT SLOT-OPTS...), where
-SLOT-OPTS are keyword-value pairs for that slot.  Currently, only
-one keyword is supported, `:read-only'.  If this has a non-nil
-value, that slot cannot be set via `setf'.
+Each SLOT may instead take the form (SNAME SDEFAULT SOPTIONS...), where
+SDEFAULT is the default value of that slot and SOPTIONS are keyword-value
+pairs for that slot.
+Currently, only one keyword is supported, `:read-only'.  If this has a
+non-nil value, that slot cannot be set via `setf'.
 
 \(fn NAME SLOTS...)" nil t)
 
@@ -687,11 +700,15 @@ The type name can then be used in `cl-typecase', `cl-check-type', etc.
 
 (put 'cl-deftype 'doc-string-elt '3)
 
+(put 'cl-deftype 'lisp-indent-function '2)
+
 (autoload 'cl-typep "cl-macs" "\
 Check that OBJECT is of type TYPE.
 TYPE is a Common Lisp-style type specifier.
 
 \(fn OBJECT TYPE)" nil nil)
+
+(eval-and-compile (put 'cl-typep 'compiler-macro #'cl--compiler-macro-typep))
 
 (autoload 'cl-check-type "cl-macs" "\
 Verify that FORM is of type TYPE; signal an error if not.
@@ -722,6 +739,8 @@ and then returning foo.
 
 \(fn FUNC ARGS &rest BODY)" nil t)
 
+(put 'cl-define-compiler-macro 'lisp-indent-function '2)
+
 (autoload 'cl-compiler-macroexpand "cl-macs" "\
 Like `macroexpand', but for compiler macros.
 Expands FORM repeatedly until no further expansion is possible.
@@ -732,9 +751,11 @@ macro that returns its `&whole' argument.
 
 (autoload 'cl-defsubst "cl-macs" "\
 Define NAME as a function.
-Like `defun', except the function is automatically declared `inline',
+Like `defun', except the function is automatically declared `inline' and
+the arguments are immutable.
 ARGLIST allows full Common Lisp conventions, and BODY is implicitly
 surrounded by (cl-block NAME ...).
+The function's arguments should be treated as immutable.
 
 \(fn NAME ARGLIST [DOCSTRING] BODY...)" nil t)
 
@@ -747,19 +768,7 @@ surrounded by (cl-block NAME ...).
 
 ;;;***
 
-;;;### (autoloads (cl-tree-equal cl-nsublis cl-sublis cl-nsubst-if-not
-;;;;;;  cl-nsubst-if cl-nsubst cl-subst-if-not cl-subst-if cl-subsetp
-;;;;;;  cl-nset-exclusive-or cl-set-exclusive-or cl-nset-difference
-;;;;;;  cl-set-difference cl-nintersection cl-intersection cl-nunion
-;;;;;;  cl-union cl-rassoc-if-not cl-rassoc-if cl-rassoc cl-assoc-if-not
-;;;;;;  cl-assoc-if cl-assoc cl--adjoin cl-member-if-not cl-member-if
-;;;;;;  cl-member cl-merge cl-stable-sort cl-sort cl-search cl-mismatch
-;;;;;;  cl-count-if-not cl-count-if cl-count cl-position-if-not cl-position-if
-;;;;;;  cl-position cl-find-if-not cl-find-if cl-find cl-nsubstitute-if-not
-;;;;;;  cl-nsubstitute-if cl-nsubstitute cl-substitute-if-not cl-substitute-if
-;;;;;;  cl-substitute cl-delete-duplicates cl-remove-duplicates cl-delete-if-not
-;;;;;;  cl-delete-if cl-delete cl-remove-if-not cl-remove-if cl-remove
-;;;;;;  cl-replace cl-fill cl-reduce) "cl-seq" "cl-seq.el" "5ce2761d9a21845a7f6a2da0e4543844")
+;;;### (autoloads nil "cl-seq" "cl-seq.el" "5b212bdeb4affa862cbfd49e4e3e8bb2")
 ;;; Generated autoloads from cl-seq.el
 
 (autoload 'cl-reduce "cl-seq" "\
@@ -1020,7 +1029,7 @@ Keywords supported:  :test :test-not :key
 
 \(fn ITEM LIST [KEYWORD VALUE]...)" nil nil)
 
-(put 'cl-member 'compiler-macro #'cl--compiler-macro-member)
+(eval-and-compile (put 'cl-member 'compiler-macro #'cl--compiler-macro-member))
 
 (autoload 'cl-member-if "cl-seq" "\
 Find the first item satisfying PREDICATE in LIST.
@@ -1050,7 +1059,7 @@ Keywords supported:  :test :test-not :key
 
 \(fn ITEM LIST [KEYWORD VALUE]...)" nil nil)
 
-(put 'cl-assoc 'compiler-macro #'cl--compiler-macro-assoc)
+(eval-and-compile (put 'cl-assoc 'compiler-macro #'cl--compiler-macro-assoc))
 
 (autoload 'cl-assoc-if "cl-seq" "\
 Find the first item whose car satisfies PREDICATE in LIST.
@@ -1242,6 +1251,7 @@ Keywords supported:  :test :test-not :key
 
 ;;;***
 
+(provide 'cl-loaddefs)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

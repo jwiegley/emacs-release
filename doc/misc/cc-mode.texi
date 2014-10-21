@@ -83,6 +83,7 @@ the second with them pointing to the XEmacs manuals.
 
 @setfilename  ../../info/ccmode
 @settitle     CC Mode Manual
+@documentencoding UTF-8
 @footnotestyle end
 
 @c The following four macros generate the filenames and titles of the
@@ -156,13 +157,13 @@ CC Mode
 @copying
 This manual is for CC Mode in Emacs.
 
-Copyright @copyright{} 1995--2013 Free Software Foundation, Inc.
+Copyright @copyright{} 1995--2014 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3 or
 any later version published by the Free Software Foundation; with no
-Invariant Sections, with the Front-Cover texts being ``A GNU Manual'',
+Invariant Sections, with the Front-Cover Texts being ``A GNU Manual'',
 and with the Back-Cover Texts as in (a) below.  A copy of the license
 is included in the section entitled ``GNU Free Documentation License''.
 
@@ -176,7 +177,7 @@ modify this GNU manual.''
 @dircategory Emacs editing modes
 @direntry
 * CC Mode: (ccmode).            Emacs mode for editing C, C++, Objective-C,
-                                Java, Pike, AWK, and CORBA IDL code.
+                                  Java, Pike, AWK, and CORBA IDL code.
 @end direntry
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -241,7 +242,7 @@ functions, classes, etc.; there are other packages for that.
 * Customizing Indentation::
 * Custom Macros::
 * Odds and Ends::
-* Sample .emacs File::
+* Sample Init File::
 * Performance Issues::
 * Limitations and Known Bugs::
 * FAQ::
@@ -750,12 +751,6 @@ very useful in this case.
 @end itemize
 
 @table @asis
-@item @kbd{C-j} (@code{newline-and-indent})
-@kindex C-j
-@findex newline-and-indent
-Inserts a newline and indents the new blank line, ready to start
-typing.  This is a standard (X)Emacs command.
-
 @item @kbd{C-M-q} (@code{c-indent-exp})
 @kindex C-M-q
 @findex c-indent-exp
@@ -1113,7 +1108,7 @@ valid.}.
 This function is not bound to a key by default, but it's intended to be
 used on the @kbd{RET} key.  If you like the behavior of
 @code{newline-and-indent} on @kbd{RET}, you should consider switching to
-this function.  @xref{Sample .emacs File}.
+this function.  @xref{Sample Init File}.
 
 @item @kbd{M-x c-context-open-line}
 @findex c-context-open-line
@@ -1170,9 +1165,9 @@ and @ref{Indentation Engine Basics}.
 
 You can toggle each of these minor modes on and off, and you can
 configure @ccmode{} so that it starts up with your favorite
-combination of them (@pxref{Sample .emacs File}).  By default, when
+combination of them (@pxref{Sample Init File}).  By default, when
 you initialize a buffer, electric mode and syntactic-indentation mode
-are enabled but the other two modes are disabled.
+are enabled but the other three modes are disabled.
 
 @ccmode{} displays the current state of the first four of these minor
 modes on the modeline by appending letters to the major mode's name,
@@ -2111,7 +2106,7 @@ contributing it: send a note to @email{bug-cc-mode@@gnu.org}.
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 The general appearance of font-locking in AWK mode is much like in any
-other programming mode.  @xref{Faces For Font Lock,,,elisp, GNU Emacs
+other programming mode.  @xref{Faces for Font Lock,,,elisp, GNU Emacs
 Lisp Reference Manual}.
 
 The following faces are, however, used in a non-standard fashion in
@@ -2378,7 +2373,7 @@ those set by @code{c-default-style}.
 @vindex initialization-hook (c-)
 Hook run only once per Emacs session, when @ccmode{} is initialized.
 This is a good place to change key bindings (or add new ones) in any
-of the @ccmode{} key maps.  @xref{Sample .emacs File}.
+of the @ccmode{} key maps.  @xref{Sample Init File}.
 @end defvar
 
 @defvar c-mode-common-hook
@@ -2406,7 +2401,7 @@ overwritten when @ccmode{} gets loaded.
 Here's a simplified example of what you can add to your @file{.emacs}
 file to do things whenever any @ccmode{} language is edited.  See the
 Emacs manuals for more information on customizing Emacs via hooks.
-@xref{Sample .emacs File}, for a more complete sample @file{.emacs}
+@xref{Sample Init File}, for a more complete sample @file{.emacs}
 file.
 
 @example
@@ -2685,7 +2680,7 @@ create a new @dfn{style definition}, possibly based on an existing
 style.  To do this, put the new style's settings into a list with the
 following format; the list can then be passed as an argument to the
 function @code{c-add-style}.  You can see an example of a style
-definition in @ref{Sample .emacs File}.
+definition in @ref{Sample Init File}.
 
 @cindex style definition
 @c @defvr {List} style definition
@@ -2753,7 +2748,7 @@ deprecated and it might be removed from @ccmode{} in a future release.
 You should use @code{c-set-style} instead.
 
 The sample @file{.emacs} file provides a concrete example of how a new
-style can be added and automatically set.  @xref{Sample .emacs File}.
+style can be added and automatically set.  @xref{Sample Init File}.
 @end defun
 
 @defvar c-style-alist
@@ -3920,7 +3915,7 @@ Conceptually, a line of code is always indented relative to some
 position higher up in the buffer (typically the indentation of the
 previous line).  That position is the @dfn{anchor position} in the
 syntactic element.  If there is an entry after the syntactic symbol in
-the syntactic element list then it's either nil or that anchor position.
+the syntactic element list then it's either @code{nil} or that anchor position.
 
 Here is an example.  Suppose we had the following code as the only thing
 in a C++ buffer @footnote{The line numbers in this and future examples
@@ -6072,7 +6067,7 @@ suggestion to get a consistent style):
 @defun c-lineup-assignments
 @findex lineup-assignments (c-)
 Line up the current line after the assignment operator on the first line
-in the statement.  If there isn't any, return nil to allow stacking with
+in the statement.  If there isn't any, return @code{nil} to allow stacking with
 other line-up functions.  If the current line contains an assignment
 operator too, try to align it with the first one.
 
@@ -6475,13 +6470,14 @@ think is generally useful, you're very welcome to contribute it;
 please contact @email{bug-cc-mode@@gnu.org}.
 
    Line-up functions are passed a single argument, the syntactic
-element (see below).  The return value is a @code{c-offsets-alist}
-offset specification: for example, an integer, a symbol such as
-@code{+}, a vector, @code{nil}@footnote{Returning @code{nil} is useful
-when the offset specification for a syntactic element is a list
-containing the line-up function (@pxref{c-offsets-alist}).}, or even
-another line-up function.  Full details of these are in
-@ref{c-offsets-alist}.
+element (see below).  At the time of the call, point will be somewhere
+on the line being indented.  The return value is a
+@code{c-offsets-alist} offset specification: for example, an integer,
+a symbol such as @code{+}, a vector, @code{nil}@footnote{Returning
+@code{nil} is useful when the offset specification for a syntactic
+element is a list containing the line-up function
+(@pxref{c-offsets-alist}).}, or even another line-up function.  Full
+details of these are in @ref{c-offsets-alist}.
 
 Line-up functions must not move point or change the content of the
 buffer (except temporarily).  They are however allowed to do
@@ -6536,7 +6532,7 @@ Return the syntactic symbol in @var{langelem}.
 
 @defun c-langelem-pos langelem
 @findex langelem-pos (c-)
-Return the anchor position in @var{langelem}, or nil if there is none.
+Return the anchor position in @var{langelem}, or @code{nil} if there is none.
 @end defun
 
 @defun c-langelem-col langelem &optional preserve-point
@@ -6759,7 +6755,7 @@ initialization code.
 @end defun
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node    Odds and Ends, Sample .emacs File, Custom Macros, Top
+@node    Odds and Ends, Sample Init File, Custom Macros, Top
 @comment node-name, next, previous, up
 @chapter Odds and Ends
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -6803,9 +6799,9 @@ anchoring position to indent the line in that case.
 
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node    Sample .emacs File, Performance Issues, Odds and Ends, Top
+@node    Sample Init File, Performance Issues, Odds and Ends, Top
 @comment node-name, next, previous, up
-@appendix Sample .emacs File
+@appendix Sample Init File
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Here's a sample .emacs file fragment that might help you along the way.
@@ -6862,7 +6858,7 @@ to change some of the actual values.
 @end verbatim
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node    Performance Issues, Limitations and Known Bugs, Sample .emacs File, Top
+@node    Performance Issues, Limitations and Known Bugs, Sample Init File, Top
 @comment node-name, next, previous, up
 @chapter Performance Issues
 @cindex performance
@@ -7051,18 +7047,20 @@ Set the variable @code{c-basic-offset}.  @xref{Getting Started}.
 @item
 @kindex RET
 @kindex C-j
-@emph{Why doesn't the @kbd{RET} key indent the new line?}
+@emph{Why does/doesn't the @kbd{RET} key indent the new line?}
 
-Emacs's convention is that @kbd{RET} just adds a newline, and that
-@kbd{C-j} adds a newline and indents it.  You can make @kbd{RET} do this
-too by adding this to your @code{c-initialization-hook}:
+Emacs's convention used to be that @kbd{RET} just adds a newline, and that
+@kbd{C-j} adds a newline and indents it.  In Emacs-24.4, this convention was
+reversed.
+
+If you use an older Emacs and you want @kbd{RET} do this
+too, add this to your @code{c-initialization-hook}:
 
 @example
 (define-key c-mode-base-map "\C-m" 'c-context-line-break)
 @end example
 
-@xref{Getting Started}.  This is a very common question.  If you want
-this to be the default behavior, don't lobby us, lobby RMS@!  @t{:-)}
+@xref{Getting Started}.  This was a very common question.
 
 @item
 @emph{How do I stop my code jumping all over the place when I type?}

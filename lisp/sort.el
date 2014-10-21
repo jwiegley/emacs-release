@@ -1,10 +1,10 @@
 ;;; sort.el --- commands to sort text in an Emacs buffer
 
-;; Copyright (C) 1986-1987, 1994-1995, 2001-2013 Free Software
+;; Copyright (C) 1986-1987, 1994-1995, 2001-2014 Free Software
 ;; Foundation, Inc.
 
 ;; Author: Howie Kaye
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: unix
 
 ;; This file is part of GNU Emacs.
@@ -566,6 +566,67 @@ From a program takes two point or marker arguments, BEG and END."
 	(insert (car ll) "\n")
 	(setq ll (cdr ll)))
       (insert (car ll)))))
+
+;;;###autoload
+(defun delete-duplicate-lines (beg end &optional reverse adjacent keep-blanks
+                               interactive)
+  "Delete all but one copy of any identical lines in the region.
+Non-interactively, arguments BEG and END delimit the region.
+Normally it searches forwards, keeping the first instance of
+each identical line.  If REVERSE is non-nil (interactively, with
+a C-u prefix), it searches backwards and keeps the last instance of
+each repeated line.
+
+Identical lines need not be adjacent, unless the argument
+ADJACENT is non-nil (interactively, with a C-u C-u prefix).
+This is a more efficient mode of operation, and may be useful
+on large regions that have already been sorted.
+
+If the argument KEEP-BLANKS is non-nil (interactively, with a
+C-u C-u C-u prefix), it retains repeated blank lines.
+
+Returns the number of deleted lines.  Interactively, or if INTERACTIVE
+is non-nil, it also prints a message describing the number of deletions."
+  (interactive
+   (progn
+     (barf-if-buffer-read-only)
+     (list (region-beginning) (region-end)
+	   (equal current-prefix-arg '(4))
+	   (equal current-prefix-arg '(16))
+	   (equal current-prefix-arg '(64))
+	   t)))
+  (let ((lines (unless adjacent (make-hash-table :test 'equal)))
+	line prev-line
+	(count 0)
+	(beg (copy-marker beg))
+	(end (copy-marker end)))
+    (save-excursion
+      (goto-char (if reverse end beg))
+      (if (and reverse (bolp)) (forward-char -1))
+      (while (if reverse
+		 (and (> (point) beg) (not (bobp)))
+	       (and (< (point) end) (not (eobp))))
+	(setq line (buffer-substring-no-properties
+		    (line-beginning-position) (line-end-position)))
+        (if (and keep-blanks (string= "" line))
+            (forward-line 1)
+          (if (if adjacent (equal line prev-line) (gethash line lines))
+              (progn
+                (delete-region (progn (forward-line 0) (point))
+                               (progn (forward-line 1) (point)))
+                (if reverse (forward-line -1))
+                (setq count (1+ count)))
+            (if adjacent (setq prev-line line) (puthash line t lines))
+            (forward-line (if reverse -1 1))))))
+    (set-marker beg nil)
+    (set-marker end nil)
+    (when interactive
+      (message "Deleted %d %sduplicate line%s%s"
+	       count
+	       (if adjacent "adjacent " "")
+	       (if (= count 1) "" "s")
+	       (if reverse " backward" "")))
+    count))
 
 (provide 'sort)
 

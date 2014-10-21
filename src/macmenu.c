@@ -47,166 +47,22 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "dispextern.h"
 
-#define HAVE_DIALOGS 1
-
 #undef HAVE_MULTILINGUAL_MENU
 
 #include "menu.h"
 
 static Lisp_Object Qdebug_on_next_call;
 
-extern Lisp_Object Qmac_apple_event;
+extern void mac_fill_menubar (widget_value *, bool);
+extern int create_and_show_popup_menu (struct frame *, widget_value *,
+				       int, int, bool);
+extern int create_and_show_dialog (struct frame *, widget_value *);
 
-extern void mac_fill_menubar (widget_value *, int);
-extern int create_and_show_popup_menu (FRAME_PTR, widget_value *,
-					   int, int, int);
-extern int create_and_show_dialog (FRAME_PTR, widget_value *);
-
-#ifdef HAVE_DIALOGS
-static Lisp_Object mac_dialog_show (FRAME_PTR, bool, Lisp_Object, Lisp_Object,
-				    const char **);
-#endif
+static Lisp_Object mac_dialog_show (struct frame *, bool, Lisp_Object,
+				    Lisp_Object, const char **);
 
 /* Nonzero means a menu is currently active.  */
 int popup_activated_flag;
-
-
-#ifdef HAVE_MENUS
-
-DEFUN ("x-popup-dialog", Fx_popup_dialog, Sx_popup_dialog, 2, 3, 0,
-       doc: /* Pop up a dialog box and return user's selection.
-POSITION specifies which frame to use.
-This is normally a mouse button event or a window or frame.
-If POSITION is t, it means to use the frame the mouse is on.
-The dialog box appears in the middle of the specified frame.
-
-CONTENTS specifies the alternatives to display in the dialog box.
-It is a list of the form (DIALOG ITEM1 ITEM2...).
-Each ITEM is a cons cell (STRING . VALUE).
-The return value is VALUE from the chosen item.
-
-An ITEM may also be just a string--that makes a nonselectable item.
-An ITEM may also be nil--that means to put all preceding items
-on the left of the dialog box and all following items on the right.
-\(By default, approximately half appear on each side.)
-
-If HEADER is non-nil, the frame title for the box is "Information",
-otherwise it is "Question".
-
-If the user gets rid of the dialog box without making a valid choice,
-for instance using the window manager, then this produces a quit and
-`x-popup-dialog' does not return.  */)
-  (Lisp_Object position, Lisp_Object contents, Lisp_Object header)
-{
-  FRAME_PTR f = NULL;
-  Lisp_Object window;
-
-  check_mac ();
-
-  /* Decode the first argument: find the window or frame to use.  */
-  if (EQ (position, Qt)
-      || (CONSP (position) && (EQ (XCAR (position), Qmenu_bar)
-			       || EQ (XCAR (position), Qtool_bar)
-			       || EQ (XCAR (position), Qmac_apple_event))))
-    {
-#if 0 /* Using the frame the mouse is on may not be right.  */
-      /* Use the mouse's current position.  */
-      FRAME_PTR new_f = SELECTED_FRAME ();
-      Lisp_Object bar_window;
-      enum scroll_bar_part part;
-      Time time;
-      Lisp_Object x, y;
-
-      (*mouse_position_hook) (&new_f, 1, &bar_window, &part, &x, &y, &time);
-
-      if (new_f != 0)
-	XSETFRAME (window, new_f);
-      else
-	window = selected_window;
-#endif
-      window = selected_window;
-    }
-  else if (CONSP (position))
-    {
-      Lisp_Object tem = XCAR (position);
-      if (CONSP (tem))
-	window = Fcar (XCDR (position));
-      else
-	{
-	  tem = Fcar (XCDR (position));  /* EVENT_START (position) */
-	  window = Fcar (tem);	     /* POSN_WINDOW (tem) */
-	}
-    }
-  else if (WINDOWP (position) || FRAMEP (position))
-    window = position;
-  else
-    window = Qnil;
-
-  /* Decode where to put the menu.  */
-
-  if (FRAMEP (window))
-    f = XFRAME (window);
-  else if (WINDOWP (window))
-    {
-      CHECK_LIVE_WINDOW (window);
-      f = XFRAME (WINDOW_FRAME (XWINDOW (window)));
-    }
-  else
-    /* ??? Not really clean; should be CHECK_WINDOW_OR_FRAME,
-       but I don't want to make one now.  */
-    CHECK_WINDOW (window);
-
-  if (! FRAME_MAC_P (f))
-    error ("Can not put dialog on this terminal");
-
-  /* Force a redisplay before showing the dialog.  If a frame is created
-     just before showing the dialog, its contents may not have been fully
-     drawn.
-
-     Do this before creating the widget value that points to Lisp
-     string contents, because Fredisplay may GC and relocate them.  */
-  Fredisplay (Qt);
-
-#ifndef HAVE_DIALOGS
-  /* Display a menu with these alternatives
-     in the middle of frame F.  */
-  {
-    Lisp_Object x, y, frame, newpos;
-    XSETFRAME (frame, f);
-    XSETINT (x, x_pixel_width (f) / 2);
-    XSETINT (y, x_pixel_height (f) / 2);
-    newpos = Fcons (Fcons (x, Fcons (y, Qnil)), Fcons (frame, Qnil));
-
-    return Fx_popup_menu (newpos,
-			  Fcons (Fcar (contents), Fcons (contents, Qnil)));
-  }
-#else /* HAVE_DIALOGS */
-  {
-    Lisp_Object title;
-    const char *error_name;
-    Lisp_Object selection;
-    ptrdiff_t specpdl_count = SPECPDL_INDEX ();
-
-    /* Decode the dialog items from what was specified.  */
-    title = Fcar (contents);
-    CHECK_STRING (title);
-    record_unwind_protect (unuse_menu_items, Qnil);
-
-    list_of_panes (Fcons (contents, Qnil));
-
-    /* Display them in a dialog box.  */
-    block_input ();
-    selection = mac_dialog_show (f, 0, title, header, &error_name);
-    unblock_input ();
-
-    unbind_to (specpdl_count, Qnil);
-    discard_menu_items ();
-
-    if (error_name) error ("%s", error_name);
-    return selection;
-  }
-#endif /* HAVE_DIALOGS */
-}
 
 
 DEFUN ("x-menu-bar-open-internal", Fx_menu_bar_open_internal, Sx_menu_bar_open_internal, 0, 1, "i",
@@ -219,7 +75,7 @@ If FRAME is nil or not given, use the selected frame.  */)
   (Lisp_Object frame)
 {
   int selection;
-  FRAME_PTR f = check_x_frame (frame);
+  struct frame *f = decode_window_system_frame (frame);
 
   set_frame_menubar (f, 0, 1);
   block_input ();
@@ -246,12 +102,11 @@ If FRAME is nil or not given, use the selected frame.  */)
    execute Lisp code.  */
 
 void
-x_activate_menubar (FRAME_PTR f)
+x_activate_menubar (struct frame *f)
 {
   int selection;
 
-  if (! FRAME_MAC_P (f))
-    emacs_abort ();
+  eassert (FRAME_MAC_P (f));
 
   set_frame_menubar (f, 0, 1);
   block_input ();
@@ -269,7 +124,7 @@ x_activate_menubar (FRAME_PTR f)
    it is set the first time this is called, from initialize_frame_menubar.  */
 
 void
-set_frame_menubar (FRAME_PTR f, bool first_time, bool deep_p)
+set_frame_menubar (struct frame *f, bool first_time, bool deep_p)
 {
   int menubar_widget = f->output_data.mac->menubar_widget;
   Lisp_Object items;
@@ -278,8 +133,7 @@ set_frame_menubar (FRAME_PTR f, bool first_time, bool deep_p)
   int *submenu_start, *submenu_end;
   int *submenu_top_level_items, *submenu_n_panes;
 
-  if (! FRAME_MAC_P (f))
-    emacs_abort ();
+  eassert (FRAME_MAC_P (f));
 
   XSETFRAME (Vmenu_updating_frame, f);
 
@@ -298,8 +152,7 @@ set_frame_menubar (FRAME_PTR f, bool first_time, bool deep_p)
       ptrdiff_t specpdl_count = SPECPDL_INDEX ();
       int previous_menu_items_used = f->menu_bar_items_used;
       Lisp_Object *previous_items
-	= (Lisp_Object *) alloca (previous_menu_items_used
-				  * word_size);
+	= alloca (previous_menu_items_used * sizeof *previous_items);
       int subitems;
 
       /* If we are making a new widget, its contents are empty,
@@ -307,7 +160,7 @@ set_frame_menubar (FRAME_PTR f, bool first_time, bool deep_p)
       if (! menubar_widget)
 	previous_menu_items_used = 0;
 
-      buffer = XWINDOW (FRAME_SELECTED_WINDOW (f))->buffer;
+      buffer = XWINDOW (FRAME_SELECTED_WINDOW (f))->contents;
       specbind (Qinhibit_quit, Qt);
       /* Don't let the debugger step into this code
 	 because it is not reentrant.  */
@@ -386,7 +239,7 @@ set_frame_menubar (FRAME_PTR f, bool first_time, bool deep_p)
       wv->help = Qnil;
       first_wv = wv;
 
-      for (i = 0; 0 <= submenu_start[i]; i++)
+      for (i = 0; submenu_start[i] >= 0; i++)
 	{
 	  menu_items_n_panes = submenu_n_panes[i];
 	  wv = digest_single_submenu (submenu_start[i], submenu_end[i],
@@ -508,7 +361,7 @@ set_frame_menubar (FRAME_PTR f, bool first_time, bool deep_p)
    This is used when deleting a frame, and when turning off the menu bar.  */
 
 void
-free_frame_menubar (FRAME_PTR f)
+free_frame_menubar (struct frame *f)
 {
   f->output_data.mac->menubar_widget = 0;
 }
@@ -530,7 +383,7 @@ free_frame_menubar (FRAME_PTR f)
    (We return nil on failure, but the value doesn't actually matter.)  */
 
 Lisp_Object
-mac_menu_show (FRAME_PTR f, int x, int y, bool for_click, bool keymaps,
+mac_menu_show (struct frame *f, int x, int y, bool for_click, bool keymaps,
 	       Lisp_Object title, const char **error_name)
 {
   int i, selection;
@@ -543,8 +396,7 @@ mac_menu_show (FRAME_PTR f, int x, int y, bool for_click, bool keymaps,
 
   int first_pane;
 
-  if (! FRAME_MAC_P (f))
-    emacs_abort ();
+  eassert (FRAME_MAC_P (f));
 
   *error_name = NULL;
 
@@ -554,12 +406,14 @@ mac_menu_show (FRAME_PTR f, int x, int y, bool for_click, bool keymaps,
       return Qnil;
     }
 
+  block_input ();
+
   /* Create a tree of widget_value objects
      representing the panes and their items.  */
   wv = xmalloc_widget_value ();
   wv->name = "menu";
   wv->value = 0;
-  wv->enabled = 1;
+  wv->enabled = true;
   wv->button_type = BUTTON_TYPE_NONE;
   wv->help = Qnil;
   first_wv = wv;
@@ -776,13 +630,14 @@ mac_menu_show (FRAME_PTR f, int x, int y, bool for_click, bool keymaps,
 		    {
 		      int j;
 
-		      entry = Fcons (entry, Qnil);
+		      entry = list1 (entry);
 		      if (!NILP (prefix))
 			entry = Fcons (prefix, entry);
 		      for (j = submenu_depth - 1; j >= 0; j--)
 			if (!NILP (subprefix_stack[j]))
 			  entry = Fcons (subprefix_stack[j], entry);
 		    }
+		  unblock_input ();
 		  return entry;
 		}
 	      i += MENU_ITEMS_ITEM_LENGTH;
@@ -790,33 +645,31 @@ mac_menu_show (FRAME_PTR f, int x, int y, bool for_click, bool keymaps,
 	}
     }
   else if (!for_click)
-    /* Make "Cancel" equivalent to C-g.  */
-    Fsignal (Qquit, Qnil);
+    {
+      unblock_input ();
+      /* Make "Cancel" equivalent to C-g.  */
+      Fsignal (Qquit, Qnil);
+    }
 
+  unblock_input ();
   return Qnil;
 }
 
 
-#ifdef HAVE_DIALOGS
 /* Construct native Mac OS dialog based on widget_value tree.  */
 
 static const char * button_names [] = {
   "button1", "button2", "button3", "button4", "button5",
   "button6", "button7", "button8", "button9", "button10" };
 
-static Lisp_Object
-cleanup_widget_value_tree (Lisp_Object arg)
+static void
+cleanup_widget_value_tree (void *arg)
 {
-  struct Lisp_Save_Value *p = XSAVE_VALUE (arg);
-  widget_value *wv = p->pointer;
-
-  free_menubar_widget_value_tree (wv);
-
-  return Qnil;
+  free_menubar_widget_value_tree (arg);
 }
 
 static Lisp_Object
-mac_dialog_show (FRAME_PTR f,
+mac_dialog_show (struct frame *f,
 		 bool keymaps,
 		 Lisp_Object title,
 		 Lisp_Object header,
@@ -834,8 +687,7 @@ mac_dialog_show (FRAME_PTR f,
 
   ptrdiff_t specpdl_count = SPECPDL_INDEX ();
 
-  if (! FRAME_MAC_P (f))
-    emacs_abort ();
+  eassert (FRAME_MAC_P (f));
 
   *error_name = NULL;
 
@@ -947,8 +799,7 @@ mac_dialog_show (FRAME_PTR f,
 
   /* Make sure to free the widget_value objects we used to specify the
      contents even with longjmp.  */
-  record_unwind_protect (cleanup_widget_value_tree,
-			 make_save_value (first_wv, 0));
+  record_unwind_protect_ptr (cleanup_widget_value_tree, first_wv);
 
   /* Actually create and show the dialog.  */
   selection = create_and_show_dialog (f, first_wv);
@@ -987,7 +838,7 @@ mac_dialog_show (FRAME_PTR f,
 		{
 		  if (keymaps)
 		    {
-		      entry = Fcons (entry, Qnil);
+		      entry = list1 (entry);
 		      if (!NILP (prefix))
 			entry = Fcons (prefix, entry);
 		    }
@@ -1003,11 +854,40 @@ mac_dialog_show (FRAME_PTR f,
 
   return Qnil;
 }
-#endif  /* HAVE_DIALOGS  */
+
+Lisp_Object
+mac_popup_dialog (struct frame *f, Lisp_Object header, Lisp_Object contents)
+{
+  Lisp_Object title;
+  const char *error_name;
+  Lisp_Object selection;
+  ptrdiff_t specpdl_count = SPECPDL_INDEX ();
+
+  check_window_system (f);
+
+  /* Decode the dialog items from what was specified.  */
+  title = Fcar (contents);
+  CHECK_STRING (title);
+  record_unwind_protect_void (unuse_menu_items);
+
+  list_of_panes (list1 (contents));
+
+  /* Display them in a dialog box.  */
+  block_input ();
+  selection = mac_dialog_show (f, 0, title, header, &error_name);
+  unblock_input ();
+
+  unbind_to (specpdl_count, Qnil);
+  discard_menu_items ();
+
+  if (error_name) error ("%s", error_name);
+  return selection;
+}
+
 
 
 /* Is this item a separator? */
-int
+bool
 name_is_separator (const char *name)
 {
   const char *start = name;
@@ -1019,7 +899,6 @@ name_is_separator (const char *name)
      them like normal separators.  */
   return (*name == '\0' || start + 2 == name);
 }
-#endif /* HAVE_MENUS */
 
 /* Detect if a menu is currently active.  */
 
@@ -1048,10 +927,6 @@ syms_of_macmenu (void)
   defsubr (&Sx_menu_bar_open_internal);
   Ffset (intern_c_string ("accelerate-menu"),
 	 intern_c_string (Sx_menu_bar_open_internal.symbol_name));
-
-#ifdef HAVE_MENUS
-  defsubr (&Sx_popup_dialog);
-#endif
 
   DEFVAR_LISP ("mac-help-topics", Vmac_help_topics,
     doc: /* List of strings shown as Help topics by Help menu search.

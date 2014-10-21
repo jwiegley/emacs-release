@@ -1,6 +1,6 @@
 /* Function for handling the GLib event loop.
 
-Copyright (C) 2009-2013 Free Software Foundation, Inc.
+Copyright (C) 2009-2014 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -15,24 +15,42 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs.  If not, see <http§://www.gnu.org/licenses/>.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 
 #include "xgselect.h"
 
-#if defined (USE_GTK) || defined (HAVE_GCONF) || defined (HAVE_GSETTINGS)
+#ifdef HAVE_GLIB
 
 #include <glib.h>
 #include <errno.h>
-#include "xterm.h"
+#include <stdbool.h>
+#include <timespec.h>
+#include "frame.h"
+#include "blockinput.h"
+#ifdef HAVE_MACGUI
+#include "macterm.h"
+#endif
+
+/* `xg_select' is a `pselect' replacement.  Why do we need a separate function?
+   1. Timeouts.  Glib and Gtk rely on timer events.  If we did pselect
+      with a greater timeout then the one scheduled by Glib, we would
+      not allow Glib to process its timer events.  We want Glib to
+      work smoothly, so we need to reduce our timeout to match Glib.
+   2. Descriptors.  Glib may listen to more file descriptors than we do.
+      So we add Glib descriptors to our pselect pool, but we don't change
+      the value returned by the function.  The return value  matches only
+      the descriptors passed as arguments, making it compatible with
+      plain pselect.  */
 
 int
-xg_select (int fds_lim, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
-	   EMACS_TIME *timeout, sigset_t *sigmask)
+xg_select (int fds_lim, fd_set *rfds, fd_set *wfds, fd_set *efds,
+	   struct timespec const *timeout, sigset_t const *sigmask)
 {
-  SELECT_TYPE all_rfds, all_wfds;
-  EMACS_TIME tmo, *tmop = timeout;
+  fd_set all_rfds, all_wfds;
+  struct timespec tmo;
+  struct timespec const *tmop = timeout;
 
   GMainContext *context;
   int have_wfds = wfds != NULL;
@@ -41,11 +59,10 @@ xg_select (int fds_lim, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
   int gfds_size = sizeof gfds_buf / sizeof *gfds_buf;
   int n_gfds, retval = 0, our_fds = 0, max_fds = fds_lim - 1;
   int i, nfds, tmo_in_millisec;
+  bool need_to_dispatch;
   USE_SAFE_ALLOCA;
 
-  if (! (x_in_use
-	 && g_main_context_pending (context = g_main_context_default ())))
-    return pselect (fds_lim, rfds, wfds, efds, timeout, sigmask);
+  context = g_main_context_default ();
 
   if (rfds) all_rfds = *rfds;
   else FD_ZERO (&all_rfds);
@@ -81,15 +98,19 @@ xg_select (int fds_lim, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 
   if (tmo_in_millisec >= 0)
     {
-      tmo = make_emacs_time (tmo_in_millisec / 1000,
-			     1000 * 1000 * (tmo_in_millisec % 1000));
-      if (!timeout || EMACS_TIME_LT (tmo, *timeout))
+      tmo = make_timespec (tmo_in_millisec / 1000,
+			   1000 * 1000 * (tmo_in_millisec % 1000));
+      if (!timeout || timespec_cmp (tmo, *timeout) < 0)
 	tmop = &tmo;
     }
 
   fds_lim = max_fds + 1;
-  nfds = pselect (fds_lim, &all_rfds, have_wfds ? &all_wfds : NULL,
-		  efds, tmop, sigmask);
+#ifdef HAVE_MACGUI
+  nfds = mac_select
+#else
+  nfds = pselect
+#endif
+    (fds_lim, &all_rfds, have_wfds ? &all_wfds : NULL, efds, tmop, sigmask);
 
   if (nfds < 0)
     retval = nfds;
@@ -118,25 +139,33 @@ xg_select (int fds_lim, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
         }
     }
 
-  if (our_fds > 0 || (nfds == 0 && tmop == &tmo))
-    {
-
-      /* If Gtk+ is in use eventually gtk_main_iteration will be called,
-         unless retval is zero.  */
+  /* If Gtk+ is in use eventually gtk_main_iteration will be called,
+     unless retval is zero.  */
 #ifdef USE_GTK
-      if (retval == 0)
+  need_to_dispatch = retval == 0;
+#else
+  need_to_dispatch = true;
 #endif
-        while (g_main_context_pending (context))
-          g_main_context_dispatch (context);
+  if (need_to_dispatch)
+    {
+      int pselect_errno = errno;
+      /* Prevent g_main_dispatch recursion, that would occur without
+         block_input wrapper, because event handlers call
+         unblock_input.  Event loop recursion was causing Bug#15801.  */
+      block_input ();
+      while (g_main_context_pending (context))
+        g_main_context_dispatch (context);
+      unblock_input ();
+      errno = pselect_errno;
+    }
 
-      /* To not have to recalculate timeout, return like this.  */
-      if (retval == 0)
-        {
-          retval = -1;
-          errno = EINTR;
-        }
+  /* To not have to recalculate timeout, return like this.  */
+  if ((our_fds > 0 || (nfds == 0 && tmop == &tmo)) && (retval == 0))
+    {
+      retval = -1;
+      errno = EINTR;
     }
 
   return retval;
 }
-#endif /* USE_GTK || HAVE_GCONF || HAVE_GSETTINGS */
+#endif /* HAVE_GLIB */

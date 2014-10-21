@@ -1,6 +1,27 @@
-2013-03-11  Glenn Morris  <rgm@gnu.org>
+2014-10-20  Glenn Morris  <rgm@gnu.org>
 
-	* Version 24.3 released.
+	* Version 24.4 released.
+
+2013-10-24  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (abs_top_srcdir): New, set by configure.
+
+2013-09-04  Paul Eggert  <eggert@cs.ucla.edu>
+
+	Makefile improvements.
+	* Makefile.in (all, tags): Don't use double-colon rules, as they
+	are not portable according to POSIX.  Mark as phony.
+
+2012-12-04  Paul Eggert  <eggert@cs.ucla.edu>
+
+	Include <config.h> uniformly in oldXMenu sources.
+	* Activate.c, AddPane.c, AddSel.c, ChgPane.c, ChgSel.c, Create.c:
+	* InsPane.c, InsSel.c, Internal.c, XMakeAssoc.c:
+	Do not include <config.h>, since XMenuInt.h does that now.
+	* XLookAssoc.c, XMenuInt.h: Include <config.h>.
+	This avoids a build failure when configuring on Fedora 17
+	--with-x-toolkit=no, reported by Dmitry Andropov in
+	<http://lists.gnu.org/archive/html/emacs-devel/2012-12/msg00078.html>.
 
 2012-10-06  Ulrich Müller  <ulm@gentoo.org>
 
@@ -637,12 +658,15 @@
 
 	* Internal.c: Declare argument `display' in some functions.
 
+1989-08-09  Joseph Arceneaux  (jla@spiff)
+
+	* Makefile: Removed all the unnecessary X stuff.
 
 ;; Local Variables:
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 1993-1999, 2001-2013 Free Software Foundation, Inc.
+  Copyright (C) 1993-1999, 2001-2014 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

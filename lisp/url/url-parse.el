@@ -1,6 +1,6 @@
 ;;; url-parse.el --- Uniform Resource Locator parser
 
-;; Copyright (C) 1996-1999, 2004-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1996-1999, 2004-2014 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
@@ -39,12 +39,13 @@
   silent (use-cookies t))
 
 (defsubst url-port (urlobj)
-  "Return the port number for the URL specified by URLOBJ."
+  "Return the port number for the URL specified by URLOBJ.
+If the port spec is nil (i.e. URLOBJ specifies no port number),
+return the default port number for URLOBJ's scheme."
   (declare (gv-setter (lambda (port) `(setf (url-portspec ,urlobj) ,port))))
   (or (url-portspec urlobj)
       (if (url-type urlobj)
           (url-scheme-get-property (url-type urlobj) 'default-port))))
-
 
 (defun url-path-and-query (urlobj)
   "Return the path and query components of URLOBJ.
@@ -124,7 +125,7 @@ TARGET   is the fragment identifier component (used to refer to a
 ATTRIBUTES is nil; this slot originally stored the attribute and
          value alists for IMAP URIs, but this feature was removed
          since it conflicts with RFC 3986.
-FULLNESS is non-nil iff the hierarchical sequence component of
+FULLNESS is non-nil if the hierarchical sequence component of
          the URL starts with two slashes, \"//\".
 
 The parser follows RFC 3986, except that it also tries to handle

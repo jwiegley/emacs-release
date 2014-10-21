@@ -1,6 +1,6 @@
-;;; esh-proc.el --- process management
+;;; esh-proc.el --- process management  -*- lexical-binding:t -*-
 
-;; Copyright (C) 1999-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -25,9 +25,7 @@
 
 (provide 'esh-proc)
 
-(eval-when-compile
-  (require 'eshell)
-  (require 'esh-util))
+(require 'esh-cmd)
 
 (defgroup eshell-proc nil
   "When Eshell invokes external commands, it always does so
@@ -118,9 +116,11 @@ information, for example."
 (defun eshell-kill-process-function (proc status)
   "Function run when killing a process.
 Runs `eshell-reset-after-proc' and `eshell-kill-hook', passing arguments
-PROC and STATUS to both."
-  (or (memq 'eshell-reset-after-proc eshell-kill-hook)
-      (eshell-reset-after-proc proc status))
+PROC and STATUS to functions on the latter."
+  ;; Was there till 24.1, but it is not optional.
+  (if (memq 'eshell-reset-after-proc eshell-kill-hook)
+      (setq eshell-kill-hook (delq 'eshell-reset-after-proc eshell-kill-hook)))
+  (eshell-reset-after-proc status)
   (run-hook-with-args 'eshell-kill-hook proc status))
 
 (defun eshell-proc-initialize ()
@@ -135,7 +135,7 @@ PROC and STATUS to both."
 ; (define-key eshell-command-map [(control ?z)]  'eshell-stop-process)
   (define-key eshell-command-map [(control ?\\)] 'eshell-quit-process))
 
-(defun eshell-reset-after-proc (proc status)
+(defun eshell-reset-after-proc (status)
   "Reset the command input location after a process terminates.
 The signals which will cause this to happen are matched by
 `eshell-reset-signals'."
@@ -165,43 +165,38 @@ The signals which will cause this to happen are matched by
        (list-processes)))
 
 (defun eshell/kill (&rest args)
-  "Kill processes, buffers, symbol or files."
-  (let ((ptr args)
-	(signum 'SIGINT))
-    (while ptr
-      (if (or (eshell-processp (car ptr))
-	      (and (stringp (car ptr))
-		   (string-match "^[A-Za-z/][A-Za-z0-9<>/]+$"
-				 (car ptr))))
-	  ;; What about when $lisp-variable is possible here?
-	  ;; It could very well name a process.
-	  (setcar ptr (get-process (car ptr))))
-      (setq ptr (cdr ptr)))
+  "Kill processes.
+Usage: kill [-<signal>] <pid>|<process> ...
+Accepts PIDs and process objects."
+  ;; If the first argument starts with a dash, treat it as the signal
+  ;; specifier.
+  (let ((signum 'SIGINT))
+    (let ((arg (car args))
+          (case-fold-search nil))
+      (when (stringp arg)
+        (cond
+         ((string-match "\\`-[[:digit:]]+\\'" arg)
+          (setq signum (abs (string-to-number arg))))
+         ((string-match "\\`-\\([[:upper:]]+\\|[[:lower:]]+\\)\\'" arg)
+          (setq signum (abs (string-to-number arg)))))
+        (setq args (cdr args))))
     (while args
-      (let ((id (if (eshell-processp (car args))
-		    (process-id (car args))
-		  (car args))))
-	(when id
-	  (cond
-	   ((null id)
-	    (error "kill: bad signal spec"))
-	   ((and (numberp id) (= id 0))
-	    (error "kill: bad signal spec `%d'" id))
-	   ((and (stringp id)
-		 (string-match "^-?[0-9]+$" id))
-	    (setq signum (abs (string-to-number id))))
-	   ((stringp id)
-	    (let (case-fold-search)
-	      (if (string-match "^-\\([A-Z]+[12]?\\)$" id)
-		  (setq signum
-			(intern (concat "SIG" (match-string 1 id))))
-		(error "kill: bad signal spec `%s'" id))))
-	   ((< id 0)
-	    (setq signum (abs id)))
-	   (t
-	    (signal-process id signum)))))
-      (setq args (cdr args)))
-    nil))
+      (let ((arg (if (eshell-processp (car args))
+                     (process-id (car args))
+                   (car args))))
+        (when arg
+          (cond
+           ((null arg)
+            (error "kill: null pid.  Process may actually be a network connection."))
+           ((not (numberp arg))
+            (error "kill: invalid argument type: %s" (type-of arg)))
+           ((and (numberp arg)
+                 (<= arg 0))
+            (error "kill: bad pid: %d" arg))
+           (t
+            (signal-process arg signum)))))
+      (setq args (cdr args))))
+  nil)
 
 (defun eshell-read-process-name (prompt)
   "Read the name of a process from the minibuffer, using completion.

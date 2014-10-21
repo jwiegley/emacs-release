@@ -1,10 +1,10 @@
 ;;; custom.el --- tools for declaring and initializing options
 ;;
-;; Copyright (C) 1996-1997, 1999, 2001-2013 Free Software Foundation,
+;; Copyright (C) 1996-1997, 1999, 2001-2014 Free Software Foundation,
 ;; Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: help, faces
 ;; Package: emacs
 
@@ -49,63 +49,66 @@ Users should not set it.")
 
 ;;; The `defcustom' Macro.
 
-(defun custom-initialize-default (symbol value)
-  "Initialize SYMBOL with VALUE.
+(defun custom-initialize-default (symbol exp)
+  "Initialize SYMBOL with EXP.
 This will do nothing if symbol already has a default binding.
 Otherwise, if symbol has a `saved-value' property, it will evaluate
 the car of that and use it as the default binding for symbol.
-Otherwise, VALUE will be evaluated and used as the default binding for
+Otherwise, EXP will be evaluated and used as the default binding for
 symbol."
-  (eval `(defvar ,symbol ,(if (get symbol 'saved-value)
-                              (car (get symbol 'saved-value))
-                            value))))
+  (eval `(defvar ,symbol ,(let ((sv (get symbol 'saved-value)))
+                            (if sv (car sv) exp)))))
 
-(defun custom-initialize-set (symbol value)
-  "Initialize SYMBOL based on VALUE.
+(defun custom-initialize-set (symbol exp)
+  "Initialize SYMBOL based on EXP.
 If the symbol doesn't have a default binding already,
 then set it using its `:set' function (or `set-default' if it has none).
 The value is either the value in the symbol's `saved-value' property,
-if any, or VALUE."
-  (unless (default-boundp symbol)
-    (funcall (or (get symbol 'custom-set) 'set-default)
-	     symbol
-	     (eval (if (get symbol 'saved-value)
-                       (car (get symbol 'saved-value))
-                     value)))))
+if any, or the value of EXP."
+  (condition-case nil
+      (default-toplevel-value symbol)
+    (error
+     (funcall (or (get symbol 'custom-set) #'set-default-toplevel-value)
+              symbol
+              (eval (let ((sv (get symbol 'saved-value)))
+                      (if sv (car sv) exp)))))))
 
-(defun custom-initialize-reset (symbol value)
-  "Initialize SYMBOL based on VALUE.
+(defun custom-initialize-reset (symbol exp)
+  "Initialize SYMBOL based on EXP.
 Set the symbol, using its `:set' function (or `set-default' if it has none).
 The value is either the symbol's current value
- \(as obtained using the `:get' function), if any,
+ (as obtained using the `:get' function), if any,
 or the value in the symbol's `saved-value' property if any,
-or (last of all) VALUE."
-  (funcall (or (get symbol 'custom-set) 'set-default)
+or (last of all) the value of EXP."
+  (funcall (or (get symbol 'custom-set) #'set-default-toplevel-value)
            symbol
-           (cond ((default-boundp symbol)
-                  (funcall (or (get symbol 'custom-get) 'default-value)
-                           symbol))
-                 ((get symbol 'saved-value)
-                  (eval (car (get symbol 'saved-value))))
-                 (t
-                  (eval value)))))
+           (condition-case nil
+               (let ((def (default-toplevel-value symbol))
+                     (getter (get symbol 'custom-get)))
+                 (if getter (funcall getter symbol) def))
+             (error
+              (eval (let ((sv (get symbol 'saved-value)))
+                      (if sv (car sv) exp)))))))
 
-(defun custom-initialize-changed (symbol value)
-  "Initialize SYMBOL with VALUE.
+(defun custom-initialize-changed (symbol exp)
+  "Initialize SYMBOL with EXP.
 Like `custom-initialize-reset', but only use the `:set' function if
 not using the standard setting.
 For the standard setting, use `set-default'."
-  (cond ((default-boundp symbol)
-	 (funcall (or (get symbol 'custom-set) 'set-default)
-		  symbol
-		  (funcall (or (get symbol 'custom-get) 'default-value)
-			   symbol)))
-	((get symbol 'saved-value)
-	 (funcall (or (get symbol 'custom-set) 'set-default)
-		  symbol
-		  (eval (car (get symbol 'saved-value)))))
-	(t
-	 (set-default symbol (eval value)))))
+  (condition-case nil
+      (let ((def (default-toplevel-value symbol)))
+        (funcall (or (get symbol 'custom-set) #'set-default-toplevel-value)
+                 symbol
+                 (let ((getter (get symbol 'custom-get)))
+                   (if getter (funcall getter symbol) def))))
+    (error
+     (cond
+      ((get symbol 'saved-value)
+       (funcall (or (get symbol 'custom-set) #'set-default-toplevel-value)
+                symbol
+                (eval (car (get symbol 'saved-value)))))
+      (t
+       (set-default symbol (eval exp)))))))
 
 (defvar custom-delayed-init-variables nil
   "List of variables whose initialization is pending.")
@@ -229,9 +232,10 @@ The following keywords are meaningful:
 	given in the `defcustom' call.  The default is
 	`custom-initialize-reset'.
 :set	VALUE should be a function to set the value of the symbol
-        when using the Customize user interface.
-	It takes two arguments, the symbol to set and the value to
-	give it.  The default choice of function is `set-default'.
+	when using the Customize user interface.  It takes two arguments,
+	the symbol to set and the value to give it.  The function should
+	not modify its value argument destructively.  The default choice
+	of function is `set-default'.
 :get	VALUE should be a function to extract the value of symbol.
 	The function takes one argument, a symbol, and should return
 	the current value for that symbol.  The default choice of function
@@ -319,7 +323,7 @@ If SYMBOL has a local binding, then this form affects the local
 binding.  This is normally not what you want.  Thus, if you need
 to load a file defining variables with this form, or with
 `defvar' or `defconst', you should always load that file
-_outside_ any bindings for these variables.  \(`defvar' and
+_outside_ any bindings for these variables.  (`defvar' and
 `defconst' behave similarly in this respect.)
 
 See Info node `(elisp) Customization' in the Emacs Lisp manual
@@ -351,7 +355,7 @@ FACE does not need to be quoted.
 
 Third argument DOC is the face documentation.
 
-If FACE has been set with `custom-set-faces', set the face
+If FACE has been set with `custom-theme-set-faces', set the face
 attributes as specified by that function, otherwise set the face
 attributes according to SPEC.
 
@@ -359,7 +363,7 @@ The remaining arguments should have the form [KEYWORD VALUE]...
 For a list of valid keywords, see the common keywords listed in
 `defcustom'.
 
-SPEC should be an alist of the form
+SPEC should be a \"face spec\", i.e., an alist of the form
 
    ((DISPLAY . ATTS)...)
 
@@ -541,8 +545,8 @@ Fourth argument TYPE is the custom option type."
 (defun custom-add-dependencies (symbol value)
   "To the custom option SYMBOL, add dependencies specified by VALUE.
 VALUE should be a list of symbols.  For each symbol in that list,
-this specifies that SYMBOL should be set after the specified symbol, if
-both appear in constructs like `custom-set-variables'."
+this specifies that SYMBOL should be set after the specified symbol,
+if both appear in constructs like `custom-set-variables'."
   (unless (listp value)
     (error "Invalid custom dependency `%s'" value))
   (let* ((deps (get symbol 'custom-dependencies))
@@ -647,7 +651,7 @@ The result is that the change is treated as having been made through Custom."
 		     (found nil))
 		 (dolist (loaded load-history)
 		   (and (stringp (car loaded))
-			(string-match regexp (car loaded))
+			(string-match-p regexp (car loaded))
 			(setq found t)))
 		 found))
 	      ;; Without this, we would load cus-edit recursively.
@@ -867,20 +871,21 @@ See `custom-known-themes' for a list of known themes."
 	(setcar (cdr setting) value)))
      ;; Add a new setting:
      (t
-      (unless old
-	;; If the user changed a variable outside of Customize, save
-	;; the value to a fake theme, `changed'.  If the theme is
-	;; later disabled, we use this to bring back the old value.
-	;;
-	;; For faces, we just use `face-new-frame-defaults' to
-	;; recompute when the theme is disabled.
-	(when (and (eq prop 'theme-value)
-		   (boundp symbol))
-	  (let ((sv  (get symbol 'standard-value))
-		(val (symbol-value symbol)))
-	    (unless (and sv (equal (eval (car sv)) val))
-	      (setq old `((changed ,(custom-quote val))))))))
-      (put symbol prop (cons (list theme value) old))
+      (unless custom--inhibit-theme-enable
+	(unless old
+	  ;; If the user changed a variable outside of Customize, save
+	  ;; the value to a fake theme, `changed'.  If the theme is
+	  ;; later disabled, we use this to bring back the old value.
+	  ;;
+	  ;; For faces, we just use `face-new-frame-defaults' to
+	  ;; recompute when the theme is disabled.
+	  (when (and (eq prop 'theme-value)
+		     (boundp symbol))
+	    (let ((sv  (get symbol 'standard-value))
+		  (val (symbol-value symbol)))
+	      (unless (and sv (equal (eval (car sv)) val))
+		(setq old `((changed ,(custom-quote val))))))))
+	(put symbol prop (cons (list theme value) old)))
       (put theme 'theme-settings
 	   (cons (list prop symbol theme value) theme-settings))))))
 
@@ -937,7 +942,7 @@ SYMBOL is the variable name, and EXP is an expression which
 evaluates to the customized value.  EXP will also be stored,
 without evaluating it, in SYMBOL's `saved-value' property, so
 that it can be restored via the Customize interface.  It is also
-added to the alist in SYMBOL's `theme-value' property \(by
+added to the alist in SYMBOL's `theme-value' property (by
 calling `custom-push-theme').
 
 NOW, if present and non-nil, means to install the variable's
@@ -949,7 +954,6 @@ prior to evaluating EXP).
 
 COMMENT is a comment string about SYMBOL."
   (custom-check-theme theme)
-
   ;; Process all the needed autoloads before anything else, so that the
   ;; subsequent code has all the info it needs (e.g. which var corresponds
   ;; to a minor mode), regardless of the ordering of the variables.
@@ -959,29 +963,7 @@ COMMENT is a comment string about SYMBOL."
                   (memq (get symbol 'custom-autoload) '(nil noset)))
         ;; This symbol needs to be autoloaded, even just for a `set'.
         (custom-load-symbol symbol))))
-
-  ;; Move minor modes and variables with explicit requires to the end.
-  (setq args
-	(sort args
-	      (lambda (a1 a2)
-		(let* ((sym1 (car a1))
-		       (sym2 (car a2))
-		       (1-then-2 (memq sym1 (get sym2 'custom-dependencies)))
-		       (2-then-1 (memq sym2 (get sym1 'custom-dependencies))))
-		  (cond ((and 1-then-2 2-then-1)
-			 (error "Circular custom dependency between `%s' and `%s'"
-				sym1 sym2))
-			(2-then-1 nil)
-			;; 1 is a dependency of 2, so needs to be set first.
-			(1-then-2)
-			;; Put minor modes and symbols with :require last.
-			;; Putting minor modes last ensures that the mode
-			;; function will see other customized values rather
-			;; than default values.
-			(t (or (nth 3 a2)
-                               (eq (get sym2 'custom-set)
-                                   'custom-set-minor-mode))))))))
-
+  (setq args (custom--sort-vars args))
   (dolist (entry args)
     (unless (listp entry)
       (error "Incompatible Custom theme spec"))
@@ -1014,6 +996,60 @@ COMMENT is a comment string about SYMBOL."
 	     (message "Error setting %s: %s" symbol data)))
 	  (and (or now (default-boundp symbol))
 	       (put symbol 'variable-comment comment)))))))
+
+(defvar custom--sort-vars-table)
+(defvar custom--sort-vars-result)
+
+(defun custom--sort-vars (vars)
+  "Sort VARS based on custom dependencies.
+VARS is a list whose elements have the same form as the ARGS
+arguments to `custom-theme-set-variables'.  Return the sorted
+list, in which A occurs before B if B was defined with a
+`:set-after' keyword specifying A (see `defcustom')."
+  (let ((custom--sort-vars-table (make-hash-table))
+	(dependants (make-hash-table))
+	(custom--sort-vars-result nil)
+	last)
+    ;; Construct a pair of tables keyed with the symbols of VARS.
+    (dolist (var vars)
+      (puthash (car var) (cons t var) custom--sort-vars-table)
+      (puthash (car var) var dependants))
+    ;; From the second table, remove symbols that are depended-on.
+    (dolist (var vars)
+      (dolist (dep (get (car var) 'custom-dependencies))
+	(remhash dep dependants)))
+    ;; If a variable is "stand-alone", put it last if it's a minor
+    ;; mode or has a :require flag.  This is not really necessary, but
+    ;; putting minor modes last helps ensure that the mode function
+    ;; sees other customized values rather than default values.
+    (maphash (lambda (sym var)
+	       (when (and (null (get sym 'custom-dependencies))
+			  (or (nth 3 var)
+			      (eq (get sym 'custom-set)
+				  'custom-set-minor-mode)))
+		 (remhash sym dependants)
+		 (push var last)))
+	     dependants)
+    ;; The remaining symbols depend on others but are not
+    ;; depended-upon.  Do a depth-first topological sort.
+    (maphash #'custom--sort-vars-1 dependants)
+    (nreverse (append last custom--sort-vars-result))))
+
+(defun custom--sort-vars-1 (sym &optional _ignored)
+  (let ((elt (gethash sym custom--sort-vars-table)))
+    ;; The car of the hash table value is nil if the variable has
+    ;; already been processed, `dependant' if it is a dependant in the
+    ;; current graph descent, and t otherwise.
+    (when elt
+      (cond
+       ((eq (car elt) 'dependant)
+	(error "Circular custom dependency on `%s'" sym))
+       ((car elt)
+	(setcar elt 'dependant)
+	(dolist (dep (get sym 'custom-dependencies))
+	  (custom--sort-vars-1 dep))
+	(setcar elt nil)
+	(push (cdr elt) custom--sort-vars-result))))))
 
 
 ;;; Defining themes.
@@ -1243,7 +1279,14 @@ NAME should be a symbol."
 		(eq name 'changed)))))
 
 (defun custom-available-themes ()
-  "Return a list of available Custom themes (symbols)."
+  "Return a list of Custom themes available for loading.
+Search the directories specified by `custom-theme-load-path' for
+files named FOO-theme.el, and return a list of FOO symbols.
+
+The returned symbols may not correspond to themes that have been
+loaded, and no effort is made to check that the files contain
+valid Custom themes.  For a list of loaded themes, check the
+variable `custom-known-themes'."
   (let (sym themes)
     (dolist (dir (custom-theme--load-path))
       (when (file-directory-p dir)
@@ -1382,6 +1425,10 @@ See `custom-enabled-themes' for a list of enabled themes."
       (setq custom-enabled-themes
 	    (delq theme custom-enabled-themes)))))
 
+;; Only used if window-system not null.
+(declare-function x-get-resource "frame.c"
+		  (attribute class &optional component subclass))
+
 (defun custom--frame-color-default (frame attribute resource-attr resource-class
 					  tty-default x-default)
   (let ((col (face-attribute 'default attribute t)))
@@ -1414,12 +1461,15 @@ This function returns nil if no custom theme specifies a value for VARIABLE."
 		 (eval (car valspec))))))
 
 (defun custom-theme-recalc-face (face)
-  "Set FACE according to currently enabled custom themes."
+  "Set FACE according to currently enabled custom themes.
+If FACE is not initialized as a face, do nothing; otherwise call
+`face-spec-recalc' to recalculate the face on all frames."
   (if (get face 'face-alias)
       (setq face (get face 'face-alias)))
-  ;; Reset the faces for each frame.
-  (dolist (frame (frame-list))
-    (face-spec-recalc face frame)))
+  (if (facep face)
+      ;; Reset the faces for each frame.
+      (dolist (frame (frame-list))
+	(face-spec-recalc face frame))))
 
 
 ;;; XEmacs compatibility functions
@@ -1451,11 +1501,6 @@ This means reset VARIABLE.  (The argument IGNORED is ignored)."
     (apply 'custom-theme-reset-variables 'user args))
 
 ;;; The End.
-
-;; Process the defcustoms for variables loaded before this file.
-(while custom-declare-variable-list
-  (apply 'custom-declare-variable (car custom-declare-variable-list))
-  (setq custom-declare-variable-list (cdr custom-declare-variable-list)))
 
 (provide 'custom)
 

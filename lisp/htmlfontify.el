@@ -1,6 +1,6 @@
 ;;; htmlfontify.el --- htmlize a buffer/source tree with optional hyperlinks
 
-;; Copyright (C) 2002-2003, 2009-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2002-2003, 2009-2014 Free Software Foundation, Inc.
 
 ;; Emacs Lisp Archive Entry
 ;; Package: htmlfontify
@@ -15,7 +15,6 @@
 ;; Compatibility: Emacs23, Emacs22
 ;; Incompatibility: Emacs19, Emacs20, Emacs21
 ;; Last Updated: Thu 2009-11-19 01:31:21 +0000
-;; Version: 0.21
 
 ;; This file is part of GNU Emacs.
 
@@ -147,6 +146,8 @@ main-content <=MAIN_CONTENT;\\n\" rtfm-section file style rtfm-section file))
   "Convert buffers and files to HTML."
   :group  'applications
   :link '(variable-link htmlfontify-manual)
+  :link '(custom-manual "(htmlfontify) Top")
+  :link '(info-link "(htmlfontify) Customization")
   :prefix "hfy-")
 
 (defcustom hfy-page-header 'hfy-default-header
@@ -717,7 +718,7 @@ STYLE is the inline CSS stylesheet (or tag referring to an external sheet)."
 --> </script>
   </head>
   <body onload=\"stripe('index'); return true;\">\n"
-          file style))
+          (mapconcat 'hfy-html-quote (mapcar 'char-to-string file) "") style))
 
 (defun hfy-default-footer (_file)
   "Default value for `hfy-page-footer'.
@@ -748,6 +749,10 @@ if you've redefined white, (esp. if you've redefined it to have a triplet
 member lower than that of the color you are processing) strange things
 may happen."
   ;;(message "hfy-colour-vals");;DBUG
+  ;; TODO?  Can we do somehow do better than this?
+  (cond
+   ((equal colour "unspecified-fg") (setq colour "black"))
+   ((equal colour "unspecified-bg") (setq colour "white")))
   (let ((white (mapcar (lambda (I) (float (1+ I))) (hfy-colour-vals "white")))
         (rgb16 (mapcar (lambda (I) (float (1+ I))) (hfy-colour-vals  colour))))
     (if rgb16
@@ -773,6 +778,8 @@ may happen."
   "Derive a CSS font-size specifier from an Emacs font :height attribute HEIGHT.
 Does not cope with the case where height is a function to be applied to
 the height of the underlying font."
+  ;; In ttys, the default face has :height == 1.
+  (and (not (display-graphic-p)) (equal 1 height) (setq height 100))
   (list
    (cond
     ;;(t                 (cons "font-size" ": 1em"))
@@ -1321,9 +1328,7 @@ return a `defface' style list of face properties instead of a face symbol."
 (defun hfy-overlay-props-at (p)
   "Grab overlay properties at point P.
 The plists are returned in descending priority order."
-  (sort (mapcar #'overlay-properties (overlays-at p))
-        (lambda (A B) (> (or (cadr (memq 'priority A)) 0) ;FIXME: plist-get?
-                    (or (cadr (memq 'priority B)) 0)))))
+ (mapcar #'overlay-properties (overlays-at p 'sorted)))
 
 ;; construct an assoc of (face-name . (css-name . "{ css-style }")) elements:
 (defun hfy-compile-stylesheet ()
@@ -1614,7 +1619,7 @@ span also begins a invisible portion of text.
 
 An implementation can use TEXT-BLOCK, TEXT-ID,
 TEXT-BEGINS-BLOCK-P to implement fold/unfold-on-mouse-click like
-behaviour.
+behavior.
 
 The default handler is `hfy-begin-span'.")
 
@@ -1635,7 +1640,6 @@ FILE, if set, is the file name."
           (css-map                     nil)
           (invis-ranges                nil)
           (rovl                        nil)
-          (orig-ovls      (overlays-in (point-min) (point-max)))
           (rmin           (when mark-active (region-beginning)))
           (rmax           (when mark-active (region-end      ))) )
     (when (and mark-active
@@ -1657,12 +1661,6 @@ FILE, if set, is the file name."
     (set-buffer     html-buffer)
     ;; rip out props that could interfere with our htmlization of the buffer:
     (remove-text-properties (point-min) (point-max) hfy-ignored-properties)
-    ;; Apply overlay invisible spec
-    (setq orig-ovls
-          (sort orig-ovls
-                (lambda (A B)
-                  (> (or (cadr (memq 'priority (overlay-properties A))) 0)
-                     (or (cadr (memq 'priority (overlay-properties B))) 0)))))
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; at this point, html-buffer retains the fontification of the parent:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1702,7 +1700,7 @@ FILE, if set, is the file name."
     ;; think we only need to relocate the hfy-endl property, as the hfy-linkp
     ;; property has already served its main purpose by this point.
     ;;(message "mapcar over the CSS-MAP")
-    (message "invis-ranges:\n%S" invis-ranges)
+    ;; (message "invis-ranges:\n%S" invis-ranges)
     (dolist (point-face css-map)
       (let ((pt (car point-face))
             (fn (cdr point-face))
@@ -2105,7 +2103,7 @@ FILE is the specific file we are rendering."
 ;; functionality easier to implement.
 ;; ( tar file functionality not merged here because it requires a
 ;;   hacked copy of etags capable of tagging stdin: if Francesco
-;;   Potorti accepts a patch, or otherwise implements stdin tagging,
+;;   Potortì accepts a patch, or otherwise implements stdin tagging,
 ;;   then I will provide a `htmlfontify-tar-file' defun )
 (defun hfy-parse-tags-buffer (srcdir buffer)
   "Parse a BUFFER containing etags formatted output, loading the
@@ -2405,8 +2403,7 @@ You may also want to set `hfy-page-header' and `hfy-page-footer'."
     (load file 'NOERROR nil nil) ))
 
 
-;;;### (autoloads (hfy-fallback-colour-values htmlfontify-load-rgb-file)
-;;;;;;  "hfy-cmap" "hfy-cmap.el" "3f97eeabe72027099da579f6ef9ae0bd")
+;;;### (autoloads nil "hfy-cmap" "hfy-cmap.el" "27dc80b0f7187aaf582805a8f887819a")
 ;;; Generated autoloads from hfy-cmap.el
 
 (autoload 'htmlfontify-load-rgb-file "hfy-cmap" "\

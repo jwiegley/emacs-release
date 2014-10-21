@@ -1,11 +1,11 @@
 ;;; compile.el --- run compiler as inferior of Emacs, parse error messages
 
-;; Copyright (C) 1985-1987, 1993-1999, 2001-2013 Free Software
+;; Copyright (C) 1985-1987, 1993-1999, 2001-2014 Free Software
 ;; Foundation, Inc.
 
 ;; Authors: Roland McGrath <roland@gnu.org>,
 ;;	    Daniel Pfeiffer <occitan@esperanto.org>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: tools, processes
 
 ;; This file is part of GNU Emacs.
@@ -42,24 +42,21 @@
 
 ;;;###autoload
 (defcustom compilation-mode-hook nil
-  "List of hook functions run by `compilation-mode' (see `run-mode-hooks')."
+  "List of hook functions run by `compilation-mode'."
   :type 'hook
   :group 'compilation)
 
 ;;;###autoload
 (defcustom compilation-start-hook nil
-  "List of hook functions run by `compilation-start' on the compilation process.
-\(See `run-hook-with-args').
-If you use \"omake -P\" and do not want \\[save-buffers-kill-terminal] to ask whether you want
-the compilation to be killed, you can use this hook:
-  (add-hook 'compilation-start-hook
-    (lambda (process) (set-process-query-on-exit-flag process nil)) nil t)"
+  "Hook run after starting a new compilation process.
+The hook is run with one argument, the new process."
   :type 'hook
   :group 'compilation)
 
 ;;;###autoload
 (defcustom compilation-window-height nil
-  "Number of lines in a compilation window.  If nil, use Emacs default."
+  "Number of lines in a compilation window.
+If nil, use Emacs default."
   :type '(choice (const :tag "Default" nil)
 		 integer)
   :group 'compilation)
@@ -134,6 +131,7 @@ and a string describing how the process finished.")
 
 ;; If you make any changes to `compilation-error-regexp-alist-alist',
 ;; be sure to run the ERT test in test/automated/compile-tests.el.
+;; emacs -batch -l compile-tests.el -f ert-run-tests-batch-and-exit
 
 (defvar compilation-error-regexp-alist-alist
   '((absoft
@@ -261,11 +259,12 @@ of[ \t]+\"?\\([a-zA-Z]?:?[^\":\n]+\\)\"?:" 3 2 nil (1))
      ;; The "in \\|from " exception was added to handle messages from Ruby.
      "^\\(?:[[:alpha:]][-[:alnum:].]+: ?\\|[ \t]+\\(?:in \\|from \\)\\)?\
 \\([0-9]*[^0-9\n]\\(?:[^\n :]\\| [^-/\n]\\|:[^ \n]\\)*?\\): ?\
-\\([0-9]+\\)\\(?:[.:]\\([0-9]+\\)\\)?\
-\\(?:-\\([0-9]+\\)?\\(?:\\.\\([0-9]+\\)\\)?\\)?:\
+\\([0-9]+\\)\\(?:-\\(?4:[0-9]+\\)\\(?:\\.\\(?5:[0-9]+\\)\\)?\
+\\|[.:]\\(?3:[0-9]+\\)\\(?:-\\(?:\\(?4:[0-9]+\\)\\.\\)?\\(?5:[0-9]+\\)\\)?\\)?:\
 \\(?: *\\(\\(?:Future\\|Runtime\\)?[Ww]arning\\|W:\\)\\|\
- *\\([Ii]nfo\\(?:\\>\\|rmationa?l?\\)\\|I:\\|instantiated from\\|[Nn]ote\\)\\|\
- *[Ee]rror\\|\[0-9]?\\(?:[^0-9\n]\\|$\\)\\|[0-9][0-9][0-9]\\)"
+ *\\([Ii]nfo\\(?:\\>\\|rmationa?l?\\)\\|I:\\|\\[ skipping .+ \\]\\|\
+\\(?:instantiated\\|required\\) from\\|[Nn]ote\\)\\|\
+ *[Ee]rror\\|[0-9]?\\(?:[^0-9\n]\\|$\\)\\|[0-9][0-9][0-9]\\)"
      1 (2 . 4) (3 . 5) (6 . 7))
 
     (lcc
@@ -514,7 +513,7 @@ listed text properties PROP# are given values VAL# as well."
   "Directory to restore to when doing `recompile'.")
 
 (defvar compilation-directory-matcher
-  '("\\(?:Entering\\|Leavin\\(g\\)\\) directory `\\(.+\\)'$" (2 . 1))
+  '("\\(?:Entering\\|Leavin\\(g\\)\\) directory [`']\\(.+\\)'$" (2 . 1))
   "A list for tracking when directories are entered or left.
 If nil, do not track directories, e.g. if all file names are absolute.  The
 first element is the REGEXP matching these messages.  It can match any number
@@ -527,7 +526,7 @@ directory we were in before the last entering message.  If you change this,
 you may also want to change `compilation-page-delimiter'.")
 
 (defvar compilation-page-delimiter
-  "^\\(?:\f\\|.*\\(?:Entering\\|Leaving\\) directory `.+'\n\\)+"
+  "^\\(?:\f\\|.*\\(?:Entering\\|Leaving\\) directory [`'].+'\n\\)+"
   "Value of `page-delimiter' in Compilation mode.")
 
 (defvar compilation-mode-font-lock-keywords
@@ -625,7 +624,9 @@ You might also use mode hooks to specify it in certain modes, like this:
 		     (file-exists-p \"Makefile\"))
 	   (set (make-local-variable 'compile-command)
 		(concat \"make -k \"
-			(file-name-sans-extension buffer-file-name))))))"
+			(if buffer-file-name
+			  (shell-quote-argument
+			    (file-name-sans-extension buffer-file-name))))))))"
   :type 'string
   :group 'compilation)
 ;;;###autoload(put 'compile-command 'safe-local-variable (lambda (a) (and (stringp a) (or (not (boundp 'compilation-read-command)) compilation-read-command))))
@@ -1353,9 +1354,7 @@ to `compilation-error-regexp-alist' if RULES is nil."
 			   (eq (car face) 'face)
 			   (or (symbolp (cadr face))
 			       (stringp (cadr face))))
-                      (put-text-property
-                       (match-beginning mn) (match-end mn)
-                       'font-lock-face (cadr face))
+                      (compilation--put-prop mn 'font-lock-face (cadr face))
                       (add-text-properties
                        (match-beginning mn) (match-end mn)
                        (nthcdr 2 face)))
@@ -1393,6 +1392,9 @@ to `compilation-error-regexp-alist' if RULES is nil."
         (move-marker compilation--parsed limit)
         (goto-char start)
         (forward-line 0)  ;Not line-beginning-position: ignore (comint) fields.
+        (while (and (not (bobp))
+                    (get-text-property (1- (point)) 'compilation-multiline))
+          (forward-line -1))
         (with-silent-modifications
           (compilation--parse-region (point) compilation--parsed)))))
   nil)
@@ -1427,8 +1429,9 @@ and move to the source code that caused it.
 If optional second arg COMINT is t the buffer will be in Comint mode with
 `compilation-shell-minor-mode'.
 
-Interactively, prompts for the command if `compilation-read-command' is
-non-nil; otherwise uses `compile-command'.  With prefix arg, always prompts.
+Interactively, prompts for the command if the variable
+`compilation-read-command' is non-nil; otherwise uses `compile-command'.
+With prefix arg, always prompts.
 Additionally, with universal prefix arg, compilation buffer will be in
 comint mode, i.e. interactive.
 
@@ -1466,12 +1469,13 @@ If the optional argument `edit-command' is non-nil, the command can be edited."
   (interactive "P")
   (save-some-buffers (not compilation-ask-about-save)
                      compilation-save-buffers-predicate)
-  (let ((default-directory (or compilation-directory default-directory)))
+  (let ((default-directory (or compilation-directory default-directory))
+	(command (eval compile-command)))
     (when edit-command
-      (setcar compilation-arguments
-              (compilation-read-command (car compilation-arguments))))
-    (apply 'compilation-start (or compilation-arguments
-				  `(,(eval compile-command))))))
+      (setq command (compilation-read-command (or (car compilation-arguments)
+						  command)))
+      (if compilation-arguments (setcar compilation-arguments command)))
+    (apply 'compilation-start (or compilation-arguments (list command)))))
 
 (defcustom compilation-scroll-output nil
   "Non-nil to scroll the *compilation* buffer window as output appears.
@@ -1581,7 +1585,16 @@ Returns the compilation buffer created."
                "\\\\\\(.\\)" "\\1"
                (substring command (1+ (match-beginning 1))
                           (1- (match-end 1)))))
-             (t (substitute-env-vars (match-string 1 command)))))
+             ;; Try globbing as well (bug#15417).
+             (t (let* ((substituted-dir
+                        (substitute-env-vars (match-string 1 command)))
+                       ;; FIXME: This also tries to expand `*' that were
+                       ;; introduced by the envvar expansion!
+                       (expanded-dir
+                        (file-expand-wildcards substituted-dir)))
+                  (if (= (length expanded-dir) 1)
+                      (car expanded-dir)
+                    substituted-dir)))))
 	(erase-buffer)
 	;; Select the desired mode.
 	(if (not (eq mode t))
@@ -1616,7 +1629,7 @@ Returns the compilation buffer created."
       (set-buffer-modified-p nil))
     ;; Pop up the compilation buffer.
     ;; http://lists.gnu.org/archive/html/emacs-devel/2007-11/msg01638.html
-    (setq outwin (display-buffer outbuf))
+    (setq outwin (display-buffer outbuf '(nil (allow-no-window . t))))
     (with-current-buffer outbuf
       (let ((process-environment
 	     (append
@@ -1638,7 +1651,7 @@ Returns the compilation buffer created."
 	     (list command mode name-function highlight-regexp))
 	(set (make-local-variable 'revert-buffer-function)
 	     'compilation-revert-buffer)
-	(set-window-start outwin (point-min))
+	(and outwin (set-window-start outwin (point-min)))
 
 	;; Position point as the user will see it.
 	(let ((desired-visible-point
@@ -1647,15 +1660,15 @@ Returns the compilation buffer created."
 		   (point-max)
 		 ;; Normally put it at the top.
 		 (point-min))))
-	  (if (eq outwin (selected-window))
-	      (goto-char desired-visible-point)
+	  (goto-char desired-visible-point)
+	  (when (and outwin (not (eq outwin (selected-window))))
 	    (set-window-point outwin desired-visible-point)))
 
 	;; The setup function is called before compilation-set-window-height
 	;; so it can set the compilation-window-height buffer locally.
 	(if compilation-process-setup-function
 	    (funcall compilation-process-setup-function))
-	(compilation-set-window-height outwin)
+	(and outwin (compilation-set-window-height outwin))
 	;; Start the compilation.
 	(if (fboundp 'start-process)
 	    (let ((proc
@@ -1810,6 +1823,7 @@ Returns the compilation buffer created."
     (define-key map [follow-link] 'mouse-face)
     (define-key map "\C-c\C-c" 'compile-goto-error)
     (define-key map "\C-m" 'compile-goto-error)
+    (define-key map "\C-o" 'compilation-display-error)
     (define-key map "\C-c\C-k" 'kill-compilation)
     (define-key map "\M-n" 'compilation-next-error)
     (define-key map "\M-p" 'compilation-previous-error)
@@ -1854,6 +1868,7 @@ Returns the compilation buffer created."
     (define-key map [follow-link] 'mouse-face)
     (define-key map "\C-c\C-c" 'compile-goto-error)
     (define-key map "\C-m" 'compile-goto-error)
+    (define-key map "\C-o" 'compilation-display-error)
     (define-key map "\C-c\C-k" 'kill-compilation)
     (define-key map "\M-n" 'compilation-next-error)
     (define-key map "\M-p" 'compilation-previous-error)
@@ -2295,6 +2310,12 @@ Prefix arg N says how many files to move backwards (or forwards, if negative)."
   (interactive "p")
   (compilation-next-file (- n)))
 
+(defun compilation-display-error ()
+  "Display the source for current error in another window."
+  (interactive)
+  (setq compilation-current-error (point))
+  (next-error-no-select 0))
+
 (defun kill-compilation ()
   "Kill the process made by the \\[compile] or \\[grep] commands."
   (interactive)
@@ -2307,7 +2328,7 @@ Prefix arg N says how many files to move backwards (or forwards, if negative)."
 
 (defun compile-goto-error (&optional event)
   "Visit the source for the error message at point.
-Use this command in a compilation log buffer.  Sets the mark at point there."
+Use this command in a compilation log buffer."
   (interactive (list last-input-event))
   (if event (posn-set-point (event-end event)))
   (or (compilation-buffer-p (current-buffer))
@@ -2316,7 +2337,6 @@ Use this command in a compilation log buffer.  Sets the mark at point there."
   (if (get-text-property (point) 'compilation-directory)
       (dired-other-window
        (car (get-text-property (point) 'compilation-directory)))
-    (push-mark)
     (setq compilation-current-error (point))
     (next-error-internal)))
 
@@ -2370,10 +2390,12 @@ This is the value of `next-error-function' in Compilation buffers."
                  ;;            (setq timestamp compilation-buffer-modtime)))
                  )
       (with-current-buffer
-          (compilation-find-file
-           marker
-           (caar (compilation--loc->file-struct loc))
-           (cadr (car (compilation--loc->file-struct loc))))
+          (apply #'compilation-find-file
+                 marker
+                 (caar (compilation--loc->file-struct loc))
+                 (cadr (car (compilation--loc->file-struct loc)))
+                 (compilation--file-struct->formats
+                  (compilation--loc->file-struct loc)))
         (let ((screen-columns
                ;; Obey the compilation-error-screen-columns of the target
                ;; buffer if its major mode set it buffer-locally.
@@ -2478,7 +2500,7 @@ displays at the top of the window; there is no arrow."
 All arguments are markers.  If END-MK is non-nil, mark is set there
 and overlay is highlighted between MK and END-MK."
   ;; Show compilation buffer in other window, scrolled to this error.
-  (let* ((from-compilation-buffer (eq (window-buffer (selected-window))
+  (let* ((from-compilation-buffer (eq (window-buffer)
                                       (marker-buffer msg)))
          ;; Use an existing window if it is in a visible frame.
          (pre-existing (get-buffer-window (marker-buffer msg) 0))
@@ -2487,14 +2509,16 @@ and overlay is highlighted between MK and END-MK."
                 ;; the error location if the two buffers are in two
                 ;; different frames.  So don't do it if it's not necessary.
                 pre-existing
-	      (display-buffer (marker-buffer msg))))
+	      (display-buffer (marker-buffer msg) '(nil (allow-no-window . t)))))
 	 (highlight-regexp (with-current-buffer (marker-buffer msg)
 			     ;; also do this while we change buffer
-			     (compilation-set-window w msg)
+			     (goto-char (marker-position msg))
+			     (and w (compilation-set-window w msg))
 			     compilation-highlight-regexp)))
     ;; Ideally, the window-size should be passed to `display-buffer'
     ;; so it's only used when creating a new window.
-    (unless pre-existing (compilation-set-window-height w))
+    (when (and (not pre-existing) w)
+      (compilation-set-window-height w))
 
     (if from-compilation-buffer
         ;; If the compilation buffer window was selected,
@@ -2605,9 +2629,12 @@ attempts to find a file whose name is produced by (format FMT FILENAME)."
     (while (null buffer)    ;Repeat until the user selects an existing file.
       ;; The file doesn't exist.  Ask the user where to find it.
       (save-excursion            ;This save-excursion is probably not right.
-        (let ((pop-up-windows t))
-          (compilation-set-window (display-buffer (marker-buffer marker))
-                                  marker)
+        (let ((w (let ((pop-up-windows t))
+		   (display-buffer (marker-buffer marker)
+				   '(nil (allow-no-window . t))))))
+          (with-current-buffer (marker-buffer marker)
+	    (goto-char marker)
+	    (and w (compilation-set-window w marker)))
           (let* ((name (read-file-name
                         (format "Find this %s in (default %s): "
                                 compilation-error filename)

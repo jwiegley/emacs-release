@@ -1,6 +1,6 @@
 ;;; ediff-util.el --- the core commands and utilities of ediff
 
-;; Copyright (C) 1994-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1994-2014 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 ;; Package: ediff
@@ -40,10 +40,7 @@
 (defvar ediff-after-quit-hook-internal nil)
 
 (eval-and-compile
-  (unless (fboundp 'declare-function) (defmacro declare-function (&rest  r))))
-
-(eval-when-compile
-  (require 'ediff))
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest  _r))))
 
 ;; end pacifier
 
@@ -143,6 +140,7 @@ to invocation.")
 					'ediff-previous-difference nil))
   ;; must come after C-h, or else C-h wipes out backspace's binding in XEmacs
   (define-key ediff-mode-map [backspace] 'ediff-previous-difference)
+  (define-key ediff-mode-map [?\S-\ ] 'ediff-previous-difference)
   (define-key ediff-mode-map "n" 'ediff-next-difference)
   (define-key ediff-mode-map " " 'ediff-next-difference)
   (define-key ediff-mode-map "j" 'ediff-jump-to-difference)
@@ -539,7 +537,7 @@ to invocation.")
 ;; to reside.
 (defun ediff-setup-control-buffer (ctl-buf)
   "Set up window for control buffer."
-  (if (window-dedicated-p (selected-window))
+  (if (window-dedicated-p)
       (set-buffer ctl-buf) ; we are in control frame but just in case
     (switch-to-buffer ctl-buf))
   (let ((window-min-height 2))
@@ -786,7 +784,12 @@ Reestablish the default three-window display."
 	   (frame-live-p ediff-control-frame)
 	   (not ediff-use-long-help-message)
 	   (not (ediff-frame-iconified-p ediff-control-frame)))
-      (raise-frame ediff-control-frame))
+      (if (fboundp 'select-frame-set-input-focus)
+	  (select-frame-set-input-focus ediff-control-frame)
+	(raise-frame ediff-control-frame)
+	(select-frame ediff-control-frame)
+	(if (fboundp 'focus-frame)
+	    (focus-frame ediff-control-frame))))
 
   ;; Redisplay whatever buffers are showing, if there is a selected difference
   (let ((control-frame ediff-control-frame)
@@ -955,7 +958,7 @@ On a dumb terminal, switches between ASCII highlighting and no highlighting."
 	 (message "Auto-refining is OFF")
 	 (setq ediff-auto-refine 'off))
 	(t ;; nix 'em
-	 (ediff-set-fine-diff-properties ediff-current-difference 'default)
+	 (ediff-set-fine-diff-properties ediff-current-difference t)
 	 (message "Refinements are HIDDEN")
 	 (setq ediff-auto-refine 'nix))
 	))
@@ -1599,7 +1602,7 @@ the width of the A/B/C windows."
 ;;BEG, END show the region to be positioned.
 ;;JOB-NAME holds ediff-job-name.  The ediff-windows job positions regions
 ;;differently.
-(defun ediff-position-region (beg end pos job-name)
+(defun ediff-position-region (beg end pos _job-name)
   (if (> end (point-max))
       (setq end (point-max)))
   (if ediff-windows-job
@@ -1626,7 +1629,7 @@ the width of the A/B/C windows."
 	    (setq lines (1+ lines)))
 	  ;; And position the beginning on the right line
 	  (goto-char beg)
-	  (recenter (/ (1+ (max (- (1- (window-height (selected-window)))
+	  (recenter (/ (1+ (max (- (1- (window-height))
 				   lines)
 				1)
 			   )
@@ -1682,7 +1685,7 @@ the width of the A/B/C windows."
 			    'ediff-get-lines-to-region-start)
 			   ((eq op 'scroll-up)
 			    'ediff-get-lines-to-region-end)
-			   (t (lambda (a b c) 0))))
+			   (t (lambda (_a _b _c) 0))))
 	       (max-lines (max (funcall func 'A n ctl-buf)
 			       (funcall func 'B n ctl-buf)
 			       (if (ediff-buffer-live-p ediff-buffer-C)
@@ -2815,7 +2818,7 @@ Hit \\[ediff-recenter] to reset the windows afterward."
   (with-output-to-temp-buffer ediff-msg-buffer
     (ediff-with-current-buffer standard-output
       (fundamental-mode))
-    (raise-frame (selected-frame))
+    (raise-frame)
     (princ (ediff-version))
     (princ "\n\n")
     (ediff-with-current-buffer ediff-buffer-A
@@ -2970,7 +2973,7 @@ Hit \\[ediff-recenter] to reset the windows afterward."
 	       ))
 
 	;; unhighlight fine diffs
-	(ediff-set-fine-diff-properties ediff-current-difference 'default)
+	(ediff-set-fine-diff-properties ediff-current-difference t)
 	(run-hooks 'ediff-unselect-hook))))
 
 
@@ -3020,8 +3023,6 @@ Hit \\[ediff-recenter] to reset the windows afterward."
 	(if (featurep 'xemacs)
 	    (ediff-move-overlay current-diff-overlay begin end-hilit)
 	  (ediff-move-overlay current-diff-overlay begin end-hilit buff))
-	(ediff-overlay-put current-diff-overlay 'priority
-			   (ediff-highest-priority begin end-hilit buff))
 	(ediff-overlay-put current-diff-overlay 'ediff-diff-num n)
 
 	;; unhighlight the background overlay for diff n so it won't
@@ -3378,10 +3379,18 @@ Without an argument, it saves customized diff argument, if available
     (set-window-buffer wind cloned-buff)
     cloned-buff))
 
-(defun ediff-clone-buffer-for-current-diff-comparison (buff buf-type reg-name)
-  (let ((cloned-buff (ediff-make-cloned-buffer buff reg-name))
-	(reg-start (ediff-get-diff-posn buf-type 'beg))
-	(reg-end (ediff-get-diff-posn buf-type 'end)))
+(defun ediff-buffer-type (buffer)
+  (cond ((eq buffer ediff-buffer-A) 'A)
+        ((eq buffer ediff-buffer-B) 'B)
+        ((eq buffer ediff-buffer-C) 'C)
+        ((eq buffer ediff-ancestor-buffer) 'Ancestor)
+        (t nil)))
+
+(defun ediff-clone-buffer-for-current-diff-comparison (buff reg-name)
+  (let* ((cloned-buff (ediff-make-cloned-buffer buff reg-name))
+         (buf-type (ediff-buffer-type buff))
+         (reg-start (ediff-get-diff-posn buf-type 'beg))
+         (reg-end (ediff-get-diff-posn buf-type 'end)))
     (ediff-with-current-buffer cloned-buff
       ;; set region to be the current diff region
       (goto-char reg-start)
@@ -3457,16 +3466,19 @@ Without an argument, it saves customized diff argument, if available
 	  (ediff-with-current-buffer buf
 	    (goto-char (point-min)))
 	  (switch-to-buffer buf)
-	  (raise-frame (selected-frame)))))
+	  (raise-frame))))
   (if (frame-live-p ediff-control-frame)
       (ediff-reset-mouse ediff-control-frame))
   (if (window-live-p ediff-control-window)
       (select-window ediff-control-window)))
 
+(declare-function ediff-regions-internal "ediff"
+		  (buffer-a beg-a end-a buffer-b beg-b end-b
+			    startup-hooks job-name word-mode setup-parameters))
 
 (defun ediff-inferior-compare-regions ()
   "Compare regions in an active Ediff session.
-Like ediff-regions-linewise but is called from under an active Ediff session on
+Like `ediff-regions-linewise' but is called from under an active Ediff session on
 the files that belong to that session.
 
 After quitting the session invoked via this function, type C-l to the parent
@@ -3480,7 +3492,7 @@ Ediff Control Panel to restore highlighting."
 
     (if (ediff-valid-difference-p ediff-current-difference)
 	(progn
-	  (ediff-set-fine-diff-properties ediff-current-difference 'default)
+	  (ediff-set-fine-diff-properties ediff-current-difference t)
 	  (ediff-unhighlight-diff)))
     (ediff-paint-background-regions 'unhighlight)
 
@@ -3555,7 +3567,7 @@ Ediff Control Panel to restore highlighting."
 
     (setq bufA (if use-current-diff-p
 		   (ediff-clone-buffer-for-current-diff-comparison
-		    bufA 'A "-Region.A-")
+		    bufA "-Region.A-")
 		 (ediff-clone-buffer-for-region-comparison bufA "-Region.A-")))
     (ediff-with-current-buffer bufA
       (setq begA (region-beginning)
@@ -3570,7 +3582,7 @@ Ediff Control Panel to restore highlighting."
 
     (setq bufB (if use-current-diff-p
 		   (ediff-clone-buffer-for-current-diff-comparison
-		    bufB 'B "-Region.B-")
+		    bufB "-Region.B-")
 		 (ediff-clone-buffer-for-region-comparison bufB "-Region.B-")))
     (ediff-with-current-buffer bufB
       (setq begB (region-beginning)
@@ -4010,7 +4022,7 @@ Mail anyway? (y or n) ")
 	      (set-buffer ctl-buf))
 	  (setq buffer-name (buffer-name))
 	  (require 'reporter)
-	  (reporter-submit-bug-report "kifer@cs.stonybrook.edu"
+	  (reporter-submit-bug-report "kifer@cs.stonybrook.edu, bug-gnu-emacs@gnu.org"
 				      (ediff-version)
 				      varlist
 				      nil

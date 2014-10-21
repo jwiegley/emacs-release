@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985-1987, 1993-1995, 1997, 2001-2013 Free Software
+@c Copyright (C) 1985-1987, 1993-1995, 1997, 2001-2014 Free Software
 @c Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @iftex
@@ -21,7 +21,7 @@ also considered.
 
 @table @kbd
 @item C-g
-@itemx C-@key{BREAK} @r{(MS-DOS only)}
+@itemx C-@key{Break} @r{(MS-DOS only)}
 Quit: cancel running or partially typed command.
 @item C-]
 Abort innermost recursive editing level and cancel the command which
@@ -58,11 +58,11 @@ incremental search, @kbd{C-g} behaves specially; it may take two
 successive @kbd{C-g} characters to get out of a search.
 @xref{Incremental Search}, for details.
 
-  On MS-DOS, the character @kbd{C-@key{BREAK}} serves as a quit character
+  On MS-DOS, the character @kbd{C-@key{Break}} serves as a quit character
 like @kbd{C-g}.  The reason is that it is not feasible, on MS-DOS, to
 recognize @kbd{C-g} while a command is running, between interactions
 with the user.  By contrast, it @emph{is} feasible to recognize
-@kbd{C-@key{BREAK}} at all times.
+@kbd{C-@key{Break}} at all times.
 @iftex
 @xref{MS-DOS Keyboard,,,emacs-xtra, Specialized Emacs Features}.
 @end iftex
@@ -135,6 +135,7 @@ facility.
 
 @node Lossage
 @section Dealing with Emacs Trouble
+@cindex troubleshooting Emacs
 
   This section describes how to recognize and deal with situations in
 which Emacs does not work as you expect, such as keyboard code mixups,
@@ -158,14 +159,15 @@ Emacs.
 @subsection If @key{DEL} Fails to Delete
 @cindex @key{DEL} vs @key{BACKSPACE}
 @cindex @key{BACKSPACE} vs @key{DEL}
+@cindex @key{DEL} does not delete
 
-  Every keyboard has a large key, usually labeled @key{Backspace},
+  Every keyboard has a large key, usually labeled @key{BACKSPACE},
 which is ordinarily used to erase the last character that you typed.
 In Emacs, this key is supposed to be equivalent to @key{DEL}.
 
   When Emacs starts up on a graphical display, it determines
 automatically which key should be @key{DEL}.  In some unusual cases,
-Emacs gets the wrong information from the system, and @key{Backspace}
+Emacs gets the wrong information from the system, and @key{BACKSPACE}
 ends up deleting forwards instead of backwards.
 
   Some keyboards also have a @key{Delete} key, which is ordinarily
@@ -173,9 +175,9 @@ used to delete forwards.  If this key deletes backward in Emacs, that
 too suggests Emacs got the wrong information---but in the opposite
 sense.
 
-  On a text terminal, if you find that @key{Backspace} prompts for a
+  On a text terminal, if you find that @key{BACKSPACE} prompts for a
 Help command, like @kbd{Control-h}, instead of deleting a character,
-it means that key is actually sending the @key{BS} character.  Emacs
+it means that key is actually sending the @samp{BS} character.  Emacs
 ought to be treating @key{BS} as @key{DEL}, but it isn't.
 
 @findex normal-erase-is-backspace-mode
@@ -189,8 +191,8 @@ sends character code 127.
 
   To fix the problem in every Emacs session, put one of the following
 lines into your initialization file (@pxref{Init File}).  For the
-first case above, where @key{Backspace} deletes forwards instead of
-backwards, use this line to make @key{Backspace} act as @key{DEL}:
+first case above, where @key{BACKSPACE} deletes forwards instead of
+backwards, use this line to make @key{BACKSPACE} act as @key{DEL}:
 
 @lisp
 (normal-erase-is-backspace-mode 0)
@@ -212,6 +214,8 @@ Customization}.
 
 @node Stuck Recursive
 @subsection Recursive Editing Levels
+@cindex stuck in recursive editing
+@cindex recursive editing, cannot exit
 
   Recursive editing levels are important and useful features of Emacs, but
 they can seem like malfunctions if you do not understand them.
@@ -225,6 +229,9 @@ top-level}.  @xref{Recursive Edit}.
 
 @node Screen Garbled
 @subsection Garbage on the Screen
+@cindex garbled display
+@cindex display, incorrect
+@cindex screen display, wrong
 
   If the text on a text terminal looks wrong, the first thing to do is
 see whether it is wrong in the buffer.  Type @kbd{C-l} to redisplay
@@ -242,6 +249,8 @@ bug in Emacs that appears for certain terminal types.
 
 @node Text Garbled
 @subsection Garbage in the Text
+@cindex garbled text
+@cindex buffer text garbled
 
   If @kbd{C-l} shows that the text is wrong, first type @kbd{C-h l} to
 see what commands you typed to produce the observed results.  Then try
@@ -282,18 +291,23 @@ itself, and the reserve supply may not be enough.
 @subsection When Emacs Crashes
 
 @cindex crash report
+@cindex backtrace
+@cindex @file{emacs_backtrace.txt} file, MS-Windows
   Emacs is not supposed to crash, but if it does, it produces a
 @dfn{crash report} prior to exiting.  The crash report is printed to
 the standard error stream.  If Emacs was started from a graphical
-desktop, the standard error stream is commonly redirected to a file
-such as @file{~/.xsession-errors}, so you can look for the crash
-report there.
+desktop on a GNU or Unix system, the standard error stream is commonly
+redirected to a file such as @file{~/.xsession-errors}, so you can
+look for the crash report there.  On MS-Windows, the crash report is
+written to a file named @file{emacs_backtrace.txt} in the current
+directory of the Emacs process, in addition to the standard error
+stream.
 
   The format of the crash report depends on the platform.  On some
 platforms, such as those using the GNU C Library, the crash report
 includes a @dfn{backtrace} describing the execution state prior to
 crashing, which can be used to help debug the crash.  Here is an
-example:
+example for a GNU system:
 
 @example
 Fatal error 11: Segmentation fault
@@ -320,26 +334,30 @@ backtrace with source-code line numbers:
 
 @example
 sed -n 's/.*\[\(.*\)]$/\1/p' @var{backtrace} |
-  addr2line -C -f -i -e @var{bindir}/emacs
+  addr2line -C -f -i -p -e @var{bindir}/@var{emacs-binary}
 @end example
 
 @noindent
 Here, @var{backtrace} is the name of a text file containing a copy of
-the backtrace, and @var{bindir} is the name of the directory that
-contains the Emacs executable.@footnote{You may wish to add the
-@option{-p} option, if your version of @command{addr2line} supports it.}
+the backtrace, @var{bindir} is the name of the directory that
+contains the Emacs executable, and @var{emacs-binary} is the name of
+the Emacs executable file, normally @file{emacs} on GNU and Unix
+systems and @file{emacs.exe} on MS-Windows and MS-DOS.  Omit the
+@option{-p} option if your version of @command{addr2line} is too old
+to have it.
 
 @cindex core dump
-  Optionally, Emacs can generate a @dfn{core dump} when it crashes.  A
-core dump is a file containing voluminous data about the state of the
-program prior to the crash, usually examined by loading it into a
-debugger such as GDB@.  On many platforms, core dumps are disabled by
-default, and you must explicitly enable them by running the shell
-command @samp{ulimit -c unlimited} (e.g., in your shell startup
-script).
+  Optionally, Emacs can generate a @dfn{core dump} when it crashes, on
+systems that support core files.  A core dump is a file containing
+voluminous data about the state of the program prior to the crash,
+usually examined by loading it into a debugger such as GDB@.  On many
+platforms, core dumps are disabled by default, and you must explicitly
+enable them by running the shell command @samp{ulimit -c unlimited}
+(e.g., in your shell startup script).
 
 @node After a Crash
 @subsection Recovery After a Crash
+@cindex recovering crashed session
 
   If Emacs or the computer crashes, you can recover the files you were
 editing at the time of the crash from their auto-save files.  To do
@@ -386,6 +404,7 @@ not make a backup of its old contents.
 
 @node Emergency Escape
 @subsection Emergency Escape
+@cindex emergency escape
 
   On text terminals, the @dfn{emergency escape} feature suspends Emacs
 immediately if you type @kbd{C-g} a second time before Emacs can
@@ -430,7 +449,7 @@ state.  The quit you requested will happen by and by.
 displays, you can use the mouse to kill Emacs or switch to another
 program.
 
-  On MS-DOS, you must type @kbd{C-@key{BREAK}} (twice) to cause
+  On MS-DOS, you must type @kbd{C-@key{Break}} (twice) to cause
 emergency escape---but there are cases where it won't work, when
 system call hangs or when Emacs is stuck in a tight loop in C code.
 
@@ -520,6 +539,8 @@ not feel obliged to read this list before reporting a bug.
 
 @node Bug Criteria
 @subsection When Is There a Bug
+@cindex bug criteria
+@cindex what constitutes an Emacs bug
 
   If Emacs accesses an invalid memory location (``segmentation
 fault''), or exits with an operating system error message that
@@ -533,7 +554,7 @@ buffer or change how it is displayed, are not responsible.
 
   Taking forever to complete a command can be a bug, but you must make
 sure that it is really Emacs's fault.  Some commands simply take a
-long time.  Type @kbd{C-g} (@kbd{C-@key{BREAK}} on MS-DOS) and then
+long time.  Type @kbd{C-g} (@kbd{C-@key{Break}} on MS-DOS) and then
 @kbd{C-h l} to see whether the input Emacs received was what you
 intended to type; if the input was such that you @emph{know} it should
 have been processed quickly, report a bug.  If you don't know whether
@@ -572,6 +593,8 @@ with the manual, one of them must be wrong; that is a bug.
 
 @node Understanding Bug Reporting
 @subsection Understanding Bug Reporting
+@cindex bug reporting
+@cindex report an Emacs bug, how to
 
 @findex emacs-version
   When you decide that there is a bug, it is important to report it
@@ -623,10 +646,13 @@ easily reproducible at all.  In that case, you should report what you
 have---but, as before, please stick to the raw facts about what you
 did to trigger the bug the first time.
 
+  If you have multiple issues that you want to report, please make a
+separate bug report for each.
+
 @node Checklist
 @subsection Checklist for Bug Reports
-
-@cindex reporting bugs
+@cindex checklist before reporting a bug
+@cindex bug reporting, checklist
 
   Before reporting a bug, first try to see if the problem has already
 been reported (@pxref{Known Problems}).
@@ -650,7 +676,13 @@ absolutely sure it is best to leave it, so that the developers can
 decide for themselves.
 
 When you have finished writing your report, type @kbd{C-c C-c} and it
-will be sent to the Emacs maintainers at @email{bug-gnu-emacs@@gnu.org}.
+will be sent to the Emacs maintainers at
+@ifnothtml
+@email{bug-gnu-emacs@@gnu.org}.
+@end ifnothtml
+@ifhtml
+@url{http://lists.gnu.org/mailman/listinfo/bug-gnu-emacs, bug-gnu-emacs}.
+@end ifhtml
 (If you want to suggest an improvement or new feature, use the same
 address.)  If you cannot send mail from inside Emacs, you can copy the
 text of your report to your normal mail client (if your system
@@ -742,7 +774,9 @@ customizations.
 One way to record the input to Emacs precisely is to write a dribble
 file.  To start the file, use the @kbd{M-x open-dribble-file
 @key{RET}} command.  From then on, Emacs copies all your input to the
-specified dribble file until the Emacs process is killed.
+specified dribble file until the Emacs process is killed.  Be aware
+that sensitive information (such as passwords) may end up recorded in
+the dribble file.
 
 @item
 @findex open-termscript
@@ -813,7 +847,7 @@ conclusion from our observations.
 @item
 If the bug is that the Emacs Manual or the Emacs Lisp Reference Manual
 fails to describe the actual behavior of Emacs, or that the text is
-confusing, copy in the text from the online manual which you think is
+confusing, copy in the text from the manual which you think is
 at fault.  If the section is small, just the section name is enough.
 
 @item
@@ -831,9 +865,9 @@ To make a backtrace for the error, use @kbd{M-x toggle-debug-on-error}
 before the error happens (that is to say, you must give that command
 and then make the bug happen).  This causes the error to start the Lisp
 debugger, which shows you a backtrace.  Copy the text of the
-debugger's backtrace into the bug report.  @xref{Debugger,, The Lisp
-Debugger, elisp, the Emacs Lisp Reference Manual}, for information on
-debugging Emacs Lisp programs with the Edebug package.
+debugger's backtrace into the bug report.  @xref{Edebug,, Edebug,
+elisp, the Emacs Lisp Reference Manual}, for information on debugging
+Emacs Lisp programs with the Edebug package.
 
 This use of the debugger is possible only if you know how to make the
 bug happen again.  If you can't make it happen again, at least copy
@@ -1126,48 +1160,77 @@ Please help us keep up with the workload by designing the patch in a
 form that is clearly safe to install.
 @end itemize
 
+@c FIXME: Include the node above?
 @node Contributing
 @section Contributing to Emacs Development
 @cindex contributing to Emacs
 
-If you would like to help pretest Emacs releases to assure they work
-well, or if you would like to work on improving Emacs, please contact
-the maintainers at @email{emacs-devel@@gnu.org}.  A pretester
-should be prepared to investigate bugs as well as report them.  If you'd
-like to work on improving Emacs, please ask for suggested projects or
-suggest your own ideas.
+If you would like to work on improving Emacs, please contact the maintainers at
+@ifnothtml
+@email{emacs-devel@@gnu.org}.
+@end ifnothtml
+@ifhtml
+@url{http://lists.gnu.org/mailman/listinfo/emacs-devel, the
+emacs-devel mailing list}.
+@end ifhtml
+You can ask for suggested projects or suggest your own ideas.
 
 If you have already written an improvement, please tell us about it.  If
 you have not yet started work, it is useful to contact
-@email{emacs-devel@@gnu.org} before you start; it might be
-possible to suggest ways to make your extension fit in better with the
-rest of Emacs.
+@ifnothtml
+@email{emacs-devel@@gnu.org}
+@end ifnothtml
+@ifhtml
+@url{http://lists.gnu.org/mailman/listinfo/emacs-devel, emacs-devel}
+@end ifhtml
+before you start; it might be possible to suggest ways to make your
+extension fit in better with the rest of Emacs.
 
 The development version of Emacs can be downloaded from the
 repository where it is actively maintained by a group of developers.
 See the Emacs project page
 @url{http://savannah.gnu.org/projects/emacs/} for details.
 
-For more information on how to contribute, see the @file{etc/CONTRIBUTE}
+For more information on how to contribute, see the
+@ifset WWW_GNU_ORG
+@ifhtml
+@url{http://gnu.org/software/emacs/CONTRIBUTE, etc/CONTRIBUTE}
+@end ifhtml
+@ifnothtml
+@file{etc/CONTRIBUTE}
+@end ifnothtml
+@end ifset
+@ifclear WWW_GNU_ORG
+@file{etc/CONTRIBUTE}
+@end ifclear
 file in the Emacs distribution.
 
 @node Service
 @section How To Get Help with GNU Emacs
+@cindex help in using Emacs
+@cindex help-gnu-emacs mailing list
+@cindex gnu.emacs.help newsgroup
 
 If you need help installing, using or changing GNU Emacs, there are two
 ways to find it:
 
 @itemize @bullet
 @item
-Send a message to the mailing list
-@email{help-gnu-emacs@@gnu.org}, or post your request on
-newsgroup @code{gnu.emacs.help}.  (This mailing list and newsgroup
-interconnect, so it does not matter which one you use.)
+Send a message to
+@ifnothtml
+the mailing list @email{help-gnu-emacs@@gnu.org},
+@end ifnothtml
+@ifhtml
+@url{http://lists.gnu.org/mailman/listinfo/help-gnu-emacs, the
+help-gnu-emacs mailing list},
+@end ifhtml
+or post your request on newsgroup @code{gnu.emacs.help}.  (This
+mailing list and newsgroup interconnect, so it does not matter which
+one you use.)
 
 @item
-Look in the service directory for someone who might help you for a fee.
-The service directory is found in the file named @file{etc/SERVICE} in the
-Emacs distribution.
+Look in the @uref{http://www.fsf.org/resources/service/, service
+directory} for someone who might help you for a fee.
 @end itemize
 
 @ifnottex

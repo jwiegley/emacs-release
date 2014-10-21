@@ -1,6 +1,6 @@
 /* Keyboard macros.
 
-Copyright (C) 1985-1986, 1993, 2000-2013 Free Software Foundation, Inc.
+Copyright (C) 1985-1986, 1993, 2000-2014 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -28,7 +28,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "window.h"
 #include "keyboard.h"
 
-Lisp_Object Qexecute_kbd_macro;
+static Lisp_Object Qexecute_kbd_macro;
 static Lisp_Object Qkbd_macro_termination_hook;
 
 /* Number of successful iterations so far
@@ -55,7 +55,7 @@ Use \\[name-last-kbd-macro] to give it a permanent name.
 Non-nil arg (prefix arg) means append to last macro defined;
 this begins by re-executing that macro as if you typed it again.
 If optional second arg, NO-EXEC, is non-nil, do not re-execute last
-macro before appending to it. */)
+macro before appending to it.  */)
   (Lisp_Object append, Lisp_Object no_exec)
 {
   if (!NILP (KVAR (current_kboard, defining_kbd_macro)))
@@ -65,8 +65,10 @@ macro before appending to it. */)
     {
       current_kboard->kbd_macro_buffer = xmalloc (30 * word_size);
       current_kboard->kbd_macro_bufsize = 30;
+      current_kboard->kbd_macro_ptr = current_kboard->kbd_macro_buffer;
+      current_kboard->kbd_macro_end = current_kboard->kbd_macro_buffer;
     }
-  update_mode_lines++;
+  update_mode_lines = 19;
   if (NILP (append))
     {
       if (current_kboard->kbd_macro_bufsize > 200)
@@ -78,7 +80,7 @@ macro before appending to it. */)
 	}
       current_kboard->kbd_macro_ptr = current_kboard->kbd_macro_buffer;
       current_kboard->kbd_macro_end = current_kboard->kbd_macro_buffer;
-      message ("Defining kbd macro...");
+      message1 ("Defining kbd macro...");
     }
   else
     {
@@ -125,7 +127,7 @@ macro before appending to it. */)
 	Fexecute_kbd_macro (KVAR (current_kboard, Vlast_kbd_macro),
 			    make_number (1), Qnil);
 
-      message ("Appending to kbd macro...");
+      message1 ("Appending to kbd macro...");
     }
   kset_defining_kbd_macro (current_kboard, Qt);
 
@@ -138,7 +140,7 @@ void
 end_kbd_macro (void)
 {
   kset_defining_kbd_macro (current_kboard, Qnil);
-  update_mode_lines++;
+  update_mode_lines = 20;
   kset_last_kbd_macro
     (current_kboard,
      make_event_array ((current_kboard->kbd_macro_end
@@ -172,21 +174,21 @@ each iteration of the macro.  Iteration stops if LOOPFUNC returns nil.  */)
   if (!NILP (KVAR (current_kboard, defining_kbd_macro)))
     {
       end_kbd_macro ();
-      message ("Keyboard macro defined");
+      message1 ("Keyboard macro defined");
     }
 
   if (XFASTINT (repeat) == 0)
     Fexecute_kbd_macro (KVAR (current_kboard, Vlast_kbd_macro), repeat, loopfunc);
   else if (XINT (repeat) > 1)
     {
-      XSETINT (repeat, XINT (repeat)-1);
+      XSETINT (repeat, XINT (repeat) - 1);
       Fexecute_kbd_macro (KVAR (current_kboard, Vlast_kbd_macro),
 			  repeat, loopfunc);
     }
   return Qnil;
 }
 
-/* Store character c into kbd macro being defined */
+/* Store character c into kbd macro being defined.  */
 
 void
 store_kbd_macro_char (Lisp_Object c)
@@ -279,7 +281,7 @@ each iteration of the macro.  Iteration stops if LOOPFUNC returns nil.  */)
 /* Restore Vexecuting_kbd_macro and executing_kbd_macro_index.
    Called when the unwind-protect in Fexecute_kbd_macro gets invoked.  */
 
-static Lisp_Object
+static void
 pop_kbd_macro (Lisp_Object info)
 {
   Lisp_Object tem;
@@ -288,12 +290,12 @@ pop_kbd_macro (Lisp_Object info)
   executing_kbd_macro_index = XINT (XCAR (tem));
   Vreal_this_command = XCDR (tem);
   Frun_hooks (1, &Qkbd_macro_termination_hook);
-  return Qnil;
 }
 
 DEFUN ("execute-kbd-macro", Fexecute_kbd_macro, Sexecute_kbd_macro, 1, 3, 0,
        doc: /* Execute MACRO as string of editor command characters.
-If MACRO is a symbol, its function definition is used.
+MACRO can also be a vector of keyboard events.  If MACRO is a symbol,
+its function definition is used.
 COUNT is a repeat count, or nil for once, or 0 for infinite loop.
 
 Optional third arg LOOPFUNC may be a function that is called prior to

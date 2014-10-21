@@ -1,6 +1,6 @@
 ;;; time-date.el --- Date and time handling functions
 
-;; Copyright (C) 1998-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2014 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	Masanobu Umeda <umerin@mse.kyutech.ac.jp>
@@ -133,9 +133,7 @@ If DATE lacks timezone information, GMT is assumed."
 ;;;###autoload(if (or (featurep 'emacs)
 ;;;###autoload        (and (fboundp 'float-time)
 ;;;###autoload             (subrp (symbol-function 'float-time))))
-;;;###autoload    (progn
-;;;###autoload      (defalias 'time-to-seconds 'float-time)
-;;;###autoload      (make-obsolete 'time-to-seconds 'float-time "21.1"))
+;;;###autoload    (defalias 'time-to-seconds 'float-time)
 ;;;###autoload  (autoload 'time-to-seconds "time-date"))
 
 (eval-when-compile

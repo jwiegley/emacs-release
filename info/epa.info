@@ -1,15 +1,14 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/epa.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/epa.texi.
+This is ../../info/epa.info, produced by makeinfo version 4.13 from
+./epa.texi.
 
 This file describes EasyPG Assistant 1.0.0.
 
-   Copyright (C) 2007-2013 Free Software Foundation, Inc.
+   Copyright (C) 2007-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -37,12 +36,12 @@ interface called EasyPG Library.
 
    This file describes EasyPG Assistant 1.0.0.
 
-   Copyright (C) 2007-2013 Free Software Foundation, Inc.
+   Copyright (C) 2007-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -58,6 +57,9 @@ interface called EasyPG Library.
 * Caching Passphrases::
 * Bug Reports::
 * GNU Free Documentation License::  The license for this documentation.
+* Key Index::
+* Function Index::
+* Variable Index::
 
 
 File: epa.info,  Node: Overview,  Next: Quick start,  Prev: Top,  Up: Top
@@ -113,7 +115,7 @@ This chapter introduces various commands for typical use cases.
 * Cryptographic operations on files::
 * Dired integration::
 * Mail-mode integration::
-* Encrypting/decrypting *.gpg files::
+* Encrypting/decrypting gpg files::
 
 
 File: epa.info,  Node: Key management,  Next: Cryptographic operations on regions,  Up: Commands
@@ -234,8 +236,9 @@ File: epa.info,  Node: Cryptographic operations on files,  Next: Dired integrati
 3.3 Cryptographic operations on files
 =====================================
 
- -- Command: epa-decrypt-file file
-     Decrypt FILE.
+ -- Command: epa-decrypt-file file &optional output
+     Decrypt FILE.  If you do not specify the name OUTPUT to use for
+     the decrypted file, this function prompts for the value to use.
 
  -- Command: epa-verify-file file
      Verify FILE.
@@ -277,7 +280,7 @@ The following keys are assigned.
 
 
 
-File: epa.info,  Node: Mail-mode integration,  Next: Encrypting/decrypting *.gpg files,  Prev: Dired integration,  Up: Commands
+File: epa.info,  Node: Mail-mode integration,  Next: Encrypting/decrypting gpg files,  Prev: Dired integration,  Up: Commands
 
 3.5 Mail-mode integration
 =========================
@@ -308,14 +311,17 @@ interface.  Try `M-x customize-variable epa-global-mail-mode'.
      Compose an encrypted message from the current buffer.  By default
      it tries to build the recipient list from `to', `cc', and `bcc'
      fields of the mail header.  To include your key in the recipient
-     list, use `encrypt-to' option in `~/.gnupg/gpg.conf'.
+     list, use `encrypt-to' option in `~/.gnupg/gpg.conf'.  This
+     function translates recipient addresses using the
+     `epa-mail-aliases' list.  You can also use that option to ignore
+     specific recipients for encryption purposes.
 
 
 
-File: epa.info,  Node: Encrypting/decrypting *.gpg files,  Prev: Mail-mode integration,  Up: Commands
+File: epa.info,  Node: Encrypting/decrypting gpg files,  Prev: Mail-mode integration,  Up: Commands
 
-3.6 Encrypting/decrypting *.gpg files
-=====================================
+3.6 Encrypting/decrypting gpg files
+===================================
 
 By default, every file whose name ends with `.gpg' will be treated as
 encrypted.  That is, when you open such a file, the decrypted text is
@@ -357,9 +363,9 @@ which encryption method should be used through *Note File Variables:
 (emacs)File Variables.  Use the `epa-file-encrypt-to' local variable
 for this.  
 
-   For example, if you want an Elisp file should be encrypted with a
-public key associated with an email address `ueno@unixuser.org', add
-the following line to the beginning of the file.
+   For example, if you want an Elisp file to be encrypted with a public
+key associated with an email address `ueno@unixuser.org', add the
+following line to the beginning of the file.
 
      ;; -*- epa-file-encrypt-to: ("ueno@unixuser.org") -*-
 
@@ -416,7 +422,7 @@ Invoking GPG-AGENT: (gnupg)Invoking GPG-AGENT.
 
    To set up elisp passphrase cache, set
 `epa-file-cache-passphrase-for-symmetric-encryption'.  *Note
-Encrypting/decrypting *.gpg files::.
+Encrypting/decrypting gpg files::.
 
 
 File: epa.info,  Node: Bug Reports,  Next: GNU Free Documentation License,  Prev: Caching Passphrases,  Up: Top
@@ -442,14 +448,14 @@ collect necessary information to fix the bug, such as:
 is a whitespace.
 
 
-File: epa.info,  Node: GNU Free Documentation License,  Prev: Bug Reports,  Up: Top
+File: epa.info,  Node: GNU Free Documentation License,  Next: Key Index,  Prev: Bug Reports,  Up: Top
 
 Appendix A GNU Free Documentation License
 *****************************************
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -927,21 +933,136 @@ recommend releasing these examples in parallel under your choice of
 free software license, such as the GNU General Public License, to
 permit their use in free software.
 
+
+File: epa.info,  Node: Key Index,  Next: Function Index,  Prev: GNU Free Documentation License,  Up: Top
+
+Key Index
+*********
+
+ [index ]
+* Menu:
+
+* : d:                                   Dired integration.    (line 17)
+* : e:                                   Dired integration.    (line 26)
+* : s:                                   Dired integration.    (line 23)
+* : v:                                   Dired integration.    (line 20)
+* C-c C-e C-d:                           Mail-mode integration.
+                                                               (line 20)
+* C-c C-e C-e:                           Mail-mode integration.
+                                                               (line 29)
+* C-c C-e C-s:                           Mail-mode integration.
+                                                               (line 26)
+* C-c C-e C-v:                           Mail-mode integration.
+                                                               (line 23)
+* C-c C-e d:                             Mail-mode integration.
+                                                               (line 20)
+* C-c C-e e:                             Mail-mode integration.
+                                                               (line 29)
+* C-c C-e s:                             Mail-mode integration.
+                                                               (line 26)
+* C-c C-e v:                             Mail-mode integration.
+                                                               (line 23)
+
+
+File: epa.info,  Node: Function Index,  Next: Variable Index,  Prev: Key Index,  Up: Top
+
+Function Index
+**************
+
+ [index ]
+* Menu:
+
+* epa-decrypt-armor-in-region:           Cryptographic operations on regions.
+                                                               (line 11)
+* epa-decrypt-file:                      Cryptographic operations on files.
+                                                               (line  7)
+* epa-decrypt-region:                    Cryptographic operations on regions.
+                                                               (line  7)
+* epa-delete-keys:                       Key management.       (line 69)
+* epa-dired-do-decrypt:                  Dired integration.    (line 17)
+* epa-dired-do-encrypt:                  Dired integration.    (line 26)
+* epa-dired-do-sign:                     Dired integration.    (line 23)
+* epa-dired-do-verify:                   Dired integration.    (line 20)
+* epa-encrypt-file:                      Cryptographic operations on files.
+                                                               (line 18)
+* epa-encrypt-region:                    Cryptographic operations on regions.
+                                                               (line 36)
+* epa-file-disable:                      Encrypting/decrypting gpg files.
+                                                               (line 21)
+* epa-file-enable:                       Encrypting/decrypting gpg files.
+                                                               (line 24)
+* epa-file-select-keys:                  Encrypting/decrypting gpg files.
+                                                               (line 32)
+* epa-import-armor-in-region:            Key management.       (line 62)
+* epa-import-keys:                       Key management.       (line 55)
+* epa-import-keys-region:                Key management.       (line 58)
+* epa-insert-keys:                       Key management.       (line 50)
+* epa-list-keys:                         Key management.       (line 11)
+* epa-list-secret-keys:                  Key management.       (line 40)
+* epa-mail-decrypt:                      Mail-mode integration.
+                                                               (line 20)
+* epa-mail-encrypt:                      Mail-mode integration.
+                                                               (line 29)
+* epa-mail-sign:                         Mail-mode integration.
+                                                               (line 26)
+* epa-mail-verify:                       Mail-mode integration.
+                                                               (line 23)
+* epa-sign-file:                         Cryptographic operations on files.
+                                                               (line 14)
+* epa-sign-region:                       Cryptographic operations on regions.
+                                                               (line 31)
+* epa-verify-cleartext-in-region:        Cryptographic operations on regions.
+                                                               (line 23)
+* epa-verify-file:                       Cryptographic operations on files.
+                                                               (line 11)
+* epa-verify-region:                     Cryptographic operations on regions.
+                                                               (line 18)
+
+
+File: epa.info,  Node: Variable Index,  Prev: Function Index,  Up: Top
+
+Variable Index
+**************
+
+ [index ]
+* Menu:
+
+* epa-file-cache-passphrase-for-symmetric-encryption: Encrypting/decrypting gpg files.
+                                                               (line 62)
+* epa-file-encrypt-to:                   Encrypting/decrypting gpg files.
+                                                               (line 44)
+* epa-file-inhibit-auto-save:            Encrypting/decrypting gpg files.
+                                                               (line 66)
+* epa-file-name-regexp:                  Encrypting/decrypting gpg files.
+                                                               (line 15)
+* epa-file-select-keys:                  Encrypting/decrypting gpg files.
+                                                               (line 39)
+* epa-mail-aliases:                      Mail-mode integration.
+                                                               (line 29)
+
 
 
 Tag Table:
-Node: Top975
-Node: Overview2194
-Node: Quick start2559
-Node: Commands3111
-Node: Key management3485
-Node: Cryptographic operations on regions6167
-Node: Cryptographic operations on files8160
-Node: Dired integration8755
-Node: Mail-mode integration9351
-Node: Encrypting/decrypting *.gpg files10749
-Node: Caching Passphrases13302
-Node: Bug Reports14720
-Node: GNU Free Documentation License15626
+Node: Top899
+Node: Overview2170
+Node: Quick start2535
+Node: Commands3087
+Node: Key management3459
+Node: Cryptographic operations on regions6141
+Node: Cryptographic operations on files8134
+Node: Dired integration8865
+Node: Mail-mode integration9461
+Node: Encrypting/decrypting gpg files11038
+Node: Caching Passphrases13581
+Node: Bug Reports14997
+Node: GNU Free Documentation License15903
+Node: Key Index41069
+Node: Function Index42608
+Node: Variable Index46047
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

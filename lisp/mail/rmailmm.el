@@ -1,10 +1,10 @@
 ;;; rmailmm.el --- MIME decoding and display stuff for RMAIL
 
-;; Copyright (C) 2006-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2006-2014 Free Software Foundation, Inc.
 
 ;; Author: Alexander Pohoyda
 ;;	Alex Schroeder
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: mail
 ;; Package: rmail
 
@@ -229,11 +229,6 @@ TRUNCATED is non-nil if the text of this entity was truncated."
 (defsubst rmail-mime-entity-truncated (entity) (aref entity 9))
 (defsubst rmail-mime-entity-set-truncated (entity truncated)
   (aset entity 9 truncated))
-
-(defsubst rmail-mime-message-p ()
-  "Non-nil if and only if the current message is a MIME."
-  (or (get-text-property (point) 'rmail-mime-entity)
-      (get-text-property (point-min) 'rmail-mime-entity)))
 
 ;;; Buttons
 
@@ -685,7 +680,8 @@ directly."
      ((string-match "image/\\(.*\\)" content-type)
       (setq type (image-type-from-file-name
 		  (concat "." (match-string 1 content-type))))
-      (if (and (memq type image-types)
+      (if (and (boundp 'image-types)
+	       (memq type image-types)
 	       (image-type-available-p type))
 	  (if (and rmail-mime-show-images
 		   (not (eq rmail-mime-show-images 'button))
@@ -1365,14 +1361,15 @@ The arguments ARG and STATE have no effect in this case."
 (defun rmail-insert-mime-forwarded-message (forward-buffer)
   "Insert the message in FORWARD-BUFFER as a forwarded message.
 This is the usual value of `rmail-insert-mime-forwarded-message-function'."
-  (let ((message-buffer
-	 (with-current-buffer forward-buffer
-	   (if rmail-buffer-swapped
-	       forward-buffer
-	     rmail-view-buffer))))
-    (save-restriction
-      (narrow-to-region (point) (point))
-      (message-forward-make-body-mime message-buffer))))
+  (let (contents-buffer start end)
+    (with-current-buffer forward-buffer
+      (setq contents-buffer
+	    (if rmail-buffer-swapped
+		rmail-view-buffer
+	      forward-buffer)
+	    start (rmail-msgbeg rmail-current-message)
+	    end (rmail-msgend rmail-current-message)))
+    (message-forward-make-body-mime contents-buffer start end)))
 
 (setq rmail-insert-mime-forwarded-message-function
       'rmail-insert-mime-forwarded-message)

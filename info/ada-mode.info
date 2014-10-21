@@ -1,14 +1,12 @@
-This is
-/misc/emacs/bzr/emacs24-merge/doc/misc/../../info/ada-mode.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/ada-mode.texi.
+This is ../../info/ada-mode.info, produced by makeinfo version 4.13
+from ./ada-mode.texi.
 
-Copyright (C) 1999-2013 Free Software Foundation, Inc.
+Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -22,17 +20,17 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: ada-mode.info,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
+File: ada-mode.info,  Node: Top,  Next: Overview,  Up: (dir)
 
 Ada Mode
 ********
 
-Copyright (C) 1999-2013 Free Software Foundation, Inc.
+Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -162,7 +160,7 @@ machines).
 * Other customization::
 
 
-File: ada-mode.info,  Node: Non-standard file names,  Next: Other compiler,  Prev: Customization,  Up: Customization
+File: ada-mode.info,  Node: Non-standard file names,  Next: Other compiler,  Up: Customization
 
 3.1 Non-standard file names
 ===========================
@@ -256,7 +254,7 @@ variables referenced here.
 * Compiler errors::
 
 
-File: ada-mode.info,  Node: Compile commands,  Next: Compiler errors,  Prev: Compiling Executing,  Up: Compiling Executing
+File: ada-mode.info,  Node: Compile commands,  Next: Compiler errors,  Up: Compiling Executing
 
 4.1 Compile commands
 ====================
@@ -378,7 +376,7 @@ Emacs Ada mode project file.
 * Project file variables::
 
 
-File: ada-mode.info,  Node: Project File Overview,  Next: GUI Editor,  Prev: Project files,  Up: Project files
+File: ada-mode.info,  Node: Project File Overview,  Next: GUI Editor,  Up: Project files
 
 5.1 Project File Overview
 =========================
@@ -656,7 +654,7 @@ website mentioned in *Note Installation::.
 * Use multiple GNAT project files::
 
 
-File: ada-mode.info,  Node: No project files,  Next: Set compiler options,  Prev: Compiling Examples,  Up: Compiling Examples
+File: ada-mode.info,  Node: No project files,  Next: Set compiler options,  Up: Compiling Examples
 
 6.1 No project files
 ====================
@@ -1462,7 +1460,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -2003,34 +2001,39 @@ Index
 
 
 Tag Table:
-Node: Top938
-Node: Overview2609
-Node: Installation3918
-Node: Customization5046
-Node: Non-standard file names5953
-Node: Other compiler7448
-Node: Other customization7951
-Node: Compiling Executing8604
-Node: Compile commands9275
-Node: Compiler errors12012
-Node: Project files12891
-Node: Project File Overview13594
-Node: GUI Editor15896
-Node: Project file variables16371
-Node: Compiling Examples23466
-Node: No project files24264
-Node: Set compiler options28950
-Node: Set source search path30915
-Node: Use GNAT project file33192
-Node: Use multiple GNAT project files35375
-Node: Moving Through Ada Code37264
-Node: Identifier completion39220
-Node: Automatic Smart Indentation40782
-Node: Formatting Parameter Lists43601
-Node: Automatic Casing44007
-Node: Statement Templates47251
-Node: Comment Handling48719
-Node: GNU Free Documentation License49253
-Node: Index74431
+Node: Top862
+Node: Overview2519
+Node: Installation3828
+Node: Customization4956
+Node: Non-standard file names5863
+Node: Other compiler7336
+Node: Other customization7839
+Node: Compiling Executing8492
+Node: Compile commands9163
+Node: Compiler errors11872
+Node: Project files12751
+Node: Project File Overview13454
+Node: GUI Editor15734
+Node: Project file variables16209
+Node: Compiling Examples23304
+Node: No project files24102
+Node: Set compiler options28761
+Node: Set source search path30726
+Node: Use GNAT project file33003
+Node: Use multiple GNAT project files35186
+Node: Moving Through Ada Code37075
+Node: Identifier completion39031
+Node: Automatic Smart Indentation40593
+Node: Formatting Parameter Lists43412
+Node: Automatic Casing43818
+Node: Statement Templates47062
+Node: Comment Handling48530
+Node: GNU Free Documentation License49064
+Node: Index74236
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

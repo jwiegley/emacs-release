@@ -1,10 +1,10 @@
 ;;; ehelp.el --- bindings for electric-help mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 1986, 1995, 2000-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1986, 1995, 2000-2014 Free Software Foundation, Inc.
 
 ;; Author: Richard Mlynarik
 ;; (according to ack.texi and authors.el)
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: help, extensions
 
 ;; This file is part of GNU Emacs.
@@ -25,7 +25,7 @@
 ;;; Commentary:
 
 ;; This package provides a pre-packaged `Electric Help Mode' for
-;; browsing on-line help screens.  There is one entry point,
+;; browsing Emacs help screens.  There is one entry point,
 ;; `with-electric-help'; all you have to give it is a no-argument
 ;; function that generates the actual text of the help into the current
 ;; buffer.
@@ -80,6 +80,7 @@
     (define-key map (char-to-string help-char) 'electric-help-help)
     (define-key map "?" 'electric-help-help)
     (define-key map " " 'scroll-up)
+    (define-key map [?\S-\ ] 'scroll-down)
     (define-key map "\^?" 'scroll-down)
     (define-key map "." 'beginning-of-buffer)
     (define-key map "<" 'beginning-of-buffer)
@@ -145,7 +146,7 @@ BUFFER is put back into its original major mode."
     (unwind-protect
          (save-excursion
            (when one
-	     (goto-char (window-start (selected-window))))
+	     (goto-char (window-start)))
            (let ((pop-up-windows t))
              (pop-to-buffer buffer))
            (with-current-buffer buffer

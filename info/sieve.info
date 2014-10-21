@@ -1,16 +1,15 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/sieve.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/sieve.texi.
+This is ../../info/sieve.info, produced by makeinfo version 4.13 from
+./sieve.texi.
 
 This file documents the Emacs Sieve package, for server-side mail
 filtering.
 
-   Copyright (C) 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -39,12 +38,12 @@ the language, so keep RFC 3028 around.
    This file documents the Emacs Sieve package, for server-side mail
 filtering.
 
-   Copyright (C) 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -124,7 +123,7 @@ to use.
    When a server has been successfully contacted, the Manage Sieve
 buffer looks something like:
 
-     Server  : mailserver:2000
+     Server  : mailserver:sieve
 
      2 scripts on server, press RET on a script name edits it, or
      press RET on <new script> to create a new script.
@@ -169,6 +168,9 @@ commands (`<up>', `<down>' etc.) can be used to navigate the list.
 
 `h'
      Displays help in the minibuffer.
+
+`Q'
+     Quit Manage Sieve and close the connection.
 
 
 
@@ -278,7 +280,7 @@ lists the relevant ones.  They can all be fetched from
 "RFC3028"
      Sieve: A Mail Filtering Language.
 
-"draft-martin-managesieve-03"
+"RFC5804"
      A Protocol for Remotely Managing Sieve Scripts
 
 
@@ -290,7 +292,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -799,6 +801,7 @@ Index
 * sieve-manage-open:                     Manage Sieve API.     (line 23)
 * sieve-manage-opened:                   Manage Sieve API.     (line 27)
 * sieve-manage-putscript:                Manage Sieve API.     (line 48)
+* sieve-manage-quit:                     Managing Sieve.       (line 61)
 * sieve-manage-setactive:                Manage Sieve API.     (line 51)
 * sieve-mode-map:                        Sieve Mode.           (line 12)
 * sieve-mode-syntax-table:               Sieve Mode.           (line 12)
@@ -809,14 +812,19 @@ Index
 
 
 Tag Table:
-Node: Top1002
-Node: Installation2649
-Node: Sieve Mode3127
-Node: Managing Sieve4100
-Node: Examples5606
-Node: Manage Sieve API6933
-Node: Standards8337
-Node: GNU Free Documentation License8829
-Node: Index33997
+Node: Top926
+Node: Installation2573
+Node: Sieve Mode3051
+Node: Managing Sieve4024
+Node: Examples5585
+Node: Manage Sieve API6912
+Node: Standards8316
+Node: GNU Free Documentation License8788
+Node: Index33950
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

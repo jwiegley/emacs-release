@@ -1,13 +1,12 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/srecode.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/srecode.texi.
+This is ../../info/srecode.info, produced by makeinfo version 4.13 from
+./srecode.texi.
 
-Copyright (C) 2007-2013 Free Software Foundation, Inc.
+Copyright (C) 2007-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -17,7 +16,7 @@ Copyright (C) 2007-2013 Free Software Foundation, Inc.
 
 INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* SRecode: (srecode).           Template code generator.
+* SRecode: (srecode).           Semantic template code generator.
 END-INFO-DIR-ENTRY
 
 
@@ -39,12 +38,12 @@ in choosing a template to insert, this is not the main goal of SRecode.
 someone can write a complex code generator, and the underlying template
 commonality allows it to work in multiple languages with ease.
 
-   Copyright (C) 2007-2013 Free Software Foundation, Inc.
+   Copyright (C) 2007-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -194,7 +193,7 @@ template files, and determining which templates are relevant to the
 current buffer.  Template files are sorted by priority, with user
 templates being found first, and system level default templates last.
 Templates are also sorted by application.  Each application has its own
-templates, and are kept seperate from the generic templates.
+templates, and are kept separate from the generic templates.
 
 3.3 Dictionary
 ==============
@@ -295,7 +294,7 @@ simple access to different templates or template applications.
 
 By default, when inserting a template, if the user needs to enter text
 to fill in a part of the template, then the minibuffer is used to query
-for that information.  SRecode also supports a field-edting mode that
+for that information.  SRecode also supports a field-editing mode that
 can be used instead.  To enable it set:
 
  -- Function: srecode-insert-ask-variable-method
@@ -321,10 +320,10 @@ modify the other linked areas.  Pressing TAB will move between editable
 fields in the template.
 
    Once the cursor moves out of the are inserted by the template, all
-the fields are cancelled.
+the fields are canceled.
 
    NOTE: Some conveniences in templates, such as completion, or
-character restrictins are lost when using field editing mode.
+character restrictions are lost when using field editing mode.
 
 
 File: srecode.info,  Node: Template Writing,  Next: Dictionaries,  Prev: SRecode Minor Mode,  Up: Top
@@ -387,7 +386,7 @@ have string like values.
      set VARNAME "some value"
 
    Note that a VARIABLE is a name in a dictionary that can be used in a
-MACRO in a template.  The macro referernces some variable by name.
+MACRO in a template.  The macro references some variable by name.
 
 * Menu:
 
@@ -409,7 +408,7 @@ other characters.  Strings are interpreted by the Emacs Lisp reader so
 `\n', `\t', and `\"' work.
 
    When a string is inserted as part of a template, nothing within the
-string is interperted, such as template escape characters.
+string is interpreted, such as template escape characters.
 
 
 File: srecode.info,  Node: Multi-string Values,  Next: Section Show,  Prev: String Values,  Up: Variables
@@ -589,7 +588,7 @@ File: srecode.info,  Node: Templates,  Next: Contexts,  Prev: Variables,  Up: Te
 
 A template represents a text pattern that can be inserted into a buffer.
 
-   A basic template is declaired like this:
+   A basic template is declared like this:
 
      template TEMPLATENAME :arg1 :arg2
      "Optional documentation string"
@@ -610,7 +609,7 @@ contain the text "----".
 * Menu:
 
 * Template Section Dictionaries::  Template Scoped Macro values
-* Template Macros::     Macros occuring in template patterns
+* Template Macros::     Macros occurring in template patterns
 
 
 File: srecode.info,  Node: Template Section Dictionaries,  Next: Template Macros,  Up: Templates
@@ -794,7 +793,7 @@ File: srecode.info,  Node: Contexts,  Next: Prompts,  Prev: Templates,  Up: Temp
 5.3 Context
 ===========
 
-Each template belongs to a context.  When promting for a template by
+Each template belongs to a context.  When prompting for a template by
 name, such as with `C-c / /', the name is prefixed by the current
 context.  If there is no context, it defaults to `declaration'.
 
@@ -816,7 +815,7 @@ next context statement.  Thus:
 
      context C2
 
-     temlate foo
+     template foo
      "Foo template in C2"
      ----
      ----
@@ -826,7 +825,7 @@ The second is available in context C2.
 
    This is useful if there are multiple ways to declare something like a
 function or variable that differ only by where it is in the syntax of
-the lanugage.  The name `foo' is not ambiguous because each is in a
+the language.  The name `foo' is not ambiguous because each is in a
 different context.
 
 
@@ -835,7 +834,7 @@ File: srecode.info,  Node: Prompts,  Prev: Contexts,  Up: Template Writing
 5.4 Prompt
 ==========
 
-Some templates use promtping macro insertion.  A macro that needs a
+Some templates use prompting macro insertion.  A macro that needs a
 prompt looks like this:
 
      {{?NAME}}
@@ -848,7 +847,7 @@ prompt looks like this:
 
    For such macros, you can pre-define prompts for any dictionary entry.
 When that dictionary entry is first encountered, the user is prompted,
-and subsequent occurances of that dictionary entry use the same value.
+and subsequent occurrences of that dictionary entry use the same value.
 
    To get a different prompt, use a prompt command like this:
 
@@ -885,7 +884,7 @@ need to use the `defaultmacro' keyword instead.
 
      prompt VARNAME "Varname: " defaultmacro "PREFIX"
 
-   now, when it attempts to read in VARNAME, it will pre-populte the
+   now, when it attempts to read in VARNAME, it will pre-populate the
 text editing section with whatever the value of PREFIX is.
 
    Some language arguments may supply possible prefixes for prompts.
@@ -937,7 +936,7 @@ When building an SRecode based application, you will need to setup your
 dictionary values yourself.  There are several utility functions for
 this.
 
-   In the simplest form, you can assocate a string with a variable.
+   In the simplest form, you can associate a string with a variable.
 
  -- Function: srecode-dictionary-set-value dict name value
      In dictionary DICT, set NAME to have VALUE.
@@ -959,7 +958,7 @@ either be toggled as visible, or it can act as a loop.
      template will be repeated.
 
      If optional argument SHOW-ONLY is non-`nil', then don't add a new
-     dictionarly if there is already one in place.  Also, don't add
+     dictionary if there is already one in place.  Also, don't add
      FIRST/LAST entries.  These entries are not needed when we are just
      showing a section.
 
@@ -1086,7 +1085,7 @@ File: srecode.info,  Node: Querying a Dictionary,  Next: Template Argument Dicti
 6.6 Querying a Dictionary
 =========================
 
-When creating a new argument, it may be useful to ask the dicitonary
+When creating a new argument, it may be useful to ask the dictionary
 what entries are already set there, and conditionally create new
 entries based on those.
 
@@ -1134,9 +1133,9 @@ File: srecode.info,  Node: Base Arguments,  Next: Semantic Arguments,  Up: Templ
 6.7.1.1 Argument :indent
 ........................
 
-Supplies the `INDENT' macro.  When `INDENT' is non-nil, then each line
-is individually indented with `indent-according-to-mode' during macro
-processing.
+Supplies the `INDENT' macro.  When `INDENT' is non-`nil', then each
+line is individually indented with `indent-according-to-mode' during
+macro processing.
 
 6.7.1.2 Argument :blank
 .......................
@@ -1205,7 +1204,7 @@ Sets up variables with the current date and time.
      The current hour in 12 hour format.
 
 `AMPM'
-     Locale equivalent of AM or PM.  Usefule with HOUR12.
+     Locale equivalent of AM or PM.  Useful with HOUR12.
 
 `MINUTE'
      The current minute.
@@ -1400,7 +1399,7 @@ Used for SRecoder template files.
      class-name for the main class in the file.
 
 `CURRENT_PACKAGE'
-     Finds the occurance of "package" and gets its value.
+     Finds the occurrence of "package" and gets its value.
 
 6.7.4.1 Argument :el
 ....................
@@ -1419,7 +1418,7 @@ similar to namespaces in other languages.
      ought to use.
 
 `FACEGROUP'
-     The name of the Emacs Custom group that faces delcared with
+     The name of the Emacs Custom group that faces declared with
      `defface' ought to use.
 
 6.7.4.3 Argument :texi
@@ -1536,7 +1535,7 @@ look the template up in.
      tables that do not belong to an application will be searched.
 
    For purposes of an SRecode application, it is important to decide
-what to call yoru application, and use that with this method call.
+what to call your application, and use that with this method call.
 
 7.3 Creating dictionaries
 =========================
@@ -1562,7 +1561,7 @@ There are several ways to insert a template.  It is easiest to just
 start with the main entry point.
 
  -- Function: srecode-insert-fcn template dictionary &optional stream
-     Insert TEMPLATE using DICTIONARY into STREAM.  If STREAM is nil,
+     Insert TEMPLATE using DICTIONARY into STREAM.  If STREAM is `nil',
      then use the current buffer.
 
 
@@ -1571,7 +1570,7 @@ File: srecode.info,  Node: Template Naming Conventions,  Next: Inserting Tag Lis
 8 Template Naming Conventions
 *****************************
 
-For SRecode to work across langauges reliably, templates need to follow
+For SRecode to work across languages reliably, templates need to follow
 a predictable pattern.  For every language of similar nature (OO,
 functional, doc based) if they all provide the same base templates,
 then an application can be written against the base templates, and it
@@ -1602,7 +1601,7 @@ Functional languages should attempt to support the following:
      A standalone function.  Not a method, external method, or other.
 
 `method'
-     A method belonging to some class declaired outside the textual
+     A method belonging to some class declared outside the textual
      bounds of that class' declaration.
 
 `variable'
@@ -1780,7 +1779,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -2302,61 +2301,66 @@ Index
 
 
 Tag Table:
-Node: Top914
-Node: Quick Start2985
-Ref: srecode-map-load-path3704
-Ref: srecode-insert3902
-Node: User Templates4295
-Ref: srecode-map-save-file4677
-Node: Parts of SRecode6186
-Node: SRecode Minor Mode10073
-Ref: srecode-insert-ask-variable-method11466
-Node: Template Writing12653
-Ref: `SRecode-template-mode'12797
-Node: Variables13916
-Node: String Values14942
-Node: Multi-string Values15371
-Node: Section Show16205
-Node: Special Variables16727
-Node: Automatic Loop Variables19813
-Node: Compound Variable Values20448
-Node: Templates20934
-Node: Template Section Dictionaries21809
-Node: Template Macros24319
-Node: Contexts27734
-Node: Prompts28776
-Node: Dictionaries30650
-Node: Create a Dictionary31593
-Ref: srecode-create-dictionary31802
-Node: Setting Dictionary Values32072
-Ref: srecode-dictionary-set-value32547
-Ref: srecode-dictionary-show-section32778
-Ref: srecode-dictionary-add-section-dictionary32945
-Node: Compound Dictionary Values33896
-Ref: srecode-dictionary-compound-value34368
-Ref: srecode-compound-toString34829
-Ref: srecode-dump35201
-Node: Argument Resolution36272
-Ref: srecode-resolve-arguments36742
-Node: Creating new Arguments36856
-Node: Querying a Dictionary37838
-Ref: srecode-dictionary-lookup-name38345
-Node: Template Argument Dictionary Entries38598
-Node: Base Arguments39224
-Node: Semantic Arguments42491
-Ref: srecode-semantic-selected-tag43129
-Node: Language Arguments44874
-Node: Developing Template Functions47189
-Ref: srecode-read-template-name49621
-Ref: srecode-table50000
-Ref: srecode-template-get-table50234
-Ref: srecode-insert-fcn51427
-Node: Template Naming Conventions51532
-Node: Inserting Tag Lists55204
-Ref: srecode-semantic-insert-tag55793
-Node: Application Writing57477
-Ref: srecode-load-tables-for-mode58431
-Node: GNU Free Documentation License58755
-Node: Index83935
+Node: Top847
+Node: Quick Start2918
+Ref: srecode-map-load-path3637
+Ref: srecode-insert3835
+Node: User Templates4228
+Ref: srecode-map-save-file4610
+Node: Parts of SRecode6119
+Node: SRecode Minor Mode10006
+Ref: srecode-insert-ask-variable-method11400
+Node: Template Writing12587
+Ref: `SRecode-template-mode'12731
+Node: Variables13850
+Node: String Values14875
+Node: Multi-string Values15304
+Node: Section Show16138
+Node: Special Variables16660
+Node: Automatic Loop Variables19746
+Node: Compound Variable Values20381
+Node: Templates20867
+Node: Template Section Dictionaries21742
+Node: Template Macros24252
+Node: Contexts27667
+Node: Prompts28711
+Node: Dictionaries30587
+Node: Create a Dictionary31530
+Ref: srecode-create-dictionary31739
+Node: Setting Dictionary Values32009
+Ref: srecode-dictionary-set-value32485
+Ref: srecode-dictionary-show-section32716
+Ref: srecode-dictionary-add-section-dictionary32883
+Node: Compound Dictionary Values33833
+Ref: srecode-dictionary-compound-value34305
+Ref: srecode-compound-toString34766
+Ref: srecode-dump35138
+Node: Argument Resolution36209
+Ref: srecode-resolve-arguments36679
+Node: Creating new Arguments36793
+Node: Querying a Dictionary37775
+Ref: srecode-dictionary-lookup-name38282
+Node: Template Argument Dictionary Entries38535
+Node: Base Arguments39161
+Node: Semantic Arguments42429
+Ref: srecode-semantic-selected-tag43067
+Node: Language Arguments44812
+Node: Developing Template Functions47128
+Ref: srecode-read-template-name49560
+Ref: srecode-table49939
+Ref: srecode-template-get-table50173
+Ref: srecode-insert-fcn51366
+Node: Template Naming Conventions51473
+Node: Inserting Tag Lists55144
+Ref: srecode-semantic-insert-tag55733
+Node: Application Writing57417
+Ref: srecode-load-tables-for-mode58371
+Node: GNU Free Documentation License58695
+Node: Index83869
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

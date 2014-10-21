@@ -1,9 +1,9 @@
 ;;; flyspell.el --- on-the-fly spell checker
 
-;; Copyright (C) 1998, 2000-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2000-2014 Free Software Foundation, Inc.
 
 ;; Author: Manuel Serrano <Manuel.Serrano@sophia.inria.fr>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: convenience
 
 ;; This file is part of GNU Emacs.
@@ -63,7 +63,7 @@ Non-nil means use highlight, nil means use minibuffer messages."
   "Non-nil means Flyspell reports a repeated word as an error.
 See `flyspell-mark-duplications-exceptions' to add exceptions to this rule.
 Detection of repeated words is not implemented in
-\"large\" regions; see `flyspell-large-region'."
+\"large\" regions; see variable `flyspell-large-region'."
   :group 'flyspell
   :type 'boolean)
 
@@ -145,9 +145,10 @@ whose length is specified by `flyspell-delay'."
 (defcustom flyspell-default-deplacement-commands
   '(next-line previous-line
     handle-switch-frame handle-select-window
-    scroll-up scroll-down)
+    scroll-up
+    scroll-down)
   "The standard list of deplacement commands for Flyspell.
-See `flyspell-deplacement-commands'."
+See variable `flyspell-deplacement-commands'."
   :group 'flyspell
   :version "21.1"
   :type '(repeat (symbol)))
@@ -282,6 +283,7 @@ If this variable is nil, all regions are treated as small."
 (defcustom flyspell-auto-correct-binding
   [(control ?\;)]
   "The key binding for flyspell auto correction."
+  :type 'key-sequence
   :group 'flyspell)
 
 ;;*---------------------------------------------------------------------*/
@@ -445,13 +447,23 @@ like <img alt=\"Some thing.\">."
 ;;*---------------------------------------------------------------------*/
 ;;*    Highlighting                                                     */
 ;;*---------------------------------------------------------------------*/
-(defface flyspell-incorrect '((t :underline t :inherit error))
+(defface flyspell-incorrect
+  '((((supports :underline (:style wave)))
+     :underline (:style wave :color "Red1"))
+    (t
+     :underline t :inherit error))
   "Flyspell face for misspelled words."
+  :version "24.4"
   :group 'flyspell)
 
-(defface flyspell-duplicate '((t :underline t :inherit warning))
+(defface flyspell-duplicate
+  '((((supports :underline (:style wave)))
+     :underline (:style wave :color "DarkOrange"))
+    (t
+     :underline t :inherit warning))
   "Flyspell face for words that appear twice in a row.
 See also `flyspell-duplicate-distance'."
+  :version "24.4"
   :group 'flyspell)
 
 (defvar flyspell-overlay nil)
@@ -727,7 +739,7 @@ before the current command."
   (let ((ispell-otherchars (ispell-get-otherchars)))
     (cond
    ((not (and (numberp flyspell-pre-point)
-              (buffer-live-p flyspell-pre-buffer)))
+              (eq flyspell-pre-buffer (current-buffer))))
       nil)
      ((and (eq flyspell-pre-pre-point flyspell-pre-point)
 	   (eq flyspell-pre-pre-buffer flyspell-pre-buffer))
@@ -945,11 +957,10 @@ Mostly we check word delimiters."
             ;; Prevent anything we do from affecting the mark.
             deactivate-mark)
         (if (flyspell-check-pre-word-p)
-            (with-current-buffer flyspell-pre-buffer
+            (save-excursion
               '(flyspell-debug-signal-pre-word-checked)
-              (save-excursion
-                (goto-char flyspell-pre-point)
-                (flyspell-word))))
+              (goto-char flyspell-pre-point)
+              (flyspell-word)))
         (if (flyspell-check-word-p)
             (progn
               '(flyspell-debug-signal-word-checked)
@@ -963,16 +974,14 @@ Mostly we check word delimiters."
               ;; FLYSPELL-CHECK-PRE-WORD-P
               (setq flyspell-pre-pre-buffer (current-buffer))
               (setq flyspell-pre-pre-point  (point)))
-          (progn
-            (setq flyspell-pre-pre-buffer nil)
-            (setq flyspell-pre-pre-point  nil)
-            ;; when a word is not checked because of a delayed command
-            ;; we do not disable the ispell cache.
-            (if (and (symbolp this-command)
+          (setq flyspell-pre-pre-buffer nil)
+          (setq flyspell-pre-pre-point  nil)
+          ;; when a word is not checked because of a delayed command
+          ;; we do not disable the ispell cache.
+          (when (and (symbolp this-command)
                      (get this-command 'flyspell-delayed))
-                (progn
-                  (setq flyspell-word-cache-end -1)
-                  (setq flyspell-word-cache-result '_)))))
+            (setq flyspell-word-cache-end -1)
+            (setq flyspell-word-cache-result '_)))
         (while (and (not (input-pending-p)) (consp flyspell-changes))
           (let ((start (car (car flyspell-changes)))
                 (stop  (cdr (car flyspell-changes))))

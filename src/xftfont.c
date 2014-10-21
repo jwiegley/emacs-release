@@ -1,5 +1,5 @@
 /* xftfont.c -- XFT font driver.
-   Copyright (C) 2006-2013 Free Software Foundation, Inc.
+   Copyright (C) 2006-2014 Free Software Foundation, Inc.
    Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H13PRO009
@@ -42,7 +42,7 @@ Lisp_Object Qxft;
 static Lisp_Object QChinting, QCautohint, QChintstyle, QCrgba, QCembolden,
   QClcdfilter;
 
-/* The actual structure for Xft font that can be casted to struct
+/* The actual structure for Xft font that can be cast to struct
    font.  */
 
 struct xftfont_info
@@ -58,8 +58,8 @@ struct xftfont_info
   int index;
   FT_Matrix matrix;
   Display *display;
-  int screen;
   XftFont *xftfont;
+  unsigned x_display_id;
 };
 
 /* Structure pointed by (struct face *)->extra  */
@@ -70,17 +70,14 @@ struct xftface_info
   XftColor xft_bg;		/* color for face->background */
 };
 
-static void xftfont_get_colors (FRAME_PTR, struct face *, GC gc,
-                                struct xftface_info *,
-                                XftColor *fg, XftColor *bg);
-
-
 /* Setup foreground and background colors of GC into FG and BG.  If
    XFTFACE_INFO is not NULL, reuse the colors in it if possible.  BG
    may be NULL.  */
 
 static void
-xftfont_get_colors (FRAME_PTR f, struct face *face, GC gc, struct xftface_info *xftface_info, XftColor *fg, XftColor *bg)
+xftfont_get_colors (struct frame *f, struct face *face, GC gc,
+		    struct xftface_info *xftface_info,
+		    XftColor *fg, XftColor *bg)
 {
   if (xftface_info && face->gc == gc)
     {
@@ -139,9 +136,9 @@ xftfont_get_colors (FRAME_PTR f, struct face *face, GC gc, struct xftface_info *
 struct font_driver xftfont_driver;
 
 static Lisp_Object
-xftfont_list (Lisp_Object frame, Lisp_Object spec)
+xftfont_list (struct frame *f, Lisp_Object spec)
 {
-  Lisp_Object list = ftfont_driver.list (frame, spec), tail;
+  Lisp_Object list = ftfont_driver.list (f, spec), tail;
 
   for (tail = list; CONSP (tail); tail = XCDR (tail))
     ASET (XCAR (tail), FONT_TYPE_INDEX, Qxft);
@@ -149,9 +146,9 @@ xftfont_list (Lisp_Object frame, Lisp_Object spec)
 }
 
 static Lisp_Object
-xftfont_match (Lisp_Object frame, Lisp_Object spec)
+xftfont_match (struct frame *f, Lisp_Object spec)
 {
-  Lisp_Object entity = ftfont_driver.match (frame, spec);
+  Lisp_Object entity = ftfont_driver.match (f, spec);
 
   if (! NILP (entity))
     ASET (entity, FONT_TYPE_INDEX, Qxft);
@@ -262,7 +259,7 @@ xftfont_add_rendering_parameters (FcPattern *pat, Lisp_Object entity)
 }
 
 static Lisp_Object
-xftfont_open (FRAME_PTR f, Lisp_Object entity, int pixel_size)
+xftfont_open (struct frame *f, Lisp_Object entity, int pixel_size)
 {
   FcResult result;
   Display *display = FRAME_X_DISPLAY (f);
@@ -369,14 +366,14 @@ xftfont_open (FRAME_PTR f, Lisp_Object entity, int pixel_size)
   ASET (font_object, FONT_FORMAT_INDEX,
 	ftfont_font_format (xftfont->pattern, filename));
   font = XFONT_OBJECT (font_object);
-  font->pixel_size = pixel_size;
+  font->pixel_size = size;
   font->driver = &xftfont_driver;
   font->encoding_charset = font->repertory_charset = -1;
 
   xftfont_info = (struct xftfont_info *) font;
   xftfont_info->display = display;
-  xftfont_info->screen = FRAME_X_SCREEN_NUMBER (f);
   xftfont_info->xftfont = xftfont;
+  xftfont_info->x_display_id = FRAME_DISPLAY_INFO (f)->x_id;
   /* This means that there's no need of transformation.  */
   xftfont_info->matrix.xx = 0;
   if (FcPatternGetMatrix (xftfont->pattern, FC_MATRIX, 0, &matrix)
@@ -387,8 +384,6 @@ xftfont_open (FRAME_PTR f, Lisp_Object entity, int pixel_size)
       xftfont_info->matrix.xy = 0x10000L * matrix->xy;
       xftfont_info->matrix.yx = 0x10000L * matrix->yx;
     }
-  font->pixel_size = size;
-  font->driver = &xftfont_driver;
   if (INTEGERP (AREF (entity, FONT_SPACING_INDEX)))
     spacing = XINT (AREF (entity, FONT_SPACING_INDEX));
   else
@@ -486,22 +481,34 @@ xftfont_open (FRAME_PTR f, Lisp_Object entity, int pixel_size)
 }
 
 static void
-xftfont_close (FRAME_PTR f, struct font *font)
+xftfont_close (struct font *font)
 {
+  struct x_display_info *xdi;
   struct xftfont_info *xftfont_info = (struct xftfont_info *) font;
 
 #ifdef HAVE_LIBOTF
   if (xftfont_info->otf)
-    OTF_close (xftfont_info->otf);
+    {
+      OTF_close (xftfont_info->otf);
+      xftfont_info->otf = NULL;
+    }
 #endif
-  block_input ();
-  XftUnlockFace (xftfont_info->xftfont);
-  XftFontClose (xftfont_info->display, xftfont_info->xftfont);
-  unblock_input ();
+
+  /* See comment in xfont_close.  */
+  if (xftfont_info->xftfont
+      && ((xdi = x_display_info_for_display (xftfont_info->display))
+	  && xftfont_info->x_display_id == xdi->x_id))
+    {
+      block_input ();
+      XftUnlockFace (xftfont_info->xftfont);
+      XftFontClose (xftfont_info->display, xftfont_info->xftfont);
+      unblock_input ();
+      xftfont_info->xftfont = NULL;
+    }
 }
 
 static int
-xftfont_prepare_face (FRAME_PTR f, struct face *face)
+xftfont_prepare_face (struct frame *f, struct face *face)
 {
   struct xftface_info *xftface_info;
 
@@ -524,7 +531,7 @@ xftfont_prepare_face (FRAME_PTR f, struct face *face)
 }
 
 static void
-xftfont_done_face (FRAME_PTR f, struct face *face)
+xftfont_done_face (struct frame *f, struct face *face)
 {
   struct xftface_info *xftface_info;
 
@@ -597,7 +604,7 @@ xftfont_text_extents (struct font *font, unsigned int *code, int nglyphs, struct
 }
 
 static XftDraw *
-xftfont_get_xft_draw (FRAME_PTR f)
+xftfont_get_xft_draw (struct frame *f)
 {
   XftDraw *xft_draw = font_get_frame_data (f, &xftfont_driver);
 
@@ -619,7 +626,7 @@ static int
 xftfont_draw (struct glyph_string *s, int from, int to, int x, int y,
               bool with_background)
 {
-  FRAME_PTR f = s->f;
+  struct frame *f = s->f;
   struct face *face = s->face;
   struct xftfont_info *xftfont_info = (struct xftfont_info *) s->font;
   struct xftface_info *xftface_info = NULL;
@@ -679,7 +686,7 @@ xftfont_shape (Lisp_Object lgstring)
 #endif
 
 static int
-xftfont_end_for_frame (FRAME_PTR f)
+xftfont_end_for_frame (struct frame *f)
 {
   XftDraw *xft_draw;
 

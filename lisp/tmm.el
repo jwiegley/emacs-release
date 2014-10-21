@@ -1,9 +1,9 @@
-;;; tmm.el --- text mode access to menu-bar
+;;; tmm.el --- text mode access to menu-bar  -*- lexical-binding: t -*-
 
-;; Copyright (C) 1994-1996, 2000-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1994-1996, 2000-2014 Free Software Foundation, Inc.
 
 ;; Author: Ilya Zakharevich <ilya@math.mps.ohio-state.edu>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: convenience
 
 ;; This file is part of GNU Emacs.
@@ -50,40 +50,45 @@
   "Text-mode emulation of looking and choosing from a menubar.
 See the documentation for `tmm-prompt'.
 X-POSITION, if non-nil, specifies a horizontal position within the menu bar;
-we make that menu bar item (the one at that position) the default choice."
+we make that menu bar item (the one at that position) the default choice.
+
+Note that \\[menu-bar-open] by default drops down TTY menus; if you want it
+to invoke `tmm-menubar' instead, customize the variable
+\`tty-menu-open-use-tmm' to a non-nil value."
   (interactive)
   (run-hooks 'menu-bar-update-hook)
   ;; Obey menu-bar-final-items; put those items last.
-  (let ((menu-bar (tmm-get-keybind [menu-bar]))
+  (let ((menu-bar '())
+        (menu-end '())
 	menu-bar-item)
-    (let ((list menu-bar-final-items))
-      (while list
-	(let ((item (car list)))
-	  ;; ITEM is the name of an item that we want to put last.
-	  ;; Find it in MENU-BAR and move it to the end.
-	  (let ((this-one (assq item menu-bar)))
-	    (setq menu-bar (append (delq this-one menu-bar)
-				   (list this-one)))))
-	(setq list (cdr list))))
+    (map-keymap
+     (lambda (key binding)
+       (push (cons key binding)
+             ;; If KEY is the name of an item that we want to put last,
+             ;; move it to the end.
+             (if (memq key menu-bar-final-items)
+                 menu-end
+               menu-bar)))
+     (tmm-get-keybind [menu-bar]))
+    (setq menu-bar `(keymap ,@(nreverse menu-bar) ,@(nreverse menu-end)))
     (if x-position
-	(let ((tail menu-bar) (column 0)
-	      this-one name visible)
-	  (while (and tail (<= column x-position))
-	    (setq this-one (car tail))
-	    (if (and (consp this-one)
-		     (consp (cdr this-one))
-		     (setq name  ;simple menu
-			   (cond ((stringp (nth 1  this-one))
-				  (nth 1  this-one))
-				 ;extended menu
-				 ((stringp (nth 2 this-one))
-				  (setq visible (plist-get
-						 (nthcdr 4 this-one) :visible))
-				  (unless (and visible (not (eval visible)))
-				    (nth 2 this-one))))))
-		(setq column (+ column (length name) 1)))
-	    (setq tail (cdr tail)))
-	  (setq menu-bar-item (car this-one))))
+	(let ((column 0))
+          (catch 'done
+            (map-keymap
+             (lambda (key binding)
+               (when (> column x-position)
+                 (setq menu-bar-item key)
+                 (throw 'done nil))
+               (pcase binding
+                 ((or `(,(and (pred stringp) name) . ,_) ;Simple menu item.
+                      `(menu-item ,name ,_cmd            ;Extended menu item.
+                        . ,(and props
+                                (guard (let ((visible
+                                              (plist-get props :visible)))
+                                         (or (null visible)
+                                             (eval visible)))))))
+                  (setq column (+ column (length name) 1)))))
+             menu-bar))))
     (tmm-prompt menu-bar nil menu-bar-item)))
 
 ;;;###autoload
@@ -138,6 +143,14 @@ specify nil for this variable."
   "Face used for inactive menu items."
   :group 'tmm)
 
+(defun tmm--completion-table (items)
+  (lambda (string pred action)
+    (if (eq action 'metadata)
+	'(metadata (display-sort-function . identity))
+      (complete-with-action action items string pred))))
+
+(defvar tmm--history nil)
+
 ;;;###autoload
 (defun tmm-prompt (menu &optional in-popup default-item)
   "Text-mode emulation of calling the bindings in keymap.
@@ -156,7 +169,7 @@ Its value should be an event that has a binding in MENU."
   ;; That is used for recursive calls only.
   (let ((gl-str "Menu bar")  ;; The menu bar itself is not a menu keymap
 					; so it doesn't have a name.
-	tmm-km-list out history history-len tmm-table-undef tmm-c-prompt
+	tmm-km-list out history-len tmm-table-undef tmm-c-prompt
 	tmm-old-mb-map tmm-short-cuts
 	chosen-string choice
 	(not-menu (not (keymapp menu))))
@@ -174,6 +187,7 @@ Its value should be an event that has a binding in MENU."
          ((vectorp elt)
           (dotimes (i (length elt))
             (tmm-get-keymap (cons i (aref elt i)) not-menu))))))
+    (setq tmm-km-list (nreverse tmm-km-list))
     ;; Choose an element of tmm-km-list; put it in choice.
     (if (and not-menu (= 1 (length tmm-km-list)))
 	;; If this is the top-level of an x-popup-menu menu,
@@ -209,16 +223,18 @@ Its value should be an event that has a binding in MENU."
 			 (setq index-of-default (1+ index-of-default)))
 		     (setq tail (cdr tail)))))
              (let ((prompt (concat "^." (regexp-quote tmm-mid-prompt))))
-               (setq history
+               (setq tmm--history
                      (reverse (delq nil
                                     (mapcar
                                      (lambda (elt)
                                        (if (string-match prompt (car elt))
                                            (car elt)))
                                      tmm-km-list)))))
-	     (setq history-len (length history))
-	     (setq history (append history history history history))
-	     (setq tmm-c-prompt (nth (- history-len 1 index-of-default) history))
+	     (setq history-len (length tmm--history))
+	     (setq tmm--history (append tmm--history tmm--history
+                                        tmm--history tmm--history))
+	     (setq tmm-c-prompt (nth (- history-len 1 index-of-default)
+                                     tmm--history))
              (setq out
                    (if default-item
                        (car (nth index-of-default tmm-km-list))
@@ -226,8 +242,8 @@ Its value should be an event that has a binding in MENU."
                        (completing-read
                         (concat gl-str
                                 " (up/down to change, PgUp to menu): ")
-                        tmm-km-list nil t nil
-                        (cons 'history
+                        (tmm--completion-table tmm-km-list) nil t nil
+                        (cons 'tmm--history
                               (- (* 2 history-len) index-of-default))))))))
       (setq choice (cdr (assoc out tmm-km-list)))
       (and (null choice)
@@ -497,46 +513,7 @@ If KEYSEQ is a prefix key that has local and global bindings,
 we merge them into a single keymap which shows the proper order of the menu.
 However, for the menu bar itself, the value does not take account
 of `menu-bar-final-items'."
-  (let (allbind bind minorbind localbind globalbind)
-    (setq bind (key-binding keyseq))
-    ;; If KEYSEQ is a prefix key, then BIND is either nil
-    ;; or a symbol defined as a keymap (which satisfies keymapp).
-    (if (keymapp bind)
-	(setq bind nil))
-    ;; If we have a non-keymap definition, return that.
-    (or bind
-	(progn
-	  ;; Otherwise, it is a prefix, so make a list of the subcommands.
-	  ;; Make a list of all the bindings in all the keymaps.
-          ;; FIXME: we'd really like to just use `key-binding' now that it
-          ;; returns a keymap that contains really all the bindings under that
-          ;; prefix, but `keyseq' is always [menu-bar], so the desired order of
-          ;; the bindings is difficult to recover.
-	  (setq minorbind (mapcar 'cdr (minor-mode-key-binding keyseq)))
-	  (setq localbind (local-key-binding keyseq))
-	  (setq globalbind (copy-sequence (cdr (global-key-binding keyseq))))
-
-	  ;; If items have been redefined/undefined locally, remove them from
-	  ;; the global list.
-	  (dolist (minor minorbind)
-	    (dolist (item (cdr minor))
-	      (setq globalbind (assq-delete-all (car-safe item) globalbind))))
-	  (dolist (item (cdr localbind))
-	    (setq globalbind (assq-delete-all (car-safe item) globalbind)))
-
-	  (setq globalbind (cons 'keymap globalbind))
-	  (setq allbind (cons globalbind (cons localbind minorbind)))
-
-	  ;; Merge all the elements of ALLBIND into one keymap.
-	  (dolist (in allbind)
-            (if (and (symbolp in) (keymapp in))
-                (setq in (symbol-function in)))
-            (and in (keymapp in)
-                 (setq bind (if (keymapp bind)
-                                (nconc bind (copy-sequence (cdr in)))
-                              (copy-sequence in)))))
-	  ;; Return that keymap.
-	  bind))))
+  (lookup-key (cons 'keymap (nreverse (current-active-maps))) keyseq))
 
 (provide 'tmm)
 

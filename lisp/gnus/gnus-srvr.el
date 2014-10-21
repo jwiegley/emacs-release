@@ -1,6 +1,6 @@
 ;;; gnus-srvr.el --- virtual server support for Gnus
 
-;; Copyright (C) 1995-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1995-2014 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -244,6 +244,7 @@ For more in-depth information on this mode, read the manual
 The following commands are available:
 
 \\{gnus-server-mode-map}"
+  ;; FIXME: Use define-derived-mode.
   (interactive)
   (when (gnus-visual-p 'server-menu 'menu)
     (gnus-server-make-menu-bar))
@@ -713,6 +714,7 @@ claim them."
     "q" gnus-browse-exit
     "Q" gnus-browse-exit
     "d" gnus-browse-describe-group
+    [delete] gnus-browse-delete-group
     "\C-c\C-c" gnus-browse-exit
     "?" gnus-browse-describe-briefly
 
@@ -868,7 +870,7 @@ claim them."
       (gnus-message 5 "Connecting to %s...done" (nth 1 method))
       t))))
 
-(defun gnus-browse-mode ()
+(define-derived-mode gnus-browse-mode fundamental-mode "Browse Server"
   "Major mode for browsing a foreign server.
 
 All normal editing commands are switched off.
@@ -883,20 +885,14 @@ buffer.
 2) `\\[gnus-browse-read-group]' to read a group ephemerally.
 
 3) `\\[gnus-browse-exit]' to return to the group buffer."
-  (interactive)
-  (kill-all-local-variables)
   (when (gnus-visual-p 'browse-menu 'menu)
     (gnus-browse-make-menu-bar))
   (gnus-simplify-mode-line)
-  (setq major-mode 'gnus-browse-mode)
-  (setq mode-name "Browse Server")
   (setq mode-line-process nil)
-  (use-local-map gnus-browse-mode-map)
   (buffer-disable-undo)
   (setq truncate-lines t)
   (gnus-set-default-directory)
-  (setq buffer-read-only t)
-  (gnus-run-mode-hooks 'gnus-browse-mode-hook))
+  (setq buffer-read-only t))
 
 (defun gnus-browse-read-group (&optional no-article number)
   "Enter the group at the current line.
@@ -964,6 +960,16 @@ how new groups will be entered into the group buffer."
   (interactive (list (gnus-browse-group-name)))
   (gnus-group-describe-group nil group))
 
+(defun gnus-browse-delete-group (group force)
+  "Delete the current group.  Only meaningful with editable groups.
+If FORCE (the prefix) is non-nil, all the articles in the group will
+be deleted.  This is \"deleted\" as in \"removed forever from the face
+of the Earth\".  There is no undo.  The user will be prompted before
+doing the deletion."
+  (interactive (list (gnus-browse-group-name)
+		     current-prefix-arg))
+  (gnus-group-delete-group group force))
+
 (defun gnus-browse-unsubscribe-group ()
   "Toggle subscription of the current group in the browse buffer."
   (let ((sub nil)
@@ -1011,7 +1017,7 @@ how new groups will be entered into the group buffer."
 (defun gnus-browse-exit ()
   "Quit browsing and return to the group buffer."
   (interactive)
-  (when (eq major-mode 'gnus-browse-mode)
+  (when (derived-mode-p 'gnus-browse-mode)
     (gnus-kill-buffer (current-buffer)))
   ;; Insert the newly subscribed groups in the group buffer.
   (with-current-buffer gnus-group-buffer

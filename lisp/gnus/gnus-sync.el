@@ -1,6 +1,6 @@
 ;;; gnus-sync.el --- synchronization facility for Gnus
 
-;; Copyright (C) 2010-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2010-2014 Free Software Foundation, Inc.
 
 ;; Author: Ted Zlatanov <tzz@lifelogs.com>
 ;; Keywords: news synchronization nntp nnrss
@@ -112,8 +112,9 @@ this setting is harmless until the user chooses a sync backend."
 (defcustom gnus-sync-newsrc-offsets '(2 3)
   "List of per-group data to be synchronized."
   :group 'gnus-sync
+  :version "24.4"
   :type '(set (const :tag "Read ranges" 2)
-              (const :tag "Marks" 3)))
+	      (const :tag "Marks" 3)))
 
 (defcustom gnus-sync-global-vars nil
   "List of global variables to be synchronized.
@@ -136,6 +137,12 @@ and `gnus-topic-alist'.  Also see `gnus-variable-list'."
 
 (defvar gnus-sync-newsrc-loader nil
   "Carrier for newsrc data")
+
+(defcustom gnus-sync-file-encrypt-to nil
+  "If non-nil, set `epa-file-encrypt-to' from this for encrypting the Sync file."
+  :version "24.4"
+  :type '(choice string (repeat string))
+  :group 'gnus-sync)
 
 (defcustom gnus-sync-lesync-name (system-name)
   "The LeSync name for this machine."
@@ -175,16 +182,15 @@ and `gnus-topic-alist'.  Also see `gnus-variable-list'."
 (defun gnus-sync-lesync-call (url method headers &optional kvdata)
   "Make an access request to URL using KVDATA and METHOD.
 KVDATA must be an alist."
-  (flet ((json-alist-p (list) (gnus-sync-json-alist-p list))) ; temp patch
-    (let ((url-request-method method)
-          (url-request-extra-headers headers)
-          (url-request-data (if kvdata (json-encode kvdata) nil)))
-      (with-current-buffer (url-retrieve-synchronously url)
-        (let ((data (gnus-sync-lesync-parse)))
-          (gnus-message 12 "gnus-sync-lesync-call: %s URL %s sent %S got %S"
-                        method url `((headers . ,headers) (data ,kvdata)) data)
-          (kill-buffer (current-buffer))
-          data)))))
+  (let ((url-request-method method)
+	(url-request-extra-headers headers)
+	(url-request-data (if kvdata (json-encode kvdata) nil)))
+    (with-current-buffer (url-retrieve-synchronously url)
+      (let ((data (gnus-sync-lesync-parse)))
+	(gnus-message 12 "gnus-sync-lesync-call: %s URL %s sent %S got %S"
+		      method url `((headers . ,headers) (data ,kvdata)) data)
+	(kill-buffer (current-buffer))
+	data))))
 
 (defun gnus-sync-lesync-PUT (url headers &optional data)
   (gnus-sync-lesync-call url "PUT" headers data))
@@ -762,6 +768,9 @@ With a prefix, FORCE is set and all groups will be saved."
         (progn
           (let ((coding-system-for-write gnus-ding-file-coding-system)
                 (standard-output (current-buffer)))
+            (when gnus-sync-file-encrypt-to
+              (set (make-local-variable 'epa-file-encrypt-to)
+                   gnus-sync-file-encrypt-to))
             (princ (format ";; -*- mode:emacs-lisp; coding: %s; -*-\n"
                            gnus-ding-file-coding-system))
             (princ ";; Gnus sync data v. 0.0.1\n")

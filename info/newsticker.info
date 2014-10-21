@@ -1,16 +1,14 @@
-This is
-/misc/emacs/bzr/emacs24-merge/doc/misc/../../info/newsticker.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/newsticker.texi.
+This is ../../info/newsticker.info, produced by makeinfo version 4.13
+from ./newsticker.texi.
 
 This manual is for Newsticker (version 1.99, June 2008).
 
-Copyright (C) 2004-2013 Free Software Foundation, Inc.
+Copyright (C) 2004-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -31,12 +29,12 @@ Newsticker
 
 This manual is for Newsticker (version 1.99, June 2008).
 
-Copyright (C) 2004-2013 Free Software Foundation, Inc.
+Copyright (C) 2004-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -83,8 +81,7 @@ Newsticker works with the following RSS formats:
 
    * Atom 0.3
 
-   * Atom 1.0 (see
-     `http://www.ietf.org/internet-drafts/draft-ietf-atompub-format-11.txt').
+   * Atom 1.0 (see `https://datatracker.ietf.org/doc/rfc4287/').
 
    That makes Newsticker.el an "Atom aggregator", "RSS reader", "Feed
 aggregator", or "Feed reader".
@@ -154,9 +151,9 @@ headlines.  It will also start the asynchronous download of headlines.
    * Newsticker's _plainview_ displays all headlines in a single
      buffer, called `*newsticker*'.  The modeline in the `*newsticker*'
      buffer informs you whenever new headlines have arrived.
-   In both views clicking mouse-button 2 or pressing RET on a headline
-will call `browse-url' to load the corresponding news story in your
-favorite web browser.
+   In both views clicking mouse-button 2 or pressing <RET> on a
+headline will call `browse-url' to load the corresponding news story in
+your favorite web browser.
 
    The scrolling, or flashing of headlines in the echo area, can be
 started with the command `newsticker-start-ticker'.  It can be stopped
@@ -256,7 +253,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -764,14 +761,19 @@ Index
 
 
 Tag Table:
-Node: Top980
-Node: Overview2200
-Node: Requirements3813
-Node: Installation4543
-Node: Usage5019
-Node: Configuration6341
-Node: Remarks9149
-Node: GNU Free Documentation License9328
-Node: Index34499
+Node: Top904
+Node: Overview2124
+Node: Requirements3705
+Node: Installation4435
+Node: Usage4911
+Node: Configuration6235
+Node: Remarks9043
+Node: GNU Free Documentation License9222
+Node: Index34387
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

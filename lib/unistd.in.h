@@ -1,5 +1,5 @@
 /* Substitute for and wrapper around <unistd.h>.
-   Copyright (C) 2003-2012 Free Software Foundation, Inc.
+   Copyright (C) 2003-2014 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -14,32 +14,30 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, see <http://www.gnu.org/licenses/>.  */
 
+#ifndef _@GUARD_PREFIX@_UNISTD_H
+
 #if __GNUC__ >= 3
 @PRAGMA_SYSTEM_HEADER@
 #endif
 @PRAGMA_COLUMNS@
 
+#ifdef _GL_INCLUDING_UNISTD_H
 /* Special invocation convention:
-   - On mingw, several headers, including <winsock2.h>, include <unistd.h>,
-     but we need to ensure that both the system <unistd.h> and <winsock2.h>
-     are completely included before we replace gethostname.  */
-#if @GNULIB_GETHOSTNAME@ && @UNISTD_H_HAVE_WINSOCK2_H@ \
-  && !defined _GL_WINSOCK2_H_WITNESS && defined _WINSOCK2_H
-/* <unistd.h> is being indirectly included for the first time from
-   <winsock2.h>; avoid declaring any overrides.  */
-# if @HAVE_UNISTD_H@
-#  @INCLUDE_NEXT@ @NEXT_UNISTD_H@
-# else
-#  error unexpected; report this to bug-gnulib@gnu.org
-# endif
-# define _GL_WINSOCK2_H_WITNESS
+   - On Mac OS X 10.3.9 we have a sequence of nested includes
+     <unistd.h> -> <signal.h> -> <pthread.h> -> <unistd.h>
+     In this situation, the functions are not yet declared, therefore we cannot
+     provide the C++ aliases.  */
 
-/* Normal invocation.  */
-#elif !defined _@GUARD_PREFIX@_UNISTD_H
+#@INCLUDE_NEXT@ @NEXT_UNISTD_H@
+
+#else
+/* Normal invocation convention.  */
 
 /* The include_next requires a split double-inclusion guard.  */
 #if @HAVE_UNISTD_H@
+# define _GL_INCLUDING_UNISTD_H
 # @INCLUDE_NEXT@ @NEXT_UNISTD_H@
+# undef _GL_INCLUDING_UNISTD_H
 #endif
 
 /* Get all possible declarations of gethostname().  */
@@ -77,9 +75,13 @@
 /* mingw, MSVC, BeOS, Haiku declare environ in <stdlib.h>, not in
    <unistd.h>.  */
 /* Solaris declares getcwd not only in <unistd.h> but also in <stdlib.h>.  */
+/* OSF Tru64 Unix cannot see gnulib rpl_strtod when system <stdlib.h> is
+   included here.  */
 /* But avoid namespace pollution on glibc systems.  */
-#ifndef __GLIBC__
+#if !defined __GLIBC__ && !defined __osf__
+# define __need_system_stdlib_h
 # include <stdlib.h>
+# undef __need_system_stdlib_h
 #endif
 
 /* Native Windows platforms declare chdir, getcwd, rmdir in
@@ -124,7 +126,16 @@
 /* Get getopt(), optarg, optind, opterr, optopt.
    But avoid namespace pollution on glibc systems.  */
 #if @GNULIB_UNISTD_H_GETOPT@ && !defined __GLIBC__ && !defined _GL_SYSTEM_GETOPT
+# define __need_getopt
 # include <getopt.h>
+#endif
+
+#ifndef _GL_INLINE_HEADER_BEGIN
+ #error "Please include config.h first."
+#endif
+_GL_INLINE_HEADER_BEGIN
+#ifndef _GL_UNISTD_INLINE
+# define _GL_UNISTD_INLINE _GL_INLINE
 #endif
 
 /* The definitions of _GL_FUNCDECL_RPL etc. are copied here.  */
@@ -404,7 +415,7 @@ extern char **environ;
 # endif
 #elif defined GNULIB_POSIXCHECK
 # if HAVE_RAW_DECL_ENVIRON
-static inline char ***
+_GL_UNISTD_INLINE char ***
 rpl_environ (void)
 {
   return &environ;
@@ -657,10 +668,19 @@ _GL_WARN_ON_USE (getdomainname, "getdomainname is unportable - "
 #if @GNULIB_GETDTABLESIZE@
 /* Return the maximum number of file descriptors in the current process.
    In POSIX, this is same as sysconf (_SC_OPEN_MAX).  */
-# if !@HAVE_GETDTABLESIZE@
+# if @REPLACE_GETDTABLESIZE@
+#  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
+#   undef getdtablesize
+#   define getdtablesize rpl_getdtablesize
+#  endif
+_GL_FUNCDECL_RPL (getdtablesize, int, (void));
+_GL_CXXALIAS_RPL (getdtablesize, int, (void));
+# else
+#  if !@HAVE_GETDTABLESIZE@
 _GL_FUNCDECL_SYS (getdtablesize, int, (void));
-# endif
+#  endif
 _GL_CXXALIAS_SYS (getdtablesize, int, (void));
+# endif
 _GL_CXXALIASWARN (getdtablesize);
 #elif defined GNULIB_POSIXCHECK
 # undef getdtablesize
@@ -862,7 +882,7 @@ _GL_CXXALIAS_RPL (getpagesize, int, (void));
 #     define getpagesize() _gl_getpagesize ()
 #    else
 #     if !GNULIB_defined_getpagesize_function
-static inline int
+_GL_UNISTD_INLINE int
 getpagesize ()
 {
   return _gl_getpagesize ();
@@ -1530,6 +1550,8 @@ _GL_CXXALIAS_SYS_CAST (write, ssize_t, (int fd, const void *buf, size_t count));
 _GL_CXXALIASWARN (write);
 #endif
 
+_GL_INLINE_HEADER_END
 
 #endif /* _@GUARD_PREFIX@_UNISTD_H */
+#endif /* _GL_INCLUDING_UNISTD_H */
 #endif /* _@GUARD_PREFIX@_UNISTD_H */

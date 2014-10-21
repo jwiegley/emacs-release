@@ -1,9 +1,9 @@
 ;;; json.el --- JavaScript Object Notation parser / generator
 
-;; Copyright (C) 2006-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2006-2014 Free Software Foundation, Inc.
 
 ;; Author: Edward O'Connor <ted@oconnor.cx>
-;; Version: 1.3
+;; Version: 1.4
 ;; Keywords: convenience
 
 ;; This file is part of GNU Emacs.
@@ -48,10 +48,10 @@
 ;; 2006-12-29 - XEmacs support, from Aidan Kehoe <kehoea@parhasard.net>.
 ;; 2008-02-21 - Installed in GNU Emacs.
 ;; 2011-10-17 - Patch `json-alist-p' and `json-plist-p' to avoid recursion -tzz
+;; 2012-10-25 - Added pretty-printed reformatting -Ryan Crum (ryan@ryancrum.org)
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 
 ;; Compatibility code
 
@@ -99,6 +99,24 @@ If this has the same value as `json-false', you might not be able to
 tell the difference between `false' and `null'.  Consider let-binding
 this around your call to `json-read' instead of `setq'ing it.")
 
+(defvar json-encoding-separator ","
+  "Value to use as an element separator when encoding.")
+
+(defvar json-encoding-default-indentation "  "
+  "The default indentation level for encoding.
+Used only when `json-encoding-pretty-print' is non-nil.")
+
+(defvar json--encoding-current-indentation "\n"
+  "Internally used to keep track of the current indentation level of encoding.
+Used only when `json-encoding-pretty-print' is non-nil.")
+
+(defvar json-encoding-pretty-print nil
+  "If non-nil, then the output of `json-encode' will be pretty-printed.")
+
+(defvar json-encoding-lisp-style-closings nil
+  "If non-nil, ] and } closings will be formatted lisp-style,
+without indentation.")
+
 
 
 ;;; Utilities
@@ -108,9 +126,10 @@ this around your call to `json-read' instead of `setq'ing it.")
   (mapconcat 'identity strings separator))
 
 (defun json-alist-p (list)
-  "Non-null if and only if LIST is an alist."
+  "Non-null if and only if LIST is an alist with simple keys."
   (while (consp list)
-    (setq list (if (consp (car list))
+    (setq list (if (and (consp (car list))
+                        (atom (caar list)))
                    (cdr list)
                  'not-alist)))
   (null list))
@@ -123,6 +142,14 @@ this around your call to `json-read' instead of `setq'ing it.")
                    (cddr list)
                  'not-plist)))
   (null list))
+
+(defmacro json--with-indentation (body)
+  `(let ((json--encoding-current-indentation
+          (if json-encoding-pretty-print
+              (concat json--encoding-current-indentation
+                      json-encoding-default-indentation)
+            "")))
+     ,body))
 
 ;; Reader utilities
 
@@ -151,36 +178,14 @@ this around your call to `json-read' instead of `setq'ing it.")
 
 ;; Error conditions
 
-(put 'json-error 'error-message "Unknown JSON error")
-(put 'json-error 'error-conditions '(json-error error))
-
-(put 'json-readtable-error 'error-message "JSON readtable error")
-(put 'json-readtable-error 'error-conditions
-     '(json-readtable-error json-error error))
-
-(put 'json-unknown-keyword 'error-message "Unrecognized keyword")
-(put 'json-unknown-keyword 'error-conditions
-     '(json-unknown-keyword json-error error))
-
-(put 'json-number-format 'error-message "Invalid number format")
-(put 'json-number-format 'error-conditions
-     '(json-number-format json-error error))
-
-(put 'json-string-escape 'error-message "Bad Unicode escape")
-(put 'json-string-escape 'error-conditions
-     '(json-string-escape json-error error))
-
-(put 'json-string-format 'error-message "Bad string format")
-(put 'json-string-format 'error-conditions
-     '(json-string-format json-error error))
-
-(put 'json-key-format 'error-message "Bad JSON object key")
-(put 'json-key-format 'error-conditions
-     '(json-key-format json-error error))
-
-(put 'json-object-format 'error-message "Bad JSON object")
-(put 'json-object-format 'error-conditions
-     '(json-object-format json-error error))
+(define-error 'json-error "Unknown JSON error")
+(define-error 'json-readtable-error "JSON readtable error" 'json-error)
+(define-error 'json-unknown-keyword "Unrecognized keyword" 'json-error)
+(define-error 'json-number-format "Invalid number format" 'json-error)
+(define-error 'json-string-escape "Bad Unicode escape" 'json-error)
+(define-error 'json-string-format "Bad string format" 'json-error)
+(define-error 'json-key-format "Bad JSON object key" 'json-error)
+(define-error 'json-object-format "Bad JSON object" 'json-error)
 
 
 
@@ -402,41 +407,70 @@ Please see the documentation of `json-object-type' and `json-key-type'."
 
 (defun json-encode-hash-table (hash-table)
   "Return a JSON representation of HASH-TABLE."
-  (format "{%s}"
+  (format "{%s%s}"
           (json-join
            (let (r)
-             (maphash
-              (lambda (k v)
-                (push (format "%s:%s"
-                              (json-encode-key k)
-                              (json-encode v))
-                      r))
-              hash-table)
+             (json--with-indentation
+              (maphash
+               (lambda (k v)
+                 (push (format
+                        (if json-encoding-pretty-print
+                            "%s%s: %s"
+                          "%s%s:%s")
+                        json--encoding-current-indentation
+                        (json-encode-key k)
+                        (json-encode v))
+                       r))
+               hash-table))
              r)
-           ", ")))
+           json-encoding-separator)
+          (if (or (not json-encoding-pretty-print)
+                  json-encoding-lisp-style-closings)
+              ""
+            json--encoding-current-indentation)))
 
 ;; List encoding (including alists and plists)
 
 (defun json-encode-alist (alist)
   "Return a JSON representation of ALIST."
-  (format "{%s}"
-          (json-join (mapcar (lambda (cons)
-                               (format "%s:%s"
-                                       (json-encode-key (car cons))
-                                       (json-encode (cdr cons))))
-                             alist)
-                     ", ")))
+  (format "{%s%s}"
+          (json-join
+           (json--with-indentation
+            (mapcar (lambda (cons)
+                      (format (if json-encoding-pretty-print
+                                  "%s%s: %s"
+                                "%s%s:%s")
+                              json--encoding-current-indentation
+                              (json-encode-key (car cons))
+                              (json-encode (cdr cons))))
+                    alist))
+           json-encoding-separator)
+          (if (or (not json-encoding-pretty-print)
+                  json-encoding-lisp-style-closings)
+              ""
+            json--encoding-current-indentation)))
 
 (defun json-encode-plist (plist)
   "Return a JSON representation of PLIST."
   (let (result)
-    (while plist
-      (push (concat (json-encode-key (car plist))
-                    ":"
-                    (json-encode (cadr plist)))
-            result)
-      (setq plist (cddr plist)))
-    (concat "{" (json-join (nreverse result) ", ") "}")))
+    (json--with-indentation
+      (while plist
+        (push (concat
+               json--encoding-current-indentation
+               (json-encode-key (car plist))
+               (if json-encoding-pretty-print
+                   ": "
+                 ":")
+               (json-encode (cadr plist)))
+              result)
+        (setq plist (cddr plist))))
+    (concat "{"
+            (json-join (nreverse result) json-encoding-separator)
+            (if (and json-encoding-pretty-print
+                     (not json-encoding-lisp-style-closings))
+                json--encoding-current-indentation
+              "")
+            "}")))
 
 (defun json-encode-list (list)
   "Return a JSON representation of LIST.
@@ -475,7 +509,22 @@ become JSON objects."
 
 (defun json-encode-array (array)
   "Return a JSON representation of ARRAY."
-  (concat "[" (mapconcat 'json-encode array ", ") "]"))
+  (if (and json-encoding-pretty-print
+           (> (length array) 0))
+      (concat
+       (json--with-indentation
+         (concat (format "[%s" json--encoding-current-indentation)
+                 (json-join (mapcar 'json-encode array)
+                            (format "%s%s"
+                                    json-encoding-separator
+                                    json--encoding-current-indentation))))
+       (format "%s]"
+               (if json-encoding-lisp-style-closings
+                   ""
+                 json--encoding-current-indentation)))
+    (concat "["
+            (mapconcat 'json-encode array json-encoding-separator)
+            "]")))
 
 
 
@@ -541,6 +590,21 @@ Advances point just past JSON object."
         ((hash-table-p object) (json-encode-hash-table object))
         ((listp object)        (json-encode-list object))
         (t                     (signal 'json-error (list object)))))
+
+;; Pretty printing
+
+(defun json-pretty-print-buffer ()
+  "Pretty-print current buffer."
+  (interactive)
+  (json-pretty-print (point-min) (point-max)))
+
+(defun json-pretty-print (begin end)
+  "Pretty-print selected region."
+  (interactive "r")
+  (atomic-change-group
+    (let ((json-encoding-pretty-print t)
+          (txt (delete-and-extract-region begin end)))
+      (insert (json-encode (json-read-from-string txt))))))
 
 (provide 'json)
 

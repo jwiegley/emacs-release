@@ -1,6 +1,6 @@
 ;;; ediff-diff.el --- diff-related utilities
 
-;; Copyright (C) 1994-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1994-2014 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 ;; Package: ediff
@@ -27,10 +27,8 @@
 
 (provide 'ediff-diff)
 
-(eval-when-compile
-  (require 'ediff-util))
-
 (require 'ediff-init)
+(require 'ediff-util)
 
 (defgroup ediff-diff nil
   "Diff related utilities."
@@ -213,7 +211,7 @@ one optional arguments, diff-number to refine.")
 ;; ediff-setup-diff-regions is called via a funcall to
 ;; ediff-setup-diff-regions-function, which can also have the value
 ;; ediff-setup-diff-regions3, which takes 4 arguments.
-(defun ediff-setup-diff-regions (file-A file-B file-C)
+(defun ediff-setup-diff-regions (file-A file-B _file-C)
   ;; looking for '-c', '-i', '-u', or 'c', 'i', 'u' among clustered non-long options
   (if (string-match "^-[ciu]\\| -[ciu]\\|\\(^\\| \\)-[^- ]+[ciu]"
 		    ediff-diff-options)
@@ -453,52 +451,30 @@ one optional arguments, diff-number to refine.")
 		   c-prev c-end)
 	   ;; else convert lines to points
 	   (ediff-with-current-buffer A-buffer
-	     (let ((longlines-mode-val
-		    (if (and (boundp 'longlines-mode) longlines-mode) 1 0)))
-	       ;; we must disable and then restore longlines-mode
-	       (if (eq longlines-mode-val 1)
-		   (longlines-mode 0))
-	       (goto-char (or a-prev-pt shift-A (point-min)))
-	       (forward-line (- a-begin a-prev))
-	       (setq a-begin-pt (point))
-	       (forward-line (- a-end a-begin))
-	       (setq a-end-pt (point)
-		     a-prev a-end
-		     a-prev-pt a-end-pt)
-	       (if (eq longlines-mode-val 1)
-		   (longlines-mode longlines-mode-val))
-	       ))
+	     (goto-char (or a-prev-pt shift-A (point-min)))
+	     (forward-line (- a-begin a-prev))
+	     (setq a-begin-pt (point))
+	     (forward-line (- a-end a-begin))
+	     (setq a-end-pt (point)
+		   a-prev a-end
+		   a-prev-pt a-end-pt))
 	   (ediff-with-current-buffer B-buffer
-	     (let ((longlines-mode-val
-		    (if (and (boundp 'longlines-mode) longlines-mode) 1 0)))
-	       (if (eq longlines-mode-val 1)
-		   (longlines-mode 0))
-	       (goto-char (or b-prev-pt shift-B (point-min)))
-	       (forward-line (- b-begin b-prev))
-	       (setq b-begin-pt (point))
-	       (forward-line (- b-end b-begin))
-	       (setq b-end-pt (point)
-		     b-prev b-end
-		     b-prev-pt b-end-pt)
-	       (if (eq longlines-mode-val 1)
-		   (longlines-mode longlines-mode-val))
-	       ))
+	     (goto-char (or b-prev-pt shift-B (point-min)))
+	     (forward-line (- b-begin b-prev))
+	     (setq b-begin-pt (point))
+	     (forward-line (- b-end b-begin))
+	     (setq b-end-pt (point)
+		   b-prev b-end
+		   b-prev-pt b-end-pt))
 	   (if (ediff-buffer-live-p C-buffer)
 	       (ediff-with-current-buffer C-buffer
-		 (let ((longlines-mode-val
-			(if (and (boundp 'longlines-mode) longlines-mode) 1 0)))
-		   (if (eq longlines-mode-val 1)
-		       (longlines-mode 0))
-		   (goto-char (or c-prev-pt (point-min)))
-		   (forward-line (- c-begin c-prev))
-		   (setq c-begin-pt (point))
-		   (forward-line (- c-end c-begin))
-		   (setq c-end-pt (point)
-			 c-prev c-end
-			 c-prev-pt c-end-pt)
-		   (if (eq longlines-mode-val 1)
-		       (longlines-mode longlines-mode-val))
-		 )))
+		 (goto-char (or c-prev-pt (point-min)))
+		 (forward-line (- c-begin c-prev))
+		 (setq c-begin-pt (point))
+		 (forward-line (- c-end c-begin))
+		 (setq c-end-pt (point)
+		       c-prev c-end
+		       c-prev-pt c-end-pt)))
 	   (setq diff-list
 		 (nconc
 		  diff-list
@@ -611,7 +587,6 @@ one optional arguments, diff-number to refine.")
 	    (setq pt-saved (ediff-with-current-buffer buff (point)))))
       (setq overlay (ediff-make-bullet-proof-overlay begin end buff))
 
-      (ediff-overlay-put overlay 'priority ediff-shadow-overlay-priority)
       (ediff-overlay-put overlay 'ediff-diff-num current-diff)
       (if (and (ediff-has-face-support-p)
 	       ediff-use-faces ediff-highlight-all-diffs)
@@ -843,23 +818,12 @@ one optional arguments, diff-number to refine.")
 						     n &optional default)
   (let ((fine-diff-vector  (ediff-get-fine-diff-vector n buf-type))
 	(face (if default
-		  'default
+		  nil
 		(ediff-get-symbol-from-alist
-		 buf-type ediff-fine-diff-face-alist)
-		))
-	(priority (if default
-		      0
-		    (1+ (or (ediff-overlay-get
-			     (symbol-value
-			      (ediff-get-symbol-from-alist
-			       buf-type
-			       ediff-current-diff-overlay-alist))
-			     'priority)
-			    0)))))
-    (mapcar (lambda (overl)
-	      (ediff-set-overlay-face overl face)
-	      (ediff-overlay-put overl 'priority priority))
-	    fine-diff-vector)))
+		 buf-type ediff-fine-diff-face-alist))))
+    (mapc (lambda (overl)
+	    (ediff-set-overlay-face overl face))
+	  fine-diff-vector)))
 
 ;; Set overlays over the regions that denote delimiters
 (defun ediff-set-fine-overlays-for-combined-merge (diff-list reg-num)
@@ -1085,65 +1049,36 @@ delimiter regions"))
 			 c-prev c-end)
 		 ;; else convert lines to points
 		 (ediff-with-current-buffer A-buffer
-		   (let ((longlines-mode-val
-			  (if (and (boundp 'longlines-mode) longlines-mode) 1 0)))
-		     ;; we must disable and then restore longlines-mode
-		     (if (eq longlines-mode-val 1)
-			 (longlines-mode 0))
-		     (goto-char (or a-prev-pt shift-A (point-min)))
-		     (forward-line (- a-begin a-prev))
-		     (setq a-begin-pt (point))
-		     (forward-line (- a-end a-begin))
-		     (setq a-end-pt (point)
-			   a-prev a-end
-			   a-prev-pt a-end-pt)
-		     (if (eq longlines-mode-val 1)
-			 (longlines-mode longlines-mode-val))
-		     ))
+		   (goto-char (or a-prev-pt shift-A (point-min)))
+		   (forward-line (- a-begin a-prev))
+		   (setq a-begin-pt (point))
+		   (forward-line (- a-end a-begin))
+		   (setq a-end-pt (point)
+			 a-prev a-end
+			 a-prev-pt a-end-pt))
 		 (ediff-with-current-buffer B-buffer
-		   (let ((longlines-mode-val
-			  (if (and (boundp 'longlines-mode) longlines-mode) 1 0)))
-		     (if (eq longlines-mode-val 1)
-			 (longlines-mode 0))
-		     (goto-char (or b-prev-pt shift-B (point-min)))
-		     (forward-line (- b-begin b-prev))
-		     (setq b-begin-pt (point))
-		     (forward-line (- b-end b-begin))
-		     (setq b-end-pt (point)
-			   b-prev b-end
-			   b-prev-pt b-end-pt)
-		     (if (eq longlines-mode-val 1)
-			 (longlines-mode longlines-mode-val))
-		     ))
+		   (goto-char (or b-prev-pt shift-B (point-min)))
+		   (forward-line (- b-begin b-prev))
+		   (setq b-begin-pt (point))
+		   (forward-line (- b-end b-begin))
+		   (setq b-end-pt (point)
+			 b-prev b-end
+			 b-prev-pt b-end-pt))
 		 (ediff-with-current-buffer C-buffer
-		   (let ((longlines-mode-val
-			  (if (and (boundp 'longlines-mode) longlines-mode) 1 0)))
-		     (if (eq longlines-mode-val 1)
-			 (longlines-mode 0))
-		     (goto-char (or c-prev-pt shift-C (point-min)))
-		     (forward-line (- c-begin c-prev))
-		     (setq c-begin-pt (point))
-		     (forward-line (- c-end c-begin))
-		     (setq c-end-pt (point)
-			   c-prev c-end
-			   c-prev-pt c-end-pt)
-		     (if (eq longlines-mode-val 1)
-			 (longlines-mode longlines-mode-val))
-		     ))
+		   (goto-char (or c-prev-pt shift-C (point-min)))
+		   (forward-line (- c-begin c-prev))
+		   (setq c-begin-pt (point))
+		   (forward-line (- c-end c-begin))
+		   (setq c-end-pt (point)
+			 c-prev c-end
+			 c-prev-pt c-end-pt))
 		 (if (ediff-buffer-live-p anc-buffer)
 		     (ediff-with-current-buffer anc-buffer
-		       (let ((longlines-mode-val
-			      (if (and (boundp 'longlines-mode) longlines-mode) 1 0)))
-			 (if (eq longlines-mode-val 1)
-			     (longlines-mode 0))
-			 (forward-line (- c-or-anc-begin anc-prev))
-			 (setq anc-begin-pt (point))
-			 (forward-line (- c-or-anc-end c-or-anc-begin))
-			 (setq anc-end-pt (point)
-			       anc-prev c-or-anc-end)
-			 (if (eq longlines-mode-val 1)
-			     (longlines-mode longlines-mode-val))
-			 )))
+		       (forward-line (- c-or-anc-begin anc-prev))
+		       (setq anc-begin-pt (point))
+		       (forward-line (- c-or-anc-end c-or-anc-begin))
+		       (setq anc-end-pt (point)
+			     anc-prev c-or-anc-end)))
 		 (setq diff-list
 		       (nconc
 			diff-list
@@ -1276,7 +1211,7 @@ delimiter regions"))
 ;; like shell-command-sentinel but doesn't print an exit status message
 ;; we do this because diff always exits with status 1, if diffs are found
 ;; so shell-command-sentinel displays a confusing message to the user
-(defun ediff-process-sentinel (process signal)
+(defun ediff-process-sentinel (process _signal)
   (if (and (memq (process-status process) '(exit signal))
            (buffer-name (process-buffer process)))
       (progn

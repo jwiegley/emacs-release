@@ -3,11 +3,7 @@
 ;;; Code:
 
 
-;;;### (autoloads (mh-iterate-on-range mh-iterate-on-messages-in-region
-;;;;;;  mh-do-at-event-location mh-in-show-buffer with-mh-folder-updating
-;;;;;;  mh-defstruct mh-mark-active-p mh-make-local-hook defmacro-mh
-;;;;;;  defun-mh mh-funcall-if-exists mh-do-in-xemacs mh-do-in-gnu-emacs
-;;;;;;  mh-require-cl) "mh-acros" "mh-acros.el" (20707 18685 911514
+;;;### (autoloads nil "mh-acros" "mh-acros.el" (21291 53104 431149
 ;;;;;;  0))
 ;;; Generated autoloads from mh-acros.el
 
@@ -132,10 +128,8 @@ MH-E functions.
 
 ;;;***
 
-;;;### (autoloads (mh-alias-grab-from-field mh-alias-for-from-p mh-alias-address-to-alias
-;;;;;;  mh-alias-letter-expand-alias mh-alias-minibuffer-confirm-address
-;;;;;;  mh-read-address mh-alias-expand mh-alias-reload-maybe) "mh-alias"
-;;;;;;  "mh-alias.el" (20707 18685 911514 0))
+;;;### (autoloads nil "mh-alias" "mh-alias.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-alias.el
 
 (autoload 'mh-alias-reload-maybe "mh-alias" "\
@@ -181,9 +175,7 @@ Add alias for the sender of the current message.
 
 ;;;***
 
-;;;### (autoloads (mh-insert-auto-fields mh-show-buffer-message-number
-;;;;;;  mh-send mh-reply mh-redistribute mh-forward mh-extract-rejected-mail
-;;;;;;  mh-edit-again) "mh-comp" "mh-comp.el" (20707 18685 911514
+;;;### (autoloads nil "mh-comp" "mh-comp.el" (21546 52205 704969
 ;;;;;;  0))
 ;;; Generated autoloads from mh-comp.el
 
@@ -366,18 +358,7 @@ added; otherwise return nil.
 
 ;;;***
 
-;;;### (autoloads (mh-msg-filename mh-refile-a-msg mh-delete-a-msg
-;;;;;;  mh-folder-from-address mh-prompt-for-refile-folder mh-next-msg
-;;;;;;  mh-reset-threads-and-narrowing mh-regenerate-headers mh-process-or-undo-commands
-;;;;;;  mh-scan-folder mh-make-folder-mode-line mh-set-folder-modified-p
-;;;;;;  mh-outstanding-commands-p mh-recenter mh-goto-cur-msg mh-update-sequences
-;;;;;;  mh-write-msg-to-file mh-visit-folder mh-undo mh-toggle-showing
-;;;;;;  mh-rescan-folder mh-refile-or-write-again mh-refile-msg mh-quit
-;;;;;;  mh-previous-unread-msg mh-previous-undeleted-msg mh-previous-page
-;;;;;;  mh-prev-button mh-page-msg mh-next-unread-msg mh-next-undeleted-msg
-;;;;;;  mh-next-button mh-modify mh-last-msg mh-inc-folder mh-goto-msg
-;;;;;;  mh-first-msg mh-execute-commands mh-delete-msg-no-motion
-;;;;;;  mh-delete-msg) "mh-folder" "mh-folder.el" (20707 18685 911514
+;;;### (autoloads nil "mh-folder" "mh-folder.el" (21291 53104 431149
 ;;;;;;  0))
 ;;; Generated autoloads from mh-folder.el
 
@@ -415,15 +396,15 @@ RANGE is read in interactive use.
 \(fn RANGE)" t nil)
 
 (autoload 'mh-execute-commands "mh-folder" "\
-Process outstanding delete and refile requests\\<mh-folder-mode-map>.
+Perform outstanding operations\\<mh-folder-mode-map>.
 
-If you've marked messages to be deleted or refiled and you want
-to go ahead and delete or refile the messages, use this command.
-Many MH-E commands that may affect the numbering of the
-messages (such as \\[mh-rescan-folder] or \\[mh-pack-folder])
-will ask if you want to process refiles or deletes first and then
-either run this command for you or undo the pending refiles and
-deletes.
+If you've marked messages to be refiled, deleted, blacklisted, or
+whitelisted and you want to go ahead and perform these operations
+on these messages, use this command. Many MH-E commands that may
+affect the numbering of the messages (such as
+\\[mh-rescan-folder] or \\[mh-pack-folder]) will ask if you want
+to perform these operations first and then either run this
+command for you or undo the pending operations.
 
 This function runs `mh-before-commands-processed-hook' before the
 commands are processed and `mh-after-commands-processed-hook'
@@ -844,10 +825,8 @@ Return the file name of MSG in FOLDER (default current folder).
 
 ;;;***
 
-;;;### (autoloads (mh-undo-folder mh-store-msg mh-sort-folder mh-pipe-msg
-;;;;;;  mh-page-digest-backwards mh-page-digest mh-pack-folder mh-list-folders
-;;;;;;  mh-kill-folder mh-copy-msg mh-burst-digest) "mh-funcs" "mh-funcs.el"
-;;;;;;  (20707 18685 911514 0))
+;;;### (autoloads nil "mh-funcs" "mh-funcs.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-funcs.el
 
 (autoload 'mh-burst-digest "mh-funcs" "\
@@ -971,11 +950,8 @@ Arguments are IGNORED (for `revert-buffer').
 
 ;;;***
 
-;;;### (autoloads (mh-identity-handler-bottom mh-identity-handler-top
-;;;;;;  mh-identity-insert-attribution-verb mh-identity-handler-attribution-verb
-;;;;;;  mh-identity-handler-signature mh-identity-handler-gpg-identity
-;;;;;;  mh-insert-identity mh-identity-add-menu mh-identity-make-menu)
-;;;;;;  "mh-identity" "mh-identity.el" (20707 18685 911514 0))
+;;;### (autoloads nil "mh-identity" "mh-identity.el" (21291 53104
+;;;;;;  431149 0))
 ;;; Generated autoloads from mh-identity.el
 
 (autoload 'mh-identity-make-menu "mh-identity" "\
@@ -1049,8 +1025,7 @@ the header.
 
 ;;;***
 
-;;;### (autoloads (mh-inc-spool-make) "mh-inc" "mh-inc.el" (20707
-;;;;;;  18685 911514 0))
+;;;### (autoloads nil "mh-inc" "mh-inc.el" (21291 53104 431149 0))
 ;;; Generated autoloads from mh-inc.el
 
 (autoload 'mh-inc-spool-make "mh-inc" "\
@@ -1060,10 +1035,7 @@ Make all commands and defines keys for contents of `mh-inc-spool-list'.
 
 ;;;***
 
-;;;### (autoloads (mh-spamprobe-whitelist mh-spamprobe-blacklist
-;;;;;;  mh-bogofilter-whitelist mh-bogofilter-blacklist mh-spamassassin-identify-spammers
-;;;;;;  mh-spamassassin-whitelist mh-spamassassin-blacklist mh-junk-whitelist
-;;;;;;  mh-junk-blacklist) "mh-junk" "mh-junk.el" (20707 18685 911514
+;;;### (autoloads nil "mh-junk" "mh-junk.el" (21291 53104 431149
 ;;;;;;  0))
 ;;; Generated autoloads from mh-junk.el
 
@@ -1086,6 +1058,19 @@ program, see:
 
 \(fn RANGE)" t nil)
 
+(autoload 'mh-junk-blacklist-disposition "mh-junk" "\
+Determines the fate of the selected spam.
+
+\(fn)" nil nil)
+
+(autoload 'mh-junk-process-blacklist "mh-junk" "\
+Blacklist RANGE as spam.
+This command trains the spam program in use (see the option
+`mh-junk-program') with the content of RANGE and then handles the
+message(s) as specified by the option `mh-junk-disposition'.
+
+\(fn RANGE)" nil nil)
+
 (autoload 'mh-junk-whitelist "mh-junk" "\
 Whitelist RANGE as ham.
 
@@ -1097,6 +1082,14 @@ Check the documentation of `mh-interactive-range' to see how
 RANGE is read in interactive use.
 
 \(fn RANGE)" t nil)
+
+(autoload 'mh-junk-process-whitelist "mh-junk" "\
+Whitelist RANGE as ham.
+
+This command reclassifies the RANGE as ham if it were incorrectly
+classified as spam (see the option `mh-junk-program').
+
+\(fn RANGE)" nil nil)
 
 (autoload 'mh-spamassassin-blacklist "mh-junk" "\
 Blacklist MSG with SpamAssassin.
@@ -1305,10 +1298,8 @@ See `mh-spamprobe-blacklist' for more information.
 
 ;;;***
 
-;;;### (autoloads (mh-letter-toggle-header-field-display-button mh-complete-word
-;;;;;;  mh-position-on-field mh-letter-next-header-field mh-yank-cur-msg
-;;;;;;  mh-insert-signature mh-letter-mode) "mh-letter" "mh-letter.el"
-;;;;;;  (20707 18685 911514 0))
+;;;### (autoloads nil "mh-letter" "mh-letter.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-letter.el
 
 (autoload 'mh-letter-mode "mh-letter" "\
@@ -1424,10 +1415,8 @@ callable from a mouse button.
 
 ;;;***
 
-;;;### (autoloads (mh-narrow-to-to mh-narrow-to-subject mh-narrow-to-range
-;;;;;;  mh-narrow-to-from mh-narrow-to-cc mh-delete-subject-or-thread
-;;;;;;  mh-delete-subject) "mh-limit" "mh-limit.el" (20707 18685
-;;;;;;  911514 0))
+;;;### (autoloads nil "mh-limit" "mh-limit.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-limit.el
 
 (autoload 'mh-delete-subject "mh-limit" "\
@@ -1500,19 +1489,7 @@ Use \\<mh-folder-mode-map>\\[mh-widen] to undo this command.
 
 ;;;***
 
-;;;### (autoloads (mh-destroy-postponed-handles mh-mime-cleanup mh-have-file-command
-;;;;;;  mh-file-mime-type mh-mh-directive-present-p mh-mml-tag-present-p
-;;;;;;  mh-mml-unsecure-message mh-mml-to-mime mh-mml-secure-message-signencrypt
-;;;;;;  mh-mml-secure-message-sign mh-mml-secure-message-encrypt
-;;;;;;  mh-mh-to-mime-undo mh-mh-to-mime mh-mh-compose-external-type
-;;;;;;  mh-mh-compose-external-compressed-tar mh-mh-compose-anon-ftp
-;;;;;;  mh-compose-insertion mh-mml-forward-message mh-compose-forward
-;;;;;;  mh-display-emphasis mh-display-smileys mh-add-missing-mime-version-header
-;;;;;;  mh-goto-next-button mh-mime-display mh-decode-message-subject
-;;;;;;  mh-decode-message-header mh-toggle-mime-buttons mh-toggle-mh-decode-mime-flag
-;;;;;;  mh-mime-save-parts mh-folder-toggle-mime-part mh-folder-save-mime-part
-;;;;;;  mh-folder-inline-mime-part mh-display-with-external-viewer
-;;;;;;  mh-buffer-data) "mh-mime" "mh-mime.el" (20707 18685 911514
+;;;### (autoloads nil "mh-mime" "mh-mime.el" (21291 53104 431149
 ;;;;;;  0))
 ;;; Generated autoloads from mh-mime.el
 
@@ -1848,9 +1825,8 @@ Free MIME data for externally displayed MIME parts.
 
 ;;;***
 
-;;;### (autoloads (mh-print-msg mh-ps-print-toggle-color mh-ps-print-toggle-faces
-;;;;;;  mh-ps-print-msg-file mh-ps-print-msg) "mh-print" "mh-print.el"
-;;;;;;  (20707 18685 911514 0))
+;;;### (autoloads nil "mh-print" "mh-print.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-print.el
 
 (autoload 'mh-ps-print-msg "mh-print" "\
@@ -1934,9 +1910,8 @@ Consider using \\[mh-ps-print-msg] instead.
 
 ;;;***
 
-;;;### (autoloads (mh-msg-num-width-to-column mh-msg-num-width mh-scan-format
-;;;;;;  mh-set-cmd-note mh-scan-msg-search-regexp mh-scan-msg-number-regexp)
-;;;;;;  "mh-scan" "mh-scan.el" (20707 18685 911514 0))
+;;;### (autoloads nil "mh-scan" "mh-scan.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-scan.el
 
 (autoload 'mh-scan-msg-number-regexp "mh-scan" "\
@@ -1980,14 +1955,8 @@ comes after that.
 
 ;;;***
 
-;;;### (autoloads (mh-index-update-maps mh-index-read-data mh-index-delete-from-sequence
-;;;;;;  mh-index-add-to-sequence mh-create-sequence-map mh-index-create-sequences
-;;;;;;  mh-index-execute-commands mh-search-p mh-index-create-imenu-index
-;;;;;;  mh-index-delete-folder-headers mh-index-insert-folder-headers
-;;;;;;  mh-index-group-by-folder mh-index-visit-folder mh-index-previous-folder
-;;;;;;  mh-index-next-folder mh-index-sequenced-messages mh-index-ticked-messages
-;;;;;;  mh-index-new-messages mh-search) "mh-search" "mh-search.el"
-;;;;;;  (20707 18685 911514 0))
+;;;### (autoloads nil "mh-search" "mh-search.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-search.el
 
 (autoload 'mh-search "mh-search" "\
@@ -2200,11 +2169,12 @@ Non-nil means that this folder was generated by searching.
 \(fn)" nil nil)
 
 (autoload 'mh-index-execute-commands "mh-search" "\
-Delete/refile the actual messages.
-The copies in the searched folder are then deleted/refiled to get
-the desired result. Before deleting the messages we make sure
-that the message being deleted is identical to the one that the
-user has marked in the index buffer.
+Perform the outstanding operations on the actual messages.
+The copies in the searched folder are then deleted, refiled,
+blacklisted and whitelisted to get the desired result. Before
+processing the messages we make sure that the message is
+identical to the one that the user has marked in the index
+buffer.
 
 \(fn)" nil nil)
 
@@ -2251,16 +2221,7 @@ origin-index) map is updated too.
 
 ;;;***
 
-;;;### (autoloads (mh-remove-all-notation mh-notate-user-sequences
-;;;;;;  mh-notate-deleted-and-refiled mh-remove-cur-notation mh-notate-cur
-;;;;;;  mh-notate mh-read-folder-sequences mh-parse-flist-output-line
-;;;;;;  mh-translate-range mh-range-to-msg-list mh-read-range mh-interactive-range
-;;;;;;  mh-valid-view-change-operation-p mh-add-msgs-to-seq mh-undefine-sequence
-;;;;;;  mh-define-sequence mh-seq-to-msgs mh-find-seq mh-valid-seq-p
-;;;;;;  mh-read-seq-default mh-widen mh-toggle-tick mh-put-msg-in-seq
-;;;;;;  mh-narrow-to-tick mh-narrow-to-seq mh-msg-is-in-seq mh-list-sequences
-;;;;;;  mh-delete-seq mh-delete-msg-from-seq mh-catchup) "mh-seq"
-;;;;;;  "mh-seq.el" (20707 18685 911514 0))
+;;;### (autoloads nil "mh-seq" "mh-seq.el" (21291 53104 431149 0))
 ;;; Generated autoloads from mh-seq.el
 
 (autoload 'mh-catchup "mh-seq" "\
@@ -2552,12 +2513,8 @@ Remove all notations on all scan lines that MH-E introduces.
 
 ;;;***
 
-;;;### (autoloads (mh-gnus-article-highlight-citation mh-show-addr
-;;;;;;  mh-show-mode mh-show-font-lock-keywords-with-cite mh-show-font-lock-keywords
-;;;;;;  mh-invalidate-show-buffer mh-clean-msg-header mh-display-msg
-;;;;;;  mh-start-of-uncleaned-message mh-maybe-show mh-show-preferred-alternative
-;;;;;;  mh-header-display mh-show) "mh-show" "mh-show.el" (20707
-;;;;;;  18685 911514 0))
+;;;### (autoloads nil "mh-show" "mh-show.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-show.el
 
 (autoload 'mh-show "mh-show" "\
@@ -2674,9 +2631,8 @@ Highlight cited text in current buffer using Gnus.
 
 ;;;***
 
-;;;### (autoloads (mh-speed-add-folder mh-speed-invalidate-map mh-speed-flists
-;;;;;;  mh-folder-speedbar-buttons) "mh-speed" "mh-speed.el" (20707
-;;;;;;  18685 911514 0))
+;;;### (autoloads nil "mh-speed" "mh-speed.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-speed.el
 
 (autoload 'mh-folder-speedbar-buttons "mh-speed" "\
@@ -2712,12 +2668,8 @@ The function invalidates the latest ancestor that is present.
 
 ;;;***
 
-;;;### (autoloads (mh-thread-forget-message mh-thread-add-spaces
-;;;;;;  mh-thread-find-msg-subject mh-thread-update-scan-line-map
-;;;;;;  mh-thread-print-scan-lines mh-thread-generate mh-thread-parse-scan-line
-;;;;;;  mh-thread-inc mh-toggle-threads mh-thread-refile mh-thread-previous-sibling
-;;;;;;  mh-thread-next-sibling mh-thread-delete mh-thread-ancestor)
-;;;;;;  "mh-thread" "mh-thread.el" (20707 18685 911514 0))
+;;;### (autoloads nil "mh-thread" "mh-thread.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-thread.el
 
 (autoload 'mh-thread-ancestor "mh-thread" "\
@@ -2807,20 +2759,8 @@ Forget the message INDEX from the threading tables.
 
 ;;;***
 
-;;;### (autoloads (mh-signature-separator-p mh-letter-skip-leading-whitespace-in-header-field
-;;;;;;  mh-letter-toggle-header-field-display mh-letter-skipped-header-field-p
-;;;;;;  mh-letter-hide-all-skipped-fields mh-header-field-end mh-header-field-beginning
-;;;;;;  mh-mail-header-end mh-goto-header-end mh-goto-header-field
-;;;;;;  mh-get-header-field mh-extract-from-header-value mh-in-header-p
-;;;;;;  mh-prompt-for-folder mh-folder-completion-function mh-speed-flists-active-p
-;;;;;;  mh-expand-file-name mh-folder-name-p mh-remove-from-sub-folders-cache
-;;;;;;  mh-sub-folders mh-folder-list mh-clear-sub-folders-cache
-;;;;;;  mh-get-msg-num mh-lessp mh-coalesce-msg-list mh-prefix-help
-;;;;;;  mh-help mh-set-help mh-ephem-message mh-find-path mh-logo-display
-;;;;;;  mh-replace-string mh-quote-pick-expr mh-mapc mh-make-local-vars
-;;;;;;  mh-delete-line mh-colors-in-use-p mh-colors-available-p mh-beginning-of-word
-;;;;;;  mh-search-from-end) "mh-utils" "mh-utils.el" (20707 18685
-;;;;;;  911514 0))
+;;;### (autoloads nil "mh-utils" "mh-utils.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-utils.el
 
 (autoload 'mh-search-from-end "mh-utils" "\
@@ -3126,8 +3066,8 @@ Return non-nil if buffer includes \"^-- $\".
 
 ;;;***
 
-;;;### (autoloads (mh-set-x-image-cache-directory mh-show-xface)
-;;;;;;  "mh-xface" "mh-xface.el" (20707 18685 911514 0))
+;;;### (autoloads nil "mh-xface" "mh-xface.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from mh-xface.el
 
 (autoload 'mh-show-xface "mh-xface" "\
@@ -3144,7 +3084,7 @@ This is only done if `mh-x-image-cache-directory' is nil.
 ;;;***
 
 ;;;### (autoloads nil nil ("mh-buffers.el" "mh-compat.el" "mh-e.el"
-;;;;;;  "mh-gnus.el" "mh-tool-bar.el") (20793 40499 323992 759000))
+;;;;;;  "mh-gnus.el" "mh-tool-bar.el") (21569 15427 659841 7000))
 
 ;;;***
 

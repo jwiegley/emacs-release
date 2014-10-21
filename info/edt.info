@@ -1,16 +1,15 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/edt.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/edt.texi.
+This is ../../info/edt.info, produced by makeinfo version 4.13 from
+./edt.texi.
 
 This file documents the EDT emulation package for Emacs.
 
-   Copyright (C) 1986, 1992, 1994-1995, 1999-2013 Free Software
+   Copyright (C) 1986, 1992, 1994-1995, 1999-2014 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -34,13 +33,13 @@ of DEC's EDT editor.
 
    This file documents the EDT emulation package for Emacs.
 
-   Copyright (C) 1986, 1992, 1994-1995, 1999-2013 Free Software
+   Copyright (C) 1986, 1992, 1994-1995, 1999-2014 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -97,7 +96,7 @@ active".
 initiate an Emacs session, by adding the following line to your
 `.emacs' file:
 
-     (add-hook term-setup-hook 'edt-emulation-on)
+     (add-hook 'emacs-startup-hook 'edt-emulation-on)
 
 *Important:* Be sure to read the rest of this manual.  It contains very
 useful information on how the EDT Emulation behaves and how to
@@ -276,7 +275,7 @@ enabled: "Default EDT keymap active".
 initiate an Emacs session, by adding the following line to your
 `.emacs' file:
 
-     (add-hook term-setup-hook 'edt-emulation-on)
+     (add-hook 'emacs-startup-hook 'edt-emulation-on)
 
    A reference sheet is included (later on) listing the default EDT
 Emulation key bindings.  This sheet is also accessible on line from
@@ -742,13 +741,13 @@ special needs.
 
 * Menu:
 
-* edt-user.el::          Creating your own `edt-user.el' file.
+* Init file::            Creating your own `edt-user.el' file.
 * Words::                Specifying word entities.
 * Control keys::         Enabling EDT control key sequence bindings.
 * Scroll margins::       Setting scroll margins.
 
 
-File: edt.info,  Node: edt-user.el,  Next: Words,  Up: Customizing
+File: edt.info,  Node: Init file,  Next: Words,  Up: Customizing
 
 7.1 Creating your own `edt-user.el' File
 ========================================
@@ -803,7 +802,7 @@ example).  It is used to bind emacs commands to LK-201 function keys, to
 keypad keys, and to gold sequences of those keys.
 
 
-File: edt.info,  Node: Words,  Next: Control keys,  Prev: edt-user.el,  Up: Customizing
+File: edt.info,  Node: Words,  Next: Control keys,  Prev: Init file,  Up: Customizing
 
 7.2 Specifying Word Entities
 ============================
@@ -890,7 +889,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1371,25 +1370,30 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top1003
-Node: Overview2466
-Node: Quick start3209
-Node: Changes4500
-Node: Goals8519
-Node: Supported terminals9657
-Node: Starting emulation10780
-Node: Platform-specific notes12884
-Node: Sun workstations13298
-Node: MS-DOS16096
-Node: GNU/Linux16635
-Node: Unix18155
-Node: Differences20343
-Node: Highlights23053
-Node: Customizing30651
-Node: edt-user.el31863
-Node: Words34067
-Node: Control keys35405
-Node: Scroll margins36071
-Node: GNU Free Documentation License37272
+Node: Top927
+Node: Overview2390
+Node: Quick start3133
+Node: Changes4428
+Node: Goals8447
+Node: Supported terminals9585
+Node: Starting emulation10708
+Node: Platform-specific notes12816
+Node: Sun workstations13230
+Node: MS-DOS16028
+Node: GNU/Linux16567
+Node: Unix18087
+Node: Differences20275
+Node: Highlights22985
+Node: Customizing30583
+Node: Init file31795
+Node: Words33997
+Node: Control keys35333
+Node: Scroll margins35999
+Node: GNU Free Documentation License37200
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

@@ -3,8 +3,7 @@
 ;;; Code:
 
 
-;;;### (autoloads (ede-cpp-root-project-root) "ede/cpp-root" "cpp-root.el"
-;;;;;;  "390335e8b40807bcc7dd6b9ecfbbb786")
+;;;### (autoloads nil "ede/cpp-root" "cpp-root.el" "14a8944affb8e1a4574c23d32bec44ac")
 ;;; Generated autoloads from cpp-root.el
 
 (autoload 'ede-cpp-root-project-root "ede/cpp-root" "\
@@ -12,12 +11,13 @@ Get the root directory for DIR.
 
 \(fn &optional DIR)" nil nil)
 
-(ede-add-project-autoload (ede-project-autoload "cpp-root" :name "CPP ROOT" :file 'ede-cpp-root :proj-file 'ede-cpp-root-project-file-for-dir :proj-root 'ede-cpp-root-project-root :load-type 'ede-cpp-root-load :class-sym 'ede-cpp-root :new-p nil :safe-p t) 'unique)
+(ede-add-project-autoload (ede-project-autoload "cpp-root" :name "CPP ROOT" :file 'ede/cpp-root :proj-file 'ede-cpp-root-project-file-for-dir :proj-root 'ede-cpp-root-project-root :load-type 'ede-cpp-root-load :class-sym 'ede-cpp-root-project :new-p nil :safe-p t) 'unique)
+
+(eieio-defclass-autoload 'ede-cpp-root-project '(ede-project eieio-instance-tracker) "ede/cpp-root" "EDE cpp-root project class.\nEach directory needs a project file to control it.")
 
 ;;;***
 
-;;;### (autoloads (ede-project-sort-targets ede-customize-current-target
-;;;;;;  ede-customize-project) "ede/custom" "custom.el" "856181c6583938388b9fa46720cb2b25")
+;;;### (autoloads nil "ede/custom" "custom.el" "dfca70ebdb1eae5fcbfc63b867d69eef")
 ;;; Generated autoloads from custom.el
 
 (autoload 'ede-customize-project "ede/custom" "\
@@ -41,8 +41,7 @@ Create a custom-like buffer for sorting targets of current project.
 
 ;;;***
 
-;;;### (autoloads (ede-emacs-project-root) "ede/emacs" "emacs.el"
-;;;;;;  "314cd162c83d80b4e3e58e70e5298438")
+;;;### (autoloads nil "ede/emacs" "emacs.el" "8591a61fa08216eef7bd413c7aa24aaa")
 ;;; Generated autoloads from emacs.el
 
 (autoload 'ede-emacs-project-root "ede/emacs" "\
@@ -54,7 +53,7 @@ Get the root directory for DIR.
 
 ;;;***
 
-;;;### (autoloads (ede-find-file) "ede/files" "files.el" "feaabd59d89f91d8c0a2684a5c1094de")
+;;;### (autoloads nil "ede/files" "files.el" "bf9129aefd6868fa111bd44598da15ae")
 ;;; Generated autoloads from files.el
 
 (autoload 'ede-find-file "ede/files" "\
@@ -66,8 +65,7 @@ the current EDE project.
 
 ;;;***
 
-;;;### (autoloads (ede-enable-generic-projects) "ede/generic" "generic.el"
-;;;;;;  "f8cee9b06faf0fbfd680e27f27cd0a86")
+;;;### (autoloads nil "ede/generic" "generic.el" "b8abcab5d4ad0b43717190264f7df1e4")
 ;;; Generated autoloads from generic.el
 
 (autoload 'ede-enable-generic-projects "ede/generic" "\
@@ -77,8 +75,7 @@ Enable generic project loaders.
 
 ;;;***
 
-;;;### (autoloads (ede-linux-load ede-linux-project-root) "ede/linux"
-;;;;;;  "linux.el" "1dffda7f812a76dc23f1bddb1b75b0ba")
+;;;### (autoloads nil "ede/linux" "linux.el" "b33e369a68b9ed46c84bb09f057f3630")
 ;;; Generated autoloads from linux.el
 
 (autoload 'ede-linux-project-root "ede/linux" "\
@@ -98,8 +95,7 @@ ROOTPROJ is nil, since there is only one project.
 
 ;;;***
 
-;;;### (autoloads (ede-enable-locate-on-project) "ede/locate" "locate.el"
-;;;;;;  "75746759e62640f3ca35db80d57481dc")
+;;;### (autoloads nil "ede/locate" "locate.el" "99e6b6f3674a7a1ac585f2f3fd0eecc3")
 ;;; Generated autoloads from locate.el
 
 (autoload 'ede-enable-locate-on-project "ede/locate" "\
@@ -111,7 +107,7 @@ based on `ede-locate-setup-options'.
 
 ;;;***
 
-;;;### (autoloads (ede-make-check-version) "ede/make" "make.el" "84364d952d6bc626c1a605a7e823c3cb")
+;;;### (autoloads nil "ede/make" "make.el" "df71648ea91298b098a4272a1d7bf83b")
 ;;; Generated autoloads from make.el
 
 (autoload 'ede-make-check-version "ede/make" "\
@@ -125,8 +121,7 @@ If NOERROR is nil, then throw an error on failure.  Return t otherwise.
 
 ;;;***
 
-;;;### (autoloads (ede-speedbar-file-setup) "ede/speedbar" "speedbar.el"
-;;;;;;  "ac8d088844e4cfc7ec3aa18e85f395d1")
+;;;### (autoloads nil "ede/speedbar" "speedbar.el" "71e6cc92750ddad3998081a853230ff8")
 ;;; Generated autoloads from speedbar.el
 
 (autoload 'ede-speedbar-file-setup "ede/speedbar" "\
@@ -136,9 +131,7 @@ Setup some keybindings in the Speedbar File display.
 
 ;;;***
 
-;;;### (autoloads (ede-vc-project-directory ede-upload-html-documentation
-;;;;;;  ede-upload-distribution ede-edit-web-page ede-web-browse-home)
-;;;;;;  "ede/system" "system.el" "af9b58fc58b806c47ac6eebb05f595dd")
+;;;### (autoloads nil "ede/system" "system.el" "8e3f3f8ccdd16dda8d2b437d4e60450e")
 ;;; Generated autoloads from system.el
 
 (autoload 'ede-web-browse-home "ede/system" "\
@@ -172,7 +165,7 @@ Run `vc-dir' on the current project.
 
 ;;;***
 
-;;;### (autoloads (ede-update-version) "ede/util" "util.el" "7694c70ea28eab86440b482cf66e8f73")
+;;;### (autoloads nil "ede/util" "util.el" "cc6701e9ecba5628c9f469691f6848f6")
 ;;; Generated autoloads from util.el
 
 (autoload 'ede-update-version "ede/util" "\

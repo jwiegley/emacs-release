@@ -40,6 +40,7 @@ lprojdirs = Emacs.app/Contents/Resources/English.lproj \
   Emacs.app/Contents/Resources/cs.lproj \
   Emacs.app/Contents/Resources/da.lproj \
   Emacs.app/Contents/Resources/el.lproj \
+  Emacs.app/Contents/Resources/es_MX.lproj \
   Emacs.app/Contents/Resources/fi.lproj \
   Emacs.app/Contents/Resources/he.lproj \
   Emacs.app/Contents/Resources/hr.lproj \

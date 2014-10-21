@@ -1,10 +1,10 @@
 ;;; byte-opt.el --- the optimization passes of the emacs-lisp byte compiler -*- lexical-binding: t -*-
 
-;; Copyright (C) 1991, 1994, 2000-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1991, 1994, 2000-2014 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: internal
 ;; Package: emacs
 
@@ -248,10 +248,10 @@
 (defun byte-compile-inline-expand (form)
   (let* ((name (car form))
          (localfn (cdr (assq name byte-compile-function-environment)))
-	 (fn (or localfn (and (fboundp name) (symbol-function name)))))
+	 (fn (or localfn (symbol-function name))))
     (when (autoloadp fn)
       (autoload-do-load fn)
-      (setq fn (or (and (fboundp name) (symbol-function name))
+      (setq fn (or (symbol-function name)
                    (cdr (assq name byte-compile-function-environment)))))
     (pcase fn
       (`nil
@@ -287,6 +287,7 @@
                          (byte-compile--reify-function fn)))))
            (if (eq (car-safe newfn) 'function)
                (byte-compile-unfold-lambda `(,(cadr newfn) ,@(cdr form)))
+             ;; This can happen because of macroexp-warn-and-return &co.
              (byte-compile-log-warning
               (format "Inlining closure %S failed" name))
              form))))
@@ -487,10 +488,21 @@
 			      (prin1-to-string form))
 	   nil)
 
-	  ((memq fn '(function condition-case))
-	   ;; These forms are compiled as constants or by breaking out
+	  ((eq fn 'function)
+	   ;; This forms is compiled as constant or by breaking out
 	   ;; all the subexpressions and compiling them separately.
 	   form)
+
+	  ((eq fn 'condition-case)
+           (if byte-compile--use-old-handlers
+               ;; Will be optimized later.
+               form
+             `(condition-case ,(nth 1 form) ;Not evaluated.
+                  ,(byte-optimize-form (nth 2 form) for-effect)
+                ,@(mapcar (lambda (clause)
+                            `(,(car clause)
+                              ,@(byte-optimize-body (cdr clause) for-effect)))
+                          (nthcdr 3 form)))))
 
 	  ((eq fn 'unwind-protect)
 	   ;; the "protected" part of an unwind-protect is compiled (and thus
@@ -503,13 +515,14 @@
 		       (cdr (cdr form)))))
 
 	  ((eq fn 'catch)
-	   ;; the body of a catch is compiled (and thus optimized) as a
-	   ;; top-level form, so don't do it here.  The tag is never
-	   ;; for-effect.  The body should have the same for-effect status
-	   ;; as the catch form itself, but that isn't handled properly yet.
 	   (cons fn
 		 (cons (byte-optimize-form (nth 1 form) nil)
-		       (cdr (cdr form)))))
+                       (if byte-compile--use-old-handlers
+                           ;; The body of a catch is compiled (and thus
+                           ;; optimized) as a top-level form, so don't do it
+                           ;; here.
+                           (cdr (cdr form))
+                         (byte-optimize-body (cdr form) for-effect)))))
 
 	  ((eq fn 'ignore)
 	   ;; Don't treat the args to `ignore' as being
@@ -532,18 +545,6 @@
 	  ((and for-effect (setq tmp (get fn 'side-effect-free))
 		(or byte-compile-delete-errors
 		    (eq tmp 'error-free)
-		    ;; Detect the expansion of (pop foo).
-		    ;; There is no need to compile the call to `car' there.
-		    (and (eq fn 'car)
-			 (eq (car-safe (cadr form)) 'prog1)
-			 (let ((var (cadr (cadr form)))
-			       (last (nth 2 (cadr form))))
-			   (and (symbolp var)
-				(null (nthcdr 3 (cadr form)))
-				(eq (car-safe last) 'setq)
-				(eq (cadr last) var)
-				(eq (car-safe (nth 2 last)) 'cdr)
-				(eq (cadr (nth 2 last)) var))))
 		    (progn
 		      (byte-compile-warn "value returned from %s is unused"
 					 (prin1-to-string form))
@@ -858,14 +859,16 @@
 
 
 (defun byte-optimize-binary-predicate (form)
-  (if (macroexp-const-p (nth 1 form))
-      (if (macroexp-const-p (nth 2 form))
-	  (condition-case ()
-	      (list 'quote (eval form))
-	    (error form))
-	;; This can enable some lapcode optimizations.
-	(list (car form) (nth 2 form) (nth 1 form)))
-    form))
+  (cond
+   ((or (not (macroexp-const-p (nth 1 form)))
+        (nthcdr 3 form)) ;; In case there are more than 2 args.
+    form)
+   ((macroexp-const-p (nth 2 form))
+    (condition-case ()
+        (list 'quote (eval form))
+      (error form)))
+   (t ;; This can enable some lapcode optimizations.
+    (list (car form) (nth 2 form) (nth 1 form)))))
 
 (defun byte-optimize-predicate (form)
   (let ((ok t)
@@ -1187,8 +1190,8 @@
 	 boundp buffer-file-name buffer-local-variables buffer-modified-p
 	 buffer-substring byte-code-function-p
 	 capitalize car-less-than-car car cdr ceiling char-after char-before
-	 char-equal char-to-string char-width
-	 compare-strings concat coordinates-in-window-p
+	 char-equal char-to-string char-width compare-strings
+	 compare-window-configurations concat coordinates-in-window-p
 	 copy-alist copy-sequence copy-marker cos count-lines
 	 decode-char
 	 decode-time default-boundp default-value documentation downcase
@@ -1196,17 +1199,18 @@
 	 fboundp fceiling featurep ffloor
 	 file-directory-p file-exists-p file-locked-p file-name-absolute-p
 	 file-newer-than-file-p file-readable-p file-symlink-p file-writable-p
-	 float float-time floor format format-time-string frame-visible-p
-	 fround ftruncate
+	 float float-time floor format format-time-string frame-first-window
+	 frame-root-window frame-selected-window
+	 frame-visible-p fround ftruncate
 	 get gethash get-buffer get-buffer-window getenv get-file-buffer
 	 hash-table-count
 	 int-to-string intern-soft
 	 keymap-parent
 	 length local-variable-if-set-p local-variable-p log log10 logand
 	 logb logior lognot logxor lsh langinfo
-	 make-list make-string make-symbol
-	 marker-buffer max member memq min mod multibyte-char-to-unibyte
-	 next-window nth nthcdr number-to-string
+	 make-list make-string make-symbol marker-buffer max member memq min
+	 minibuffer-selected-window minibuffer-window
+	 mod multibyte-char-to-unibyte next-window nth nthcdr number-to-string
 	 parse-colon-path plist-get plist-member
 	 prefix-numeric-value previous-window prin1-to-string propertize
 	 degrees-to-radians
@@ -1221,9 +1225,19 @@
 	 unibyte-char-to-multibyte upcase user-full-name
 	 user-login-name user-original-login-name custom-variable-p
 	 vconcat
-	 window-buffer window-dedicated-p window-edges window-height
-	 window-hscroll window-minibuffer-p window-width
-	 zerop))
+	 window-absolute-pixel-edges window-at window-body-height
+	 window-body-width window-buffer window-dedicated-p window-display-table
+	 window-combination-limit window-edges window-frame window-fringes
+	 window-height window-hscroll window-inside-edges
+	 window-inside-absolute-pixel-edges window-inside-pixel-edges
+	 window-left-child window-left-column window-margins window-minibuffer-p
+	 window-next-buffers window-next-sibling window-new-normal
+	 window-new-total window-normal-size window-parameter window-parameters
+	 window-parent window-pixel-edges window-point window-prev-buffers 
+	 window-prev-sibling window-redisplay-end-trigger window-scroll-bars
+	 window-start window-text-height window-top-child window-top-line
+	 window-total-height window-total-width window-use-time window-vscroll
+	 window-width zerop))
       (side-effect-and-error-free-fns
        '(arrayp atom
 	 bobp bolp bool-vector-p
@@ -1256,7 +1270,8 @@
 	 this-single-command-raw-keys
 	 user-real-login-name user-real-uid user-uid
 	 vector vectorp visible-frame-list
-	 wholenump window-configuration-p window-live-p windowp)))
+	 wholenump window-configuration-p window-live-p
+	 window-valid-p windowp)))
   (while side-effect-free-fns
     (put (car side-effect-free-fns) 'side-effect-free t)
     (setq side-effect-free-fns (cdr side-effect-free-fns)))
@@ -1291,7 +1306,7 @@
   "Don't call this!"
   ;; Fetch and return the offset for the current opcode.
   ;; Return nil if this opcode has no offset.
-  (cond ((< bytedecomp-op byte-nth)
+  (cond ((< bytedecomp-op byte-pophandler)
 	 (let ((tem (logand bytedecomp-op 7)))
 	   (setq bytedecomp-op (logand bytedecomp-op 248))
 	   (cond ((eq tem 6)
@@ -1310,7 +1325,9 @@
 	   (setq bytedecomp-op byte-constant)))
 	((or (and (>= bytedecomp-op byte-constant2)
                   (<= bytedecomp-op byte-goto-if-not-nil-else-pop))
-             (= bytedecomp-op byte-stack-set2))
+             (memq bytedecomp-op (eval-when-compile
+                                   (list byte-stack-set2 byte-pushcatch
+                                         byte-pushconditioncase))))
 	 ;; Offset in next 2 bytes.
 	 (setq bytedecomp-ptr (1+ bytedecomp-ptr))
 	 (+ (aref bytes bytedecomp-ptr)

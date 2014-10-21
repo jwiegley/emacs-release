@@ -1,13 +1,12 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/dbus.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/dbus.texi.
+This is ../../info/dbus.info, produced by makeinfo version 4.13 from
+./dbus.texi.
 
-Copyright (C) 2007-2013 Free Software Foundation, Inc.
+Copyright (C) 2007-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -31,12 +30,12 @@ message bus system, a simple way for applications to talk to one
 another.  An overview of D-Bus can be found at
 `http://dbus.freedesktop.org/'.
 
-   Copyright (C) 2007-2013 Free Software Foundation, Inc.
+   Copyright (C) 2007-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -419,8 +418,8 @@ strings.
 `http://dbus.freedesktop.org/doc/dbus-specification.html#message-protocol-signatures'.
 
    (2)  The interfaces of the service `org.freedesktop.Hal' are
-described at
-`http://people.freedesktop.org/~david/hal-spec/hal-spec.html#interfaces'.
+described in the HAL specification
+(http://people.freedesktop.org/~dkukawka/hal-spec-git/hal-spec.html#interfaces).
 
 
 File: dbus.info,  Node: Nodes and Interfaces,  Next: Methods and Signal,  Prev: Introspection,  Up: Inspection
@@ -687,7 +686,7 @@ the interface for a given language binding.
               ("styleSheet" . ""))
 
  -- Function: dbus-get-all-managed-objects bus service path
-     This functions returns all objects at BUS, SERVICE, PATH, and the
+     This function returns all objects at BUS, SERVICE, PATH, and the
      children of PATH.  The result is a list of objects.  Every object
      is a cons of an existing path name, and the list of available
      interface objects.  An interface object is another cons, which car
@@ -956,11 +955,11 @@ this array.  Example:
        ""                          ;; No icon.
        "Notification summary"      ;; Summary.
        (format                     ;; Body.
-         "This is a test notification, raised from %s" (emacs-version))
+         "This is a test notification, raised from\n%S" (emacs-version))
        '(:array)                   ;; No actions (empty array of strings).
        '(:array :signature "{sv}") ;; No hints
                                    ;; (empty array of dictionary entries).
-       :int32 -1)                 ;; Default timeout.
+       :int32 -1)                  ;; Default timeout.
 
      => 3
 
@@ -1029,22 +1028,36 @@ stands here for either `nil' or `t'):
 
      (INTEGER ((STRING BOOL BOOL) (STRING BOOL BOOL) ...))
 
- -- Function: dbus-byte-array-to-string byte-array
+ -- Function: dbus-byte-array-to-string byte-array &optional multibyte
      If a D-Bus method or signal returns an array of bytes, which are
      known to represent an UTF8 string, this function converts
-     BYTE-ARRAY to the corresponding string.  Example:
+     BYTE-ARRAY to the corresponding string.  The string is unibyte
+     encoded, unless MULTIBYTE is non-`nil'.  Example:
 
           (dbus-byte-array-to-string '(47 101 116 99 47 104 111 115 116 115))
 
           => "/etc/hosts"
 
  -- Function: dbus-unescape-from-identifier string
-     Retrieve the original string from the encoded STRING.  STRING must
-     have been coded with `dbus-escape-as-identifier'.  Example:
+     Retrieve the original string from the encoded STRING as unibyte
+     string.  STRING must have been encoded with
+     `dbus-escape-as-identifier'.  Example:
 
           (dbus-unescape-from-identifier "_30123abc_5fxyz_01_ff")
 
-          => "0123abc_xyz^Aÿ"
+          => "0123abc_xyz\x01\xff"
+
+     If the original string used in `dbus-escape-as-identifier' is a
+     multibyte string, it cannot be expected that this function returns
+     that string:
+
+          (string-equal
+            (dbus-unescape-from-identifier
+              (dbus-escape-as-identifier "Grüß Göttin"))
+            "Grüß Göttin")
+
+          => nil
+
 
 
 File: dbus.info,  Node: Synchronous Methods,  Next: Asynchronous Methods,  Prev: Type Conversion,  Up: Top
@@ -1908,7 +1921,7 @@ Index
                                                               (line  69)
 * dbus-setenv:                           Alternative Buses.   (line  75)
 * dbus-string-to-byte-array:             Type Conversion.     (line 105)
-* dbus-unescape-from-identifier:         Type Conversion.     (line 179)
+* dbus-unescape-from-identifier:         Type Conversion.     (line 180)
 * dbus-unregister-object:                Receiving Method Calls.
                                                               (line 277)
 * dbus-unregister-service:               Receiving Method Calls.
@@ -1939,7 +1952,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -2420,31 +2433,36 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top906
-Node: Overview2578
-Node: Inspection4929
-Node: Version5534
-Node: Bus names6240
-Node: Introspection10065
-Ref: Introspection-Footnote-117694
-Ref: Introspection-Footnote-217847
-Node: Nodes and Interfaces17999
-Node: Methods and Signal22267
-Node: Properties and Annotations25258
-Ref: Properties and Annotations-Footnote-133525
-Ref: Properties and Annotations-Footnote-233626
-Ref: Properties and Annotations-Footnote-333730
-Node: Arguments and Signatures33821
-Node: Type Conversion35999
-Node: Synchronous Methods43244
-Node: Asynchronous Methods47422
-Node: Receiving Method Calls49238
-Node: Signals60839
-Ref: Signals-Footnote-165868
-Ref: Signals-Footnote-266013
-Node: Alternative Buses66252
-Node: Errors and Events70307
-Node: Index74919
-Node: GNU Free Documentation License82381
+Node: Top830
+Node: Overview2502
+Node: Inspection4853
+Node: Version5458
+Node: Bus names6164
+Node: Introspection9989
+Ref: Introspection-Footnote-117618
+Ref: Introspection-Footnote-217771
+Node: Nodes and Interfaces17952
+Node: Methods and Signal22220
+Node: Properties and Annotations25211
+Ref: Properties and Annotations-Footnote-133477
+Ref: Properties and Annotations-Footnote-233578
+Ref: Properties and Annotations-Footnote-333682
+Node: Arguments and Signatures33773
+Node: Type Conversion35951
+Node: Synchronous Methods43652
+Node: Asynchronous Methods47830
+Node: Receiving Method Calls49646
+Node: Signals61247
+Ref: Signals-Footnote-166276
+Ref: Signals-Footnote-266421
+Node: Alternative Buses66660
+Node: Errors and Events70715
+Node: Index75327
+Node: GNU Free Documentation License82789
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

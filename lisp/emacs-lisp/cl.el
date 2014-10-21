@@ -1,6 +1,6 @@
 ;;; cl.el --- Compatibility aliases for the old CL library.  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2012-2014 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: extensions
@@ -29,6 +29,7 @@
 
 (require 'cl-lib)
 (require 'macroexp)
+(require 'gv)
 
 ;; (defun cl--rename ()
 ;;   (let ((vdefs ())
@@ -112,14 +113,6 @@
                ;; custom-print-functions
                ))
   (defvaralias var (intern (format "cl-%s" var))))
-
-;; Before overwriting subr.el's `dotimes' and `dolist', let's remember
-;; them under a different name, so we can use them in our implementation
-;; of `dotimes' and `dolist'.
-(unless (fboundp 'cl--dotimes)
-  (defalias 'cl--dotimes (symbol-function 'dotimes) "The non-CL `dotimes'."))
-(unless (fboundp 'cl--dolist)
-  (defalias 'cl--dolist (symbol-function 'dolist) "The non-CL `dolist'."))
 
 (dolist (fun '(
                (get* . cl-get)
@@ -228,13 +221,12 @@
                callf2
                callf
                letf*
-               ;; letf
+               letf
                rotatef
                shiftf
                remf
                psetf
                (define-setf-method . define-setf-expander)
-               declare
                the
                locally
                multiple-value-setq
@@ -245,8 +237,6 @@
                psetq
                do-all-symbols
                do-symbols
-               dotimes
-               dolist
                do*
                do
                loop
@@ -327,6 +317,15 @@
   (let ((new (if (consp fun) (prog1 (cdr fun) (setq fun (car fun)))
                (intern (format "cl-%s" fun)))))
     (defalias fun new)))
+
+(defun cl--wrap-in-nil-block (fun &rest args)
+  `(cl-block nil ,(apply fun args)))
+(advice-add 'dolist :around #'cl--wrap-in-nil-block)
+(advice-add 'dotimes :around #'cl--wrap-in-nil-block)
+
+(defun cl--pass-args-to-cl-declare (&rest specs)
+   (macroexpand `(cl-declare ,@specs)))
+(advice-add 'declare :after #'cl--pass-args-to-cl-declare)
 
 ;;; Features provided a bit differently in Elisp.
 
@@ -505,28 +504,6 @@ rather than relying on `lexical-binding'."
 ;; Generalized variables are provided by gv.el, but some details are
 ;; not 100% compatible: not worth the trouble to add them to cl-lib.el, but we
 ;; still need to support old users of cl.el.
-
-(defmacro cl--symbol-function (symbol)
-  "Like `symbol-function' but return `cl--unbound' if not bound."
-  ;; (declare (gv-setter (lambda (store)
-  ;;                       `(if (eq ,store 'cl--unbound)
-  ;;                            (fmakunbound ,symbol) (fset ,symbol ,store)))))
-  `(if (fboundp ,symbol) (symbol-function ,symbol) 'cl--unbound))
-(gv-define-setter cl--symbol-function (store symbol)
-  `(if (eq ,store 'cl--unbound) (fmakunbound ,symbol) (fset ,symbol ,store)))
-
-(defmacro letf (bindings &rest body)
-  "Dynamically scoped let-style bindings for places.
-For more details, see `cl-letf'.  This macro behaves like that one
-in almost every respect (apart from details that relate to some
-deprecated usage of `symbol-function' in place forms)."  ; bug#12760
-  (declare (indent 1) (debug cl-letf))
-  ;; Like cl-letf, but with special handling of symbol-function.
-  `(cl-letf ,(mapcar (lambda (x) (if (eq (car-safe (car x)) 'symbol-function)
-                                `((cl--symbol-function ,@(cdar x)) ,@(cdr x))
-                              x))
-                     bindings)
-            ,@body))
 
 (defun cl--gv-adapt (cl-gv do)
   ;; This function is used by all .elc files that use define-setf-expander and

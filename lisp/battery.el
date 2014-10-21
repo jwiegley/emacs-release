@@ -1,6 +1,6 @@
-;;; battery.el --- display battery status information  -*- coding: iso-8859-1 -*-
+;;; battery.el --- display battery status information  -*- coding: utf-8 -*-
 
-;; Copyright (C) 1997-1998, 2000-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1997-1998, 2000-2014 Free Software Foundation, Inc.
 
 ;; Author: Ralph Schleicher <rs@nunatak.allgaeu.org>
 ;; Keywords: hardware
@@ -53,6 +53,9 @@
 	      (directory-files "/sys/class/power_supply/" nil
                                battery--linux-sysfs-regexp))
 	 'battery-linux-sysfs)
+	((and (eq system-type 'berkeley-unix)
+	      (file-executable-p "/usr/sbin/apm"))
+	 'battery-bsd-apm)
 	((and (eq system-type 'darwin)
 	      (condition-case nil
 		  (with-temp-buffer
@@ -113,7 +116,7 @@ string are substituted as defined by the current value of the variable
 
 (defcustom battery-mode-line-format
   (cond ((eq battery-status-function 'battery-linux-proc-acpi)
-	 "[%b%p%%,%d°C]")
+	 "[%b%p%%,%dÂ°C]")
 	(battery-status-function
 	 "[%b%p%%]"))
   "Control string formatting the string to display in the mode line.
@@ -198,19 +201,18 @@ seconds."
 
 (defun battery-update ()
   "Update battery status information in the mode line."
-  (let ((data (and battery-status-function (funcall battery-status-function))))
+  (let* ((data (and battery-status-function (funcall battery-status-function)))
+         (percentage (car (read-from-string (cdr (assq ?p data))))))
     (setq battery-mode-line-string
 	  (propertize (if (and battery-mode-line-format
-			       (<= (car (read-from-string (cdr (assq ?p data))))
-				   battery-mode-line-limit))
-			  (battery-format
-			   battery-mode-line-format
-			   data)
+			       (numberp percentage)
+                               (<= percentage battery-mode-line-limit))
+			  (battery-format battery-mode-line-format data)
 			"")
 		      'face
-		      (and (<= (car (read-from-string (cdr (assq ?p data))))
-				   battery-load-critical)
-			   'error)
+                      (and (numberp percentage)
+                           (<= percentage battery-load-critical)
+                           'error)
 		      'help-echo "Battery status information")))
   (force-mode-line-update))
 
@@ -455,12 +457,15 @@ The following %-sequences are provided:
 	  (and (re-search-forward "POWER_SUPPLY_STATUS=\\(.*\\)$" nil t)
 	       (member charging-state '("Unknown" "Full" nil))
 	       (setq charging-state (match-string 1)))
+	  (goto-char (point-min))
 	  (when (re-search-forward
                  "POWER_SUPPLY_\\(CURRENT\\|POWER\\)_NOW=\\([0-9]*\\)$"
                  nil t)
 	    (setq rate (float (string-to-number (match-string 2)))))
+	  (goto-char (point-min))
 	  (when (re-search-forward "POWER_SUPPLY_TEMP=\\([0-9]*\\)$" nil t)
 	    (setq temperature (match-string 1)))
+	  (goto-char (point-min))
 	  (let (full-string now-string)
 	    ;; Sysfs may list either charge (mAh) or energy (mWh).
 	    ;; Keep track of both, and choose which to report later.
@@ -474,7 +479,8 @@ The following %-sequences are provided:
 					(string-to-number full-string))
 			 charge-now  (+ charge-now
 					(string-to-number now-string))))
-		  ((and (re-search-forward
+		  ((and (progn (goto-char (point-min)) t)
+			(re-search-forward
 			 "POWER_SUPPLY_ENERGY_FULL=\\([0-9]*\\)$" nil t)
 			(setq full-string (match-string 1))
 			(re-search-forward
@@ -523,6 +529,75 @@ The following %-sequences are provided:
 			   "AC"
 			 "BAT")
 		     "N/A")))))
+
+
+;;; `apm' interface for BSD.
+(defun battery-bsd-apm ()
+  "Get APM status information from BSD apm binary.
+The following %-sequences are provided:
+%L AC line status (verbose)
+%B Battery status (verbose)
+%b Battery status, empty means high, `-' means low,
+ `!' means critical, and `+' means charging
+%P Advanced power saving mode state (verbose)
+%p Battery charge percentage
+%s Remaining battery charge time in seconds
+%m Remaining battery charge time in minutes
+%h Remaining battery charge time in hours
+%t Remaining battery charge time in the form `h:min'"
+  (let* ((os-name (car (split-string
+			(shell-command-to-string "/usr/bin/uname"))))
+	 (apm-flag (if (equal os-name "OpenBSD") "P" "s"))
+	 (apm-cmd (concat "/usr/sbin/apm -ablm" apm-flag))
+	 (apm-output (split-string (shell-command-to-string apm-cmd)))
+	 ;; Battery status
+	 (battery-status
+	  (let ((stat (string-to-number (nth 0 apm-output))))
+	    (cond ((eq stat 0) '("high" . ""))
+		  ((eq stat 1) '("low" . "-"))
+		  ((eq stat 2) '("critical" . "!"))
+		  ((eq stat 3) '("charging" . "+"))
+		  ((eq stat 4) '("absent" . nil)))))
+	 ;; Battery percentage
+	 (battery-percentage (nth 1 apm-output))
+	 ;; Battery life
+	 (battery-life (nth 2 apm-output))
+	 ;; AC status
+	 (line-status
+	  (let ((ac (string-to-number (nth 3 apm-output))))
+	    (cond ((eq ac 0) "disconnected")
+		  ((eq ac 1) "connected")
+		  ((eq ac 2) "backup power"))))
+	 ;; Advanced power savings mode
+	 (apm-mode
+	  (let ((apm (string-to-number (nth 4 apm-output))))
+	    (if (string= os-name "OpenBSD")
+		(cond ((eq apm 0) "manual")
+		      ((eq apm 1) "automatic")
+		      ((eq apm 2) "cool running"))
+	      (if (eq apm 1) "on" "off"))))
+	 seconds minutes hours remaining-time)
+    (unless (member battery-life '("unknown" "-1"))
+      (if (member os-name '("OpenBSD" "NetBSD"))
+	  (setq minutes (string-to-number battery-life)
+		seconds (* 60 minutes))
+	(setq seconds (string-to-number battery-life)
+	      minutes (truncate (/ seconds 60))))
+      (setq hours (truncate (/ minutes 60))
+	    remaining-time (format "%d:%02d" hours
+				   (- minutes (* 60 hours)))))
+    (list (cons ?L (or line-status "N/A"))
+	  (cons ?B (or (car battery-status) "N/A"))
+	  (cons ?b (or (cdr battery-status) "N/A"))
+	  (cons ?p (if (string= battery-percentage "255")
+		       "N/A"
+		     battery-percentage))
+	  (cons ?P (or apm-mode "N/A"))
+	  (cons ?s (or (and seconds (number-to-string seconds)) "N/A"))
+	  (cons ?m (or (and minutes (number-to-string minutes)) "N/A"))
+	  (cons ?h (or (and hours (number-to-string hours)) "N/A"))
+	  (cons ?t (or remaining-time "N/A")))))
+
 
 ;;; `pmset' interface for Darwin (OS X).
 

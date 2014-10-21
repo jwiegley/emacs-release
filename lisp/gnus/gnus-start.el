@@ -1,6 +1,6 @@
 ;;; gnus-start.el --- startup functions for Gnus
 
-;; Copyright (C) 1996-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2014 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -110,7 +110,7 @@ ask the servers (primary, secondary, and archive servers) to list new
 groups since the last time it checked:
   1. This variable is `ask-server'.
   2. This variable is a list of select methods (see below).
-  3. `gnus-read-active-file' is nil or `some'.
+  3. Option `gnus-read-active-file' is nil or `some'.
   4. A prefix argument is given to `gnus-find-new-newsgroups' interactively.
 
 Thus, if this variable is `ask-server' or a list of select methods or
@@ -395,7 +395,16 @@ This hook is called after Gnus is connected to the NNTP server."
 
 (defcustom gnus-before-startup-hook nil
   "A hook called before startup.
-This hook is called as the first thing when Gnus is started."
+This hook is called as the first thing when Gnus is started.
+See also `gnus-before-resume-hook'."
+  :group 'gnus-start
+  :type 'hook)
+
+(defcustom gnus-before-resume-hook nil
+  "A hook called before resuming Gnus after suspend.
+This hook is called as the first thing when Gnus is resumed after a suspend.
+See also `gnus-before-startup-hook'."
+  :version "24.4"
   :group 'gnus-start
   :type 'hook)
 
@@ -749,6 +758,7 @@ prompt the user for the name of an NNTP server to use."
 
   (if (gnus-alive-p)
       (progn
+	(gnus-run-hooks 'gnus-before-resume-hook)
 	(switch-to-buffer gnus-group-buffer)
 	(gnus-group-get-new-news
 	 (and (numberp arg)
@@ -934,7 +944,8 @@ If REGEXP is given, lines that match it will be deleted."
   (when (and gnus-dribble-buffer
 	     (buffer-name gnus-dribble-buffer))
     (with-current-buffer gnus-dribble-buffer
-      (save-buffer))))
+      (when (> (buffer-size) 0)
+	(save-buffer)))))
 
 (defun gnus-dribble-clear ()
   (when (gnus-buffer-exists-p gnus-dribble-buffer)
@@ -1797,6 +1808,9 @@ backend check whether the group actually exists."
        (or (not (gnus-agent-method-p method))
 	   (gnus-online method)))
       (gnus-finish-retrieve-group-infos method infos early-data)
+      ;; We may have altered the data now, so mark the dribble buffer
+      ;; as dirty so that it gets saved.
+      (gnus-dribble-touch)
       (gnus-agent-save-active method))
      ;; Most backends have -retrieve-groups.
      ((gnus-check-backend-function 'retrieve-groups (car method))
@@ -2291,7 +2305,12 @@ If FORCE is non-nil, the .newsrc file is read."
 	  (gnus-message 5 "Reading %s...done" newsrc-file)))
 
       ;; Convert old to new.
-      (gnus-convert-old-newsrc))))
+      (gnus-convert-old-newsrc)
+      (gnus-clean-old-newsrc))))
+
+(defun gnus-clean-old-newsrc (&optional force)
+  ;; Currently no cleanups.
+  )
 
 (defun gnus-convert-old-newsrc ()
   "Convert old newsrc formats into the current format, if needed."

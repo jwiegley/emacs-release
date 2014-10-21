@@ -57,6 +57,7 @@ typedef Lisp_Object XrmDatabase;
 #undef INFINITY
 #undef Z
 #define Z (current_buffer->text->z)
+#undef ALIGN
 
 #ifndef CGFLOAT_DEFINED
 typedef float CGFloat;
@@ -77,8 +78,8 @@ typedef struct _XImage
 
 typedef const struct _EmacsDocument *EmacsDocumentRef; /* opaque */
 
-#define Cursor ThemeCursor
-#define No_Cursor (-1)
+#define Cursor CFTypeRef
+#define No_Cursor NULL
 
 
 typedef CGGlyph XChar2b;
@@ -93,6 +94,12 @@ typedef CGGlyph XChar2b;
 #define XCHAR2B_BYTE2(chp) \
   ((*(chp)) & 0x00ff)
 
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+#ifndef DRAWING_USE_GCD
+#define DRAWING_USE_GCD 1
+#endif
+#endif
 
 /* Emulate X GC's by keeping color and font info in a structure.  */
 typedef struct _XGCValues
@@ -114,13 +121,9 @@ typedef struct _XGC
   /* Quartz 2D background color.  */
   CGColorRef cg_back_color;
 
-#define MAX_CLIP_RECTS 2
-  /* Number of clipping rectangles.  */
-  int n_clip_rects;
-
-  /* Clipping rectangles used in Quartz 2D drawing.  The y-coordinate
-     is in QuickDraw's.  */
-  CGRect clip_rects[MAX_CLIP_RECTS];
+  /* Data consisting of clipping rectangles used in Quartz 2D drawing.
+     The y-coordinate is in the flipped coordinates.  */
+  CFDataRef clip_rects_data;
 } *GC;
 
 #define GCForeground            (1L<<2)

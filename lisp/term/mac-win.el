@@ -132,6 +132,18 @@
 (defconst x-pointer-sb-v-double-arrow mac-pointer-resize-up-down)
 
 
+;;;; Utility functions
+(defun mac-possibly-use-high-resolution-monitors-p ()
+  "Return non-nil if high-resolution monitors can possibly be used.
+Namely, either a Retina display is connected or HiDPI display
+modes have been enabled with Quartz Debug.app."
+  (or
+   ;; HiDPI display modes have been enabled with Quartz Debug.app.
+   (mac-get-preference "DisplayResolutionEnabled" "com.apple.windowserver")
+   (cl-loop for attributes in (display-monitor-attributes-list)
+	    if (eq (cdr (assq 'backing-scale-factor attributes)) 2) return t)))
+
+
 ;;;; Modifier keys
 
 ;; Modifier name `ctrl' is an alias of `control'.
@@ -298,20 +310,6 @@
 	(or (cdr (assq mac-system-script-code mac-script-code-coding-systems))
 	    'mac-roman))
   (set-selection-coding-system mac-system-coding-system))
-
-
-;;;; Keyboard layout/language change events
-(defun mac-handle-language-change (event)
-  "Set keyboard coding system to what is specified in EVENT."
-  (interactive "e")
-  (let ((coding-system
-	 (cdr (assq (car (cadr event)) mac-script-code-coding-systems))))
-    (set-keyboard-coding-system (or coding-system 'mac-roman))
-    ;; MacJapanese maps reverse solidus to ?\x80.
-    (if (eq coding-system 'japanese-shift-jis)
-	(define-key key-translation-map [?\x80] "\\"))))
-
-(define-key special-event-map [language-change] 'mac-handle-language-change)
 
 
 ;;;; Composition
@@ -1916,7 +1914,8 @@ non-nil, and the input device supports it."
 	     ;; Do redisplay and measure line heights before selecting
 	     ;; the window to scroll.
 	     (point-height
-	      (or (progn
+	      (or (window-line-height nil window-to-scroll)
+		  (progn
 		    (redisplay t)
 		    (window-line-height nil window-to-scroll))
 		  ;; The above still sometimes return nil.
@@ -1968,9 +1967,8 @@ non-nil, and the input device supports it."
 			    delta-y)
 			(or
 			 ;; Cursor is still fully visible if scrolled?
-			 (<= (- (nth 2 point-height) delta-y)
-			     (- (+ first-y window-inside-pixel-height)
-				(frame-char-height)))
+			 (<= (+ (car point-height) (nth 2 point-height))
+			     (+ first-y window-inside-pixel-height delta-y))
 			 ;; Window has the only one row?
 			 (= (nth 2 first-height) (nth 2 last-height)))))
 		      ((> delta-y 0) ; scroll up
@@ -2008,6 +2006,8 @@ non-nil, and the input device supports it."
 		       (funcall mwheel-scroll-up-function 1)
 		     (end-of-buffer))
 		   (setq delta-y 0)))
+		;; XXX: Why is this necessary?
+		(set-window-start nil (window-start))
 		(set-window-vscroll nil 0 t))
 	      (condition-case nil
 		  (if (< delta-y 0)
@@ -2076,13 +2076,16 @@ non-nil, and the input device supports it."
 						 0 prev-first-vscrolled-y))))))
 			      (set-window-vscroll nil 0 t))))
 			(let* ((target-posn (posn-at-x-y 0 (+ first-y delta-y)))
-			       (target-coord (pos-visible-in-window-p
-					      (posn-point target-posn) nil t))
-			       (target-row (cdr (posn-actual-col-row
-						 target-posn)))
+			       target-coord target-row
 			       target-y scrolled-pixel-height)
-			  (if (and target-coord target-row)
-			      (setq target-y (cadr target-coord))
+			  (if (and (eq (posn-window target-posn)
+				       (selected-window))
+				   (null (posn-area target-posn)))
+			      (progn
+				(setq target-coord
+				      (pos-visible-in-window-p
+				       (posn-point target-posn) nil t))
+				(setq target-y (cadr target-coord)))
 			    ;; The target row is below the visible
 			    ;; area.  Temporarily set vscroll so the
 			    ;; target row comes at the top and
@@ -2092,12 +2095,23 @@ non-nil, and the input device supports it."
 			    (setq target-coord (pos-visible-in-window-p
 						(posn-point target-posn) nil t))
 			    (set-window-vscroll nil 0 t)
-			    (setq target-row (cdr (posn-actual-col-row
-						   target-posn)))
 			    (setq target-y (cadr target-coord))
-			    (if (= target-y 0)
-				(setq target-y (- (or (nth 2 target-coord)) 0)))
+			    (cond ((null target-y)
+			    	   ;; Image is completely invisible
+			    	   ;; but its descent is visible in
+			    	   ;; the first row.
+			    	   (setq target-y
+			    		 (- first-y (cdr (posn-object-x-y
+			    				  target-posn)))))
+			    	  ((= target-y first-y)
+			    	   ;; Image is partly invisible in the
+			    	   ;; first row.
+			    	   (setq target-y
+			    		 (- first-y (or (nth 2 target-coord)
+			    				0)))))
 			    (setq target-y (+ target-y delta-y)))
+			  (setq target-row
+				(cdr (posn-actual-col-row target-posn)))
 			  (setq scrolled-pixel-height (- target-y first-y))
 			  ;; Cancel the last scroll.
 			  (goto-char prev-point)
@@ -2173,8 +2187,12 @@ non-nil, and the input device supports it."
 			  ;; Emacs 23 -> 24 incompatibility: the
 			  ;; actual row part of POSITION now counts
 			  ;; the header line.
-			  (if header-line-height
-			      (setq target-row (1- target-row)))
+			  ;;
+			  ;; Emacs 24.3 -> 24.4 incompatibility again:
+			  ;; the actual row part of POSITION no longer
+			  ;; counts the header line (see Bug#18384).
+			  ;; (if header-line-height
+			  ;;     (setq target-row (1- target-row)))
 			  (scroll-up (if (= delta-y scrolled-pixel-height)
 					 target-row
 				       (1+ target-row)))
@@ -2398,6 +2416,8 @@ The actual magnification is performed by `text-scale-mode'."
 ;;; Window system initialization.
 
 (defun x-win-suspend-error ()
+  "Report an error when a suspend is attempted.
+This returns an error if any Emacs frames are X frames, or always under W32 or Mac."
   (error "Suspending an Emacs running under Mac makes no sense"))
 
 (defvar mac-initialized nil
@@ -2459,7 +2479,7 @@ standard ones in `x-handle-args'."
   (mac-start-animation (selected-window) :type 'fade-out)
   (exit-splash-screen))
 
-(defun mac-initialize-window-system ()
+(defun mac-initialize-window-system (&optional _display)
   "Initialize Emacs for Mac GUI frames."
   (cl-assert (not mac-initialized))
 

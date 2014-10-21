@@ -1,6 +1,6 @@
 /* sound.c -- sound support.
 
-Copyright (C) 1998-1999, 2001-2013 Free Software Foundation, Inc.
+Copyright (C) 1998-1999, 2001-2014 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -55,6 +55,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* BEGIN: Non Windows Includes */
 #if !defined WINDOWSNT && !defined HAVE_MACGUI
 
+#include <byteswap.h>
+
 #include <sys/ioctl.h>
 
 /* FreeBSD has machine/soundcard.h.  Voxware sound driver docs mention
@@ -86,6 +88,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <limits.h>
 #include <windows.h>
 #include <mmsystem.h>
+
+#include "coding.h"
+#include "w32.h"
 /* END: Windows Specific Includes */
 
 #else /* HAVE_MACGUI */
@@ -184,8 +189,8 @@ struct au_header
 
 struct sound_device
 {
-  /* The name of the device or null meaning use a default device name.  */
-  char *file;
+  /* If a string, the name of the device; otherwise use a default.  */
+  Lisp_Object file;
 
   /* File descriptor of the device.  */
   int fd;
@@ -274,24 +279,11 @@ static struct sound *current_sound;
 
 /* Function prototypes.  */
 
-static void vox_open (struct sound_device *);
-static void vox_configure (struct sound_device *);
-static void vox_close (struct sound_device *sd);
-static void vox_choose_format (struct sound_device *, struct sound *);
-static int vox_init (struct sound_device *);
 static void vox_write (struct sound_device *, const char *, ptrdiff_t);
-static void find_sound_type (struct sound *);
-static u_int32_t le2hl (u_int32_t);
-static u_int16_t le2hs (u_int16_t);
-static u_int32_t be2hl (u_int32_t);
-static int wav_init (struct sound *);
+static bool wav_init (struct sound *);
 static void wav_play (struct sound *, struct sound_device *);
-static int au_init (struct sound *);
+static bool au_init (struct sound *);
 static void au_play (struct sound *, struct sound_device *);
-
-#if 0 /* Currently not used.  */
-static u_int16_t be2hs (u_int16_t);
-#endif
 
 /* END: Non Windows Definitions */
 #elif defined WINDOWSNT
@@ -337,7 +329,7 @@ sound_perror (const char *msg)
 static void
 sound_warning (const char *msg)
 {
-  message ("%s", msg);
+  message1 (msg);
 }
 
 
@@ -367,7 +359,7 @@ sound_warning (const char *msg)
    VOL must be an integer in the range [0, 100], or a float in the
    range [0, 1].  */
 
-static int
+static bool
 parse_sound (Lisp_Object sound, Lisp_Object *attrs)
 {
   /* SOUND must be a list starting with the symbol `sound'.  */
@@ -433,6 +425,15 @@ parse_sound (Lisp_Object sound, Lisp_Object *attrs)
 /* BEGIN: Non Windows functions */
 #if !defined WINDOWSNT && !defined HAVE_MACGUI
 
+/* Return S's value as a string if S is a string, otherwise DEFAULT_VALUE.  */
+
+static char const *
+string_default (Lisp_Object s, char const *default_value)
+{
+  return STRINGP (s) ? SSDATA (s) : default_value;
+}
+
+
 /* Find out the type of the sound file whose file descriptor is FD.
    S is the sound file structure to fill in.  */
 
@@ -444,10 +445,10 @@ find_sound_type (struct sound *s)
 }
 
 
-/* Function installed by play-sound-internal with record_unwind_protect.  */
+/* Function installed by play-sound-internal with record_unwind_protect_void.  */
 
-static Lisp_Object
-sound_cleanup (Lisp_Object arg)
+static void
+sound_cleanup (void)
 {
   if (current_sound_device->close)
     current_sound_device->close (current_sound_device);
@@ -455,8 +456,6 @@ sound_cleanup (Lisp_Object arg)
     emacs_close (current_sound->fd);
   xfree (current_sound_device);
   xfree (current_sound);
-
-  return Qnil;
 }
 
 /***********************************************************************
@@ -470,8 +469,7 @@ static u_int32_t
 le2hl (u_int32_t value)
 {
 #ifdef WORDS_BIGENDIAN
-  unsigned char *p = (unsigned char *) &value;
-  value = p[0] + (p[1] << 8) + (p[2] << 16) + (p[3] << 24);
+  value = bswap_32 (value);
 #endif
   return value;
 }
@@ -484,8 +482,7 @@ static u_int16_t
 le2hs (u_int16_t value)
 {
 #ifdef WORDS_BIGENDIAN
-  unsigned char *p = (unsigned char *) &value;
-  value = p[0] + (p[1] << 8);
+  value = bswap_16 (value);
 #endif
   return value;
 }
@@ -498,29 +495,10 @@ static u_int32_t
 be2hl (u_int32_t value)
 {
 #ifndef WORDS_BIGENDIAN
-  unsigned char *p = (unsigned char *) &value;
-  value = p[3] + (p[2] << 8) + (p[1] << 16) + (p[0] << 24);
+  value = bswap_32 (value);
 #endif
   return value;
 }
-
-
-#if 0 /* Currently not used.  */
-
-/* Convert 16-bit value VALUE which is in big-endian byte-order
-   to host byte-order.  */
-
-static u_int16_t
-be2hs (u_int16_t value)
-{
-#ifndef WORDS_BIGENDIAN
-  unsigned char *p = (unsigned char *) &value;
-  value = p[1] + (p[0] << 8);
-#endif
-  return value;
-}
-
-#endif /* 0 */
 
 /***********************************************************************
 			  RIFF-WAVE (*.wav)
@@ -530,9 +508,9 @@ be2hs (u_int16_t value)
    contains the first MAX_SOUND_HEADER_BYTES number of bytes from the
    sound file.  If the file is a WAV-format file, set up interface
    functions in S and convert header fields to host byte-order.
-   Value is non-zero if the file is a WAV file.  */
+   Value is true if the file is a WAV file.  */
 
-static int
+static bool
 wav_init (struct sound *s)
 {
   struct wav_header *header = (struct wav_header *) s->header;
@@ -638,9 +616,9 @@ enum au_encoding
    contains the first MAX_SOUND_HEADER_BYTES number of bytes from the
    sound file.  If the file is a AU-format file, set up interface
    functions in S and convert header fields to host byte-order.
-   Value is non-zero if the file is an AU file.  */
+   Value is true if the file is an AU file.  */
 
-static int
+static bool
 au_init (struct sound *s)
 {
   struct au_header *header = (struct au_header *) s->header;
@@ -709,20 +687,14 @@ au_play (struct sound *s, struct sound_device *sd)
    has a compatible own driver aka Luigi's driver.  */
 
 
-/* Open device SD.  If SD->file is non-null, open that device,
+/* Open device SD.  If SD->file is a string, open that device,
    otherwise use a default device name.  */
 
 static void
 vox_open (struct sound_device *sd)
 {
-  const char *file;
-
   /* Open the sound device (eg /dev/dsp).  */
-  if (sd->file)
-    file = sd->file;
-  else
-    file = DEFAULT_SOUND_DEVICE;
-
+  char const *file = string_default (sd->file, DEFAULT_SOUND_DEVICE);
   sd->fd = emacs_open (file, O_WRONLY, 0);
   if (sd->fd < 0)
     sound_perror (file);
@@ -865,18 +837,12 @@ vox_choose_format (struct sound_device *sd, struct sound *s)
 /* Initialize device SD.  Set up the interface functions in the device
    structure.  */
 
-static int
+static bool
 vox_init (struct sound_device *sd)
 {
-  const char *file;
-  int fd;
-
   /* Open the sound device (eg /dev/dsp).  */
-  if (sd->file)
-    file = sd->file;
-  else
-    file = DEFAULT_SOUND_DEVICE;
-  fd = emacs_open (file, O_WRONLY, 0);
+  char const *file = string_default (sd->file, DEFAULT_SOUND_DEVICE);
+  int fd = emacs_open (file, O_WRONLY, 0);
   if (fd >= 0)
     emacs_close (fd);
   else
@@ -898,7 +864,7 @@ vox_init (struct sound_device *sd)
 static void
 vox_write (struct sound_device *sd, const char *buffer, ptrdiff_t nbytes)
 {
-  if (emacs_write (sd->fd, buffer, nbytes) != nbytes)
+  if (emacs_write_sig (sd->fd, buffer, nbytes) != nbytes)
     sound_perror ("Error writing to sound device");
 }
 
@@ -927,23 +893,17 @@ struct alsa_params
   snd_pcm_uframes_t period_size;
 };
 
-/* Open device SD.  If SD->file is non-null, open that device,
+/* Open device SD.  If SD->file is a string, open that device,
    otherwise use a default device name.  */
 
 static void
 alsa_open (struct sound_device *sd)
 {
-  const char *file;
-  struct alsa_params *p;
+  /* Open the sound device.  Default is "default".  */
+  struct alsa_params *p = xmalloc (sizeof *p);
+  char const *file = string_default (sd->file, DEFAULT_ALSA_SOUND_DEVICE);
   int err;
 
-  /* Open the sound device.  Default is "default".  */
-  if (sd->file)
-    file = sd->file;
-  else
-    file = DEFAULT_ALSA_SOUND_DEVICE;
-
-  p = xmalloc (sizeof *p);
   p->handle = NULL;
   p->hwparams = NULL;
   p->swparams = NULL;
@@ -1055,10 +1015,10 @@ alsa_configure (struct sound_device *sd)
       int chn;
       snd_mixer_t *handle;
       snd_mixer_elem_t *e;
-      const char *file = sd->file ? sd->file : DEFAULT_ALSA_SOUND_DEVICE;
-
       if (snd_mixer_open (&handle, 0) >= 0)
         {
+	  char const *file = string_default (sd->file,
+					     DEFAULT_ALSA_SOUND_DEVICE);
           if (snd_mixer_attach (handle, file) >= 0
               && snd_mixer_load (handle) >= 0
               && snd_mixer_selem_register (handle, NULL, NULL) >= 0)
@@ -1215,18 +1175,13 @@ snd_error_quiet (const char *file, int line, const char *function, int err,
 /* Initialize device SD.  Set up the interface functions in the device
    structure.  */
 
-static int
+static bool
 alsa_init (struct sound_device *sd)
 {
-  const char *file;
+  /* Open the sound device.  Default is "default".  */
+  char const *file = string_default (sd->file, DEFAULT_ALSA_SOUND_DEVICE);
   snd_pcm_t *handle;
   int err;
-
-  /* Open the sound device.  Default is "default".  */
-  if (sd->file)
-    file = sd->file;
-  else
-    file = DEFAULT_ALSA_SOUND_DEVICE;
 
   snd_lib_error_set_handler ((snd_lib_error_handler_t) snd_error_quiet);
   err = snd_pcm_open (&handle, file, SND_PCM_STREAM_PLAYBACK, 0);
@@ -1363,12 +1318,9 @@ Internal use only, use `play-sound' instead.  */)
   CFTypeRef mac_sound;
 #endif
 #else /* WINDOWSNT */
-  int len = 0;
-  Lisp_Object lo_file = {0};
-  char * psz_file = NULL;
+  Lisp_Object lo_file;
   unsigned long ui_volume_tmp = UINT_MAX;
   unsigned long ui_volume = UINT_MAX;
-  int i_result = 0;
 #endif /* WINDOWSNT */
 
   /* Parse the sound specification.  Give up if it is invalid.  */
@@ -1380,14 +1332,14 @@ Internal use only, use `play-sound' instead.  */)
   GCPRO2 (sound, file);
   current_sound_device = xzalloc (sizeof *current_sound_device);
   current_sound = xzalloc (sizeof *current_sound);
-  record_unwind_protect (sound_cleanup, Qnil);
+  record_unwind_protect_void (sound_cleanup);
   current_sound->header = alloca (MAX_SOUND_HEADER_BYTES);
 
   if (STRINGP (attrs[SOUND_FILE]))
     {
       /* Open the sound file.  */
-      current_sound->fd = openp (Fcons (Vdata_directory, Qnil),
-				 attrs[SOUND_FILE], Qnil, &file, Qnil);
+      current_sound->fd = openp (list1 (Vdata_directory),
+				 attrs[SOUND_FILE], Qnil, &file, Qnil, false);
       if (current_sound->fd < 0)
 	sound_perror ("Could not open sound file");
 
@@ -1410,12 +1362,7 @@ Internal use only, use `play-sound' instead.  */)
   find_sound_type (current_sound);
 
   /* Set up a device.  */
-  if (STRINGP (attrs[SOUND_DEVICE]))
-    {
-      int len = SCHARS (attrs[SOUND_DEVICE]);
-      current_sound_device->file = alloca (len + 1);
-      strcpy (current_sound_device->file, SSDATA (attrs[SOUND_DEVICE]));
-    }
+  current_sound_device->file = attrs[SOUND_DEVICE];
 
   if (INTEGERP (attrs[SOUND_VOLUME]))
     current_sound_device->volume = XFASTINT (attrs[SOUND_VOLUME]);
@@ -1443,10 +1390,11 @@ Internal use only, use `play-sound' instead.  */)
 
 #elif defined WINDOWSNT
 
-  lo_file = Fexpand_file_name (attrs[SOUND_FILE], Qnil);
-  len = XSTRING (lo_file)->size;
-  psz_file = alloca (len + 1);
-  strcpy (psz_file, XSTRING (lo_file)->data);
+  lo_file = Fexpand_file_name (attrs[SOUND_FILE], Vdata_directory);
+  lo_file = ENCODE_FILE (lo_file);
+  /* Since UNICOWS.DLL includes only a stub for mciSendStringW, we
+     need to encode the file in the ANSI codepage.  */
+  lo_file = ansi_encode_filename (lo_file);
   if (INTEGERP (attrs[SOUND_VOLUME]))
     {
       ui_volume_tmp = XFASTINT (attrs[SOUND_VOLUME]);
@@ -1468,7 +1416,7 @@ Internal use only, use `play-sound' instead.  */)
     {
       ui_volume = ui_volume_tmp * (UINT_MAX / 100);
     }
-  i_result = do_play_sound (psz_file, ui_volume);
+  do_play_sound (SDATA (lo_file), ui_volume);
 
 #else /* HAVE_MACGUI */
   if (inhibit_window_system || noninteractive)
@@ -1481,7 +1429,7 @@ Internal use only, use `play-sound' instead.  */)
     {
       /* Open the sound file.  */
       int fd = openp (Fcons (Vdata_directory, Qnil),
-		      attrs[SOUND_FILE], Qnil, &file, Qnil);
+		      attrs[SOUND_FILE], Qnil, &file, Qnil, false);
 
       if (fd < 0)
 	{

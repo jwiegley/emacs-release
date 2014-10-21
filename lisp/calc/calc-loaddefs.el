@@ -3,13 +3,7 @@
 ;;; Code:
 
 
-;;;### (autoloads (math-read-if math-remove-dashes calc-match-user-syntax
-;;;;;;  calc-check-user-syntax math-read-token math-find-user-tokens
-;;;;;;  math-build-parse-table math-read-expr-list math-read-exprs
-;;;;;;  math-read-preprocess-string calcDigit-edit calcDigit-algebraic
-;;;;;;  calc-alg-digit-entry calc-do-alg-entry calc-alg-entry calc-algebraic-entry
-;;;;;;  calc-auto-algebraic-entry calc-do-calc-eval calc-do-quick-calc)
-;;;;;;  "calc-aent" "calc-aent.el" "d0cc05ccd24bbc2892b54a5f40ae6a68")
+;;;### (autoloads nil "calc-aent" "calc-aent.el" "0b3193cb3d596642ddfd3fbd2b53691c")
 ;;; Generated autoloads from calc-aent.el
 
 (autoload 'calc-do-quick-calc "calc-aent" "\
@@ -109,8 +103,7 @@ Replace some substrings of STR by Calc equivalents.
 
 ;;;***
 
-;;;### (autoloads (calc-do-embedded-activate) "calc-embed" "calc-embed.el"
-;;;;;;  "e8ec5b310e3794d2bd006417c05712b3")
+;;;### (autoloads nil "calc-embed" "calc-embed.el" "97c365828a256826710c346c25eb0ee6")
 ;;; Generated autoloads from calc-embed.el
 
 (autoload 'calc-do-embedded-activate "calc-embed" "\
@@ -120,19 +113,7 @@ Replace some substrings of STR by Calc equivalents.
 
 ;;;***
 
-;;;### (autoloads (report-calc-bug math-read-radix-digit math-ipow
-;;;;;;  math-pow math-mod math-do-working calcFunc-inv math-imod
-;;;;;;  math-floor math-trunc math-reject-arg math-div2-bignum math-div2
-;;;;;;  math-evenp math-posp math-looks-negp math-negp math-zerop
-;;;;;;  math-concat calc-temp-minibuffer-message calcDigit-letter
-;;;;;;  calc-shift-Y-prefix-help calc-missing-key calc-num-prefix-name
-;;;;;;  calc-transpose-lines calc-roll-up calc-roll-down calc-pop-above
-;;;;;;  calc-over calc-percent calc-inv calc-mod calc-power calc-last-args-stub
-;;;;;;  calc-record-list calc-do-refresh calc-roll-up-stack calc-roll-down-stack
-;;;;;;  math-constp calc-record-why calc-do-handle-whys calc-help
-;;;;;;  calc-info-summary calc-tutorial calc-info-goto-node calc-info
-;;;;;;  another-calc calc-other-window calc-big-or-small calc-dispatch-help)
-;;;;;;  "calc-misc" "calc-misc.el" "c9ed5f405b89c532880ee54481f58534")
+;;;### (autoloads nil "calc-misc" "calc-misc.el" "6c51be874eea683653d7b741e059838f")
 ;;; Generated autoloads from calc-misc.el
 
 (autoload 'calc-dispatch-help "calc-misc" "\
@@ -443,7 +424,7 @@ Prompts for bug subject.  Leaves you in a mail buffer.
 
 ;;;***
 
-;;;### (autoloads (calc-yank) "calc-yank" "calc-yank.el" "9c057926e990941673f13bb4c68e8b5e")
+;;;### (autoloads nil "calc-yank" "calc-yank.el" "543bc99dbfc52a0e73df0c241d6365dc")
 ;;; Generated autoloads from calc-yank.el
 
 (autoload 'calc-yank "calc-yank" "\

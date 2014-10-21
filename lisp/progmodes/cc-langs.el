@@ -1,6 +1,6 @@
-;;; cc-langs.el --- language specific settings for CC Mode
+;;; cc-langs.el --- language specific settings for CC Mode -*- coding: utf-8 -*-
 
-;; Copyright (C) 1985, 1987, 1992-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1987, 1992-2014 Free Software Foundation, Inc.
 
 ;; Authors:    2002- Alan Mackenzie
 ;;             1998- Martin Stjernholm
@@ -130,7 +130,9 @@
 
 
 ;; This file is not always loaded.  See note above.
-(cc-external-require 'cl)
+;; Except it is always loaded - see bug#17463.
+;;;(cc-external-require 'cl)
+(require 'cl-lib)
 
 
 ;;; Setup for the `c-lang-defvar' system.
@@ -209,9 +211,9 @@ the evaluated constant value at compile time."
 ;; Suppress "might not be defined at runtime" warning.
 ;; This file is only used when compiling other cc files.
 ;; These are defined in cl as aliases to the cl- versions.
-(declare-function delete-duplicates "cl-seq" (cl-seq &rest cl-keys) t)
-(declare-function mapcan "cl-extra" (cl-func cl-seq &rest cl-rest) t)
-(declare-function cl-macroexpand-all "cl" (form &optional env))
+;(declare-function delete-duplicates "cl-seq" (cl-seq &rest cl-keys) t)
+;(declare-function mapcan "cl-extra" (cl-func cl-seq &rest cl-rest) t)
+;(declare-function cl-macroexpand-all "cl" (form &optional env))
 
 (eval-and-compile
   ;; Some helper functions used when building the language constants.
@@ -252,14 +254,14 @@ the evaluated constant value at compile time."
     (unless xlate
       (setq xlate 'identity))
     (c-with-syntax-table (c-lang-const c-mode-syntax-table)
-      (delete-duplicates
-       (mapcan (lambda (opgroup)
+      (cl-delete-duplicates
+       (cl-mapcan (lambda (opgroup)
 		 (when (if (symbolp (car opgroup))
 			   (when (funcall opgroup-filter (car opgroup))
 			     (setq opgroup (cdr opgroup))
 			     t)
 			 t)
-		   (mapcan (lambda (op)
+		   (cl-mapcan (lambda (op)
 			     (when (funcall op-filter op)
 			       (let ((res (funcall xlate op)))
 				 (if (listp res) res (list res)))))
@@ -812,8 +814,8 @@ Assumed to not contain any submatches or \\| operators."
 (c-lang-defconst c-anchored-cpp-prefix
   "Regexp matching the prefix of a cpp directive anchored to BOL,
 in the languages that have a macro preprocessor."
-  t (if (c-lang-const c-opt-cpp-prefix)
-	(concat "^" (c-lang-const c-opt-cpp-prefix))))
+  t "^\\s *\\(#\\)\\s *"
+  (java awk) nil)
 (c-lang-defvar c-anchored-cpp-prefix (c-lang-const c-anchored-cpp-prefix))
 
 (c-lang-defconst c-opt-cpp-start
@@ -1147,7 +1149,7 @@ operators."
 (c-lang-defconst c-all-op-syntax-tokens
   ;; List of all tokens in the punctuation and parenthesis syntax
   ;; classes.
-  t (delete-duplicates (append (c-lang-const c-other-op-syntax-tokens)
+  t (cl-delete-duplicates (append (c-lang-const c-other-op-syntax-tokens)
 			       (c-lang-const c-operator-list))
 		       :test 'string-equal))
 
@@ -1700,7 +1702,7 @@ not the type face."
 (c-lang-defconst c-type-start-kwds
   ;; All keywords that can start a type (i.e. are either a type prefix
   ;; or a complete type).
-  t (delete-duplicates (append (c-lang-const c-primitive-type-kwds)
+  t (cl-delete-duplicates (append (c-lang-const c-primitive-type-kwds)
 			       (c-lang-const c-type-prefix-kwds)
 			       (c-lang-const c-type-modifier-kwds))
 		       :test 'string-equal))
@@ -1943,7 +1945,7 @@ one of `c-type-list-kwds', `c-ref-list-kwds',
   ;; something is a type or just some sort of macro in front of the
   ;; declaration.  They might be ambiguous with types or type
   ;; prefixes.
-  t (delete-duplicates (append (c-lang-const c-class-decl-kwds)
+  t (cl-delete-duplicates (append (c-lang-const c-class-decl-kwds)
 			       (c-lang-const c-brace-list-decl-kwds)
 			       (c-lang-const c-other-block-decl-kwds)
 			       (c-lang-const c-typedef-decl-kwds)
@@ -2040,6 +2042,12 @@ declarations."
 	 ;; In CORBA PSDL:
 	 "as" "const" "implements" "of" "ref"))
 
+(c-lang-defconst c-postfix-decl-spec-key
+  ;; Regexp matching the keywords in `c-postfix-decl-spec-kwds'.
+  t (c-make-keywords-re t (c-lang-const c-postfix-decl-spec-kwds)))
+(c-lang-defvar c-postfix-decl-spec-key
+  (c-lang-const c-postfix-decl-spec-key))
+
 (c-lang-defconst c-nonsymbol-sexp-kwds
   "Keywords that may be followed by a nonsymbol sexp before whatever
 construct it's part of continues."
@@ -2130,7 +2138,7 @@ type identifiers separated by arbitrary tokens."
   pike '("array" "function" "int" "mapping" "multiset" "object" "program"))
 
 (c-lang-defconst c-paren-any-kwds
-  t (delete-duplicates (append (c-lang-const c-paren-nontype-kwds)
+  t (cl-delete-duplicates (append (c-lang-const c-paren-nontype-kwds)
 			       (c-lang-const c-paren-type-kwds))
 		       :test 'string-equal))
 
@@ -2156,15 +2164,14 @@ assumed to be set if this isn't nil."
 
 (c-lang-defconst c-<>-sexp-kwds
   ;; All keywords that can be followed by an angle bracket sexp.
-  t (delete-duplicates (append (c-lang-const c-<>-type-kwds)
+  t (cl-delete-duplicates (append (c-lang-const c-<>-type-kwds)
 			       (c-lang-const c-<>-arglist-kwds))
 		       :test 'string-equal))
 
 (c-lang-defconst c-opt-<>-sexp-key
   ;; Adorned regexp matching keywords that can be followed by an angle
   ;; bracket sexp.  Always set when `c-recognize-<>-arglists' is.
-  t (if (c-lang-const c-recognize-<>-arglists)
-	(c-make-keywords-re t (c-lang-const c-<>-sexp-kwds))))
+  t (c-make-keywords-re t (c-lang-const c-<>-sexp-kwds)))
 (c-lang-defvar c-opt-<>-sexp-key (c-lang-const c-opt-<>-sexp-key))
 
 (c-lang-defconst c-brace-id-list-kwds
@@ -2187,6 +2194,18 @@ identifiers that follows the type in a normal declaration."
   t (c-make-keywords-re t (c-lang-const c-block-stmt-1-kwds)))
 (c-lang-defvar c-block-stmt-1-key (c-lang-const c-block-stmt-1-key))
 
+(c-lang-defconst c-block-stmt-1-2-kwds
+  "Statement keywords optionally followed by a paren sexp.
+Keywords here should also be in `c-block-stmt-1-kwds'."
+  t nil
+  java '("try"))
+
+(c-lang-defconst c-block-stmt-1-2-key
+  ;; Regexp matching the start of a statement which may be followed by a
+  ;; paren sexp and will then be followed by a substatement.
+  t (c-make-keywords-re t (c-lang-const c-block-stmt-1-2-kwds)))
+(c-lang-defvar c-block-stmt-1-2-key (c-lang-const c-block-stmt-1-2-key))
+
 (c-lang-defconst c-block-stmt-2-kwds
   "Statement keywords followed by a paren sexp and then by a substatement."
   t    '("for" "if" "switch" "while")
@@ -2205,7 +2224,7 @@ identifiers that follows the type in a normal declaration."
 
 (c-lang-defconst c-block-stmt-kwds
   ;; Union of `c-block-stmt-1-kwds' and `c-block-stmt-2-kwds'.
-  t (delete-duplicates (append (c-lang-const c-block-stmt-1-kwds)
+  t (cl-delete-duplicates (append (c-lang-const c-block-stmt-1-kwds)
 			       (c-lang-const c-block-stmt-2-kwds))
 		       :test 'string-equal))
 
@@ -2309,7 +2328,7 @@ This construct is \"<keyword> <expression> :\"."
 (c-lang-defconst c-expr-kwds
   ;; Keywords that can occur anywhere in expressions.  Built from
   ;; `c-primary-expr-kwds' and all keyword operators in `c-operators'.
-  t (delete-duplicates
+  t (cl-delete-duplicates
      (append (c-lang-const c-primary-expr-kwds)
 	     (c-filter-ops (c-lang-const c-operator-list)
 			   t
@@ -2413,7 +2432,7 @@ Note that Java specific rules are currently applied to tell this from
 
 (c-lang-defconst c-keywords
   ;; All keywords as a list.
-  t (delete-duplicates
+  t (cl-delete-duplicates
      (c-lang-defconst-eval-immediately
       `(append ,@(mapcar (lambda (kwds-lang-const)
 			   `(c-lang-const ,kwds-lang-const))
@@ -2576,6 +2595,15 @@ Note that Java specific rules are currently applied to tell this from
 
 ;;; Additional constants for parser-level constructs.
 
+(c-lang-defconst c-decl-start-colon-kwd-re
+  "Regexp matching a keyword that is followed by a colon, where
+  the whole construct can precede a declaration.
+  E.g. \"public:\" in C++."
+  t "\\<\\>"
+  c++ (c-make-keywords-re t (c-lang-const c-protection-kwds)))
+(c-lang-defvar c-decl-start-colon-kwd-re
+  (c-lang-const c-decl-start-colon-kwd-re))
+
 (c-lang-defconst c-decl-prefix-re
   "Regexp matching something that might precede a declaration, cast or
 label, such as the last token of a preceding statement or declaration.
@@ -2615,8 +2643,11 @@ more info."
   java "\\([\{\}\(;,<]+\\)"
   ;; Match "<" in C++ to get the first argument in a template arglist.
   ;; In that case there's an additional check in `c-find-decl-spots'
-  ;; that it got open paren syntax.
-  c++ "\\([\{\}\(\);,<]+\\)"
+  ;; that it got open paren syntax.  Match ":" to aid in picking up
+  ;; "public:", etc.  This involves additional checks in
+  ;; `c-find-decl-prefix-search' to prevent a match of identifiers
+  ;; or labels.
+  c++ "\\([\{\}\(\);:,<]+\\)"
   ;; Additionally match the protection directives in Objective-C.
   ;; Note that this doesn't cope with the longer directives, which we
   ;; would have to match from start to end since they don't end with
@@ -2805,7 +2836,8 @@ is in effect when this is matched (see `c-identifier-syntax-table')."
 		     "\\>")
 		  "")
 		"\\)")
-  (java idl) "\\([\[\(]\\)")
+  java "\\([\[\(\)]\\)"
+  idl "\\([\[\(]\\)")
 (c-lang-defvar c-type-decl-suffix-key (c-lang-const c-type-decl-suffix-key)
   'dont-doc)
 
@@ -2907,7 +2939,7 @@ is in effect or not."
 
 (c-lang-defconst c-special-brace-lists
 "List of open- and close-chars that makes up a pike-style brace list,
-i.e. for a ([ ]) list there should be a cons (?\\[ . ?\\]) in this
+i.e. for a ([Â ]) list there should be a cons (?\\[ . ?\\]) in this
 list."
   t    nil
   pike '((?{ . ?}) (?\[ . ?\]) (?< . ?>)))
@@ -2926,7 +2958,7 @@ calls before a brace block.  This setting does not affect declarations
 that are preceded by a declaration starting keyword, so
 e.g. `c-typeless-decl-kwds' may still be used when it's set to nil."
   t nil
-  (c c++ objc) t)
+  (c c++ objc java) t)
 (c-lang-defvar c-recognize-typeless-decls
   (c-lang-const c-recognize-typeless-decls))
 
@@ -2938,7 +2970,8 @@ identifier or one of the keywords on `c-<>-type-kwds' or
 `c-<>-arglist-kwds'.  If there's an identifier before then the whole
 expression is considered to be a type."
   t (or (consp (c-lang-const c-<>-type-kwds))
-	(consp (c-lang-const c-<>-arglist-kwds))))
+	(consp (c-lang-const c-<>-arglist-kwds)))
+  java t)
 (c-lang-defvar c-recognize-<>-arglists (c-lang-const c-recognize-<>-arglists))
 
 (c-lang-defconst c-enums-contain-decls
@@ -3162,10 +3195,10 @@ accomplish that conveniently."
 			     ;; `c-lang-const' will expand to the evaluated
 			     ;; constant immediately in `cl-macroexpand-all'
 			     ;; below.
-			      (mapcan
+			      (cl-mapcan
 			       (lambda (init)
 				 `(current-var ',(car init)
-				   ,(car init) ,(cl-macroexpand-all
+				   ,(car init) ,(macroexpand-all
 						 (elt init 1))))
 			       ;; Note: The following `append' copies the
 			       ;; first argument.  That list is small, so
